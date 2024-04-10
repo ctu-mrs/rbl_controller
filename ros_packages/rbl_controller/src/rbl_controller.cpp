@@ -577,7 +577,7 @@ namespace formation_control
     }
 
     std::vector<double> x_in_no_conn, y_in_no_conn;
-    for (const auto &point : circle_points)
+    for (const auto &point : voronoi_circle_intersection)
     {
       x_in_no_conn.push_back(point.first);
       y_in_no_conn.push_back(point.second);
@@ -660,6 +660,7 @@ namespace formation_control
     double current_j_y = current_position[1];
 
     // first condition
+    
     double dist_c1_c2 = sqrt(pow((c1[0] - c2[0]), 2) + pow((c1[1] - c2[1]), 2));
     if (dist_c1_c2 > d2 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d1)
     {
@@ -669,7 +670,9 @@ namespace formation_control
     {
       beta = beta - dt * (beta - betaD);
     }
-
+    
+    std::cout << "distc1_c2 = " << dist_c1_c2 <<"distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) <<std::endl;
+    
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
@@ -850,7 +853,7 @@ namespace formation_control
       std::vector<double> c1_no_conn = {std::get<2>(centroids).first, std::get<2>(centroids).second};
 
 
-      std::vector<double> c1_no_rotation = {std::get<0>(centroids_no_rotation).first, std::get<0>(centroids_no_rotation).second};
+      std::vector<double> c1_no_rotation = {std::get<2>(centroids_no_rotation).first, std::get<2>(centroids_no_rotation).second};
       
       std::vector<double> current_position(2); // Vector with two elements
       current_position[0] = robot_pos.first;   // Assigning first element

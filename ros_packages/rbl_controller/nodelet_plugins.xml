@@ -1,0 +1,9 @@
+<library path="lib/libRBLController">
+  <class name="formation_control/RBLController"
+         type="formation_control::RBLController"
+         base_class_type="nodelet::Nodelet">
+    <description>
+        This nodelet receives a message and publishes it.
+    </description>
+  </class>
+</library>

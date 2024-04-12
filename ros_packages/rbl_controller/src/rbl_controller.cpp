@@ -38,6 +38,7 @@
 #include <limits>
 #include <algorithm>
 
+#include <chrono>
 namespace formation_control
 {
 
@@ -92,25 +93,24 @@ namespace formation_control
     std::pair<double, double> destination;
     // std::vector<double> destinations;
     std::vector<double> goal = {0, 0};
-    std::vector<double> size_neighbors = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5};
+    std::vector<double> size_neighbors = {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
     double encumbrance;
     double dt;
     double beta_min;
     double betaD;
     double beta;
-    std::vector<std::vector<int>> Adj_matrix = {{0, 1, 1, 0, 0, 0, 0},
-                                                {1, 0, 1, 1, 0, 0, 0},
-                                                {1, 1, 0, 1, 1, 0, 0},
-                                                {0, 1, 1, 0, 1, 1, 0},
-                                                {0, 0, 1, 1, 0, 1, 1},
-                                                {0, 0, 0, 1, 1, 0, 1},
-                                                {0, 0, 0, 0, 1, 1, 0}};
-    /*std::vector<std::vector<int>> Adj_matrix = {
-        {0, 1, 1},
-        {1, 0, 1},
-        {1, 1, 0},
-    };*/
 
+    std::vector<std::vector<int>> Adj_matrix = {{0, 1, 1, 0, 0},
+                                                {1, 0, 1, 1, 1},
+                                                {1, 1, 0, 1, 0},
+                                                {0, 1, 1, 0, 1},
+                                                {0, 1, 0, 1, 0}};
+
+    /*std::vector<std::vector<int>> Adj_matrix = {{0, 0, 0, 0, 0},
+                                                {0, 0, 0, 0, 0},
+                                                {0, 0, 0, 0, 0},
+                                                {0, 0, 0, 0, 0},
+                                                {0, 0, 0, 0, 0}};*/
     double d1;
     double d2;
     double d3;
@@ -143,7 +143,7 @@ namespace formation_control
 
     std::vector<std::pair<double, double>> account_encumbrance(const std::vector<std::pair<double, double>> &points, const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &neighbors, const std::vector<double> &size_neighbors, double encumbrance);
 
-    std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<double, double>>  get_centroid(
+    std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<double, double>> get_centroid(
         std::pair<double, double> robot_pos,
         double radius,
         double step_size,
@@ -241,7 +241,7 @@ namespace formation_control
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-    destination = {0, 18}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))};
+    destination = {0.0, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))}; //
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -376,7 +376,7 @@ namespace formation_control
             std::pow(new_points[i].first - neighbor.first, 2) +
             std::pow(new_points[i].second - neighbor.second, 2));
 
-        if (distance > 4.0)
+        if (distance > 12.0)
         {
           index.push_back(i);
         }
@@ -545,11 +545,11 @@ namespace formation_control
       all_uavs = insert_pair_at_index(neighbors, this_uav_idx_, val);
 
       fixed_neighbors_vec = fixed_neighbors(all_uavs, Adj_matrix, this_uav_idx_);
-      //std::cout << "Filtered Neighbors:\n";
-      //for (const auto &neighbor : fixed_neighbors_vec)
+      // std::cout << "Filtered Neighbors:\n";
+      // for (const auto &neighbor : fixed_neighbors_vec)
       //{
-      //  std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n";
-      //}
+      //   std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n";
+      // }
       voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
 
       if (voronoi_circle_intersection_connectivity.empty())
@@ -607,7 +607,6 @@ namespace formation_control
     double sum_y_in_no_neigh_times_scalar_values = 0.0;
     double sum_scalar_values_no_neigh = 0.0;
 
-
     for (size_t i = 0; i < x_in_no_neigh.size(); ++i)
     {
       sum_x_in_no_neigh_times_scalar_values += x_in_no_neigh[i] * scalar_values_no_neigh[i];
@@ -615,9 +614,7 @@ namespace formation_control
       sum_scalar_values_no_neigh += scalar_values_no_neigh[i];
     }
 
-
     std::pair<double, double> centroid_no_neigh = std::make_pair(sum_x_in_no_neigh_times_scalar_values / sum_scalar_values_no_neigh, sum_y_in_no_neigh_times_scalar_values / sum_scalar_values_no_neigh);
-
 
     // Compute the centroid without conn
     double sum_x_in_no_conn_times_scalar_values = 0.0;
@@ -632,27 +629,25 @@ namespace formation_control
     }
 
     std::pair<double, double> centroid_no_conn = std::make_pair(sum_x_in_no_conn_times_scalar_values / sum_scalar_values_no_conn, sum_y_in_no_conn_times_scalar_values / sum_scalar_values_no_conn);
-    
-    
-    
+
     return std::make_tuple(centroid, centroid_no_neigh, centroid_no_conn);
   }
 
   void RBLController::apply_rules(double &beta,
-                                             const std::vector<double> &c1,
-                                             const std::vector<double> &c2,
-                                             const std::vector<double> &current_position,
-                                             double dt,
-                                             double beta_min,
-                                             const double &betaD,
-                                             std::vector<double> &goal,
-                                             double d1,
-                                             double &th,
-                                             double d2,
-                                             double d3,
-                                             double d4,
-                                             std::pair<double, double> &destinations,
-                                             std::vector<double> &c1_no_rotation)
+                                  const std::vector<double> &c1,
+                                  const std::vector<double> &c2,
+                                  const std::vector<double> &current_position,
+                                  double dt,
+                                  double beta_min,
+                                  const double &betaD,
+                                  std::vector<double> &goal,
+                                  double d1,
+                                  double &th,
+                                  double d2,
+                                  double d3,
+                                  double d4,
+                                  std::pair<double, double> &destinations,
+                                  std::vector<double> &c1_no_rotation)
   {
 
     // Extract x, y components from current_position
@@ -660,7 +655,7 @@ namespace formation_control
     double current_j_y = current_position[1];
 
     // first condition
-    
+
     double dist_c1_c2 = sqrt(pow((c1[0] - c2[0]), 2) + pow((c1[1] - c2[1]), 2));
     if (dist_c1_c2 > d2 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d1)
     {
@@ -670,9 +665,9 @@ namespace formation_control
     {
       beta = beta - dt * (beta - betaD);
     }
-    
-    std::cout << "distc1_c2 = " << dist_c1_c2 <<"distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) <<std::endl;
-    
+
+    std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
+
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
@@ -689,7 +684,7 @@ namespace formation_control
     {
       th = 0;
     }
-    std::cout << "theta : "<< th<<", beta: "<< beta <<std::endl;
+    std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -817,10 +812,12 @@ namespace formation_control
     mrs_msgs::Reference p_ref;
 
     {
+      std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_);
+
+      auto start = std::chrono::steady_clock::now();
 
       std::vector<std::pair<double, double>> neighbors;
 
-      std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_);
       robot_pos = {
           position_command_.x,
           position_command_.y,
@@ -844,29 +841,26 @@ namespace formation_control
 
       auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, encumbrance, {goal[0], goal[1]}, beta);
 
-      //std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
-      //std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};
-
+      // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
+      // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};
 
       std::vector<double> c1 = {std::get<0>(centroids).first, std::get<0>(centroids).second};
       std::vector<double> c2 = {std::get<1>(centroids).first, std::get<1>(centroids).second};
       std::vector<double> c1_no_conn = {std::get<2>(centroids).first, std::get<2>(centroids).second};
 
-
       std::vector<double> c1_no_rotation = {std::get<2>(centroids_no_rotation).first, std::get<2>(centroids_no_rotation).second};
-      
+
       std::vector<double> current_position(2); // Vector with two elements
       current_position[0] = robot_pos.first;   // Assigning first element
       current_position[1] = robot_pos.second;
       // std::vector<double> destinations = {destination.first, destination.second};
-      
 
       // Call apply_rules function
 
       RBLController::apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, destination, c1_no_rotation);
 
       // double ts = 1.0 / double(_rate_timer_set_reference_);
-      if (this_uav_idx_ < 7)
+      if (this_uav_idx_ < 5)
       {
         p_ref.position.x = c1[0]; // next_values[0];
         p_ref.position.y = c1[1];
@@ -879,6 +873,11 @@ namespace formation_control
         p_ref.position.z = 2.0;
       }
       // p_ref.heading = std::atan2(c1[1] - position_command_.y, c1[0] - position_command_.x);
+      auto end = std::chrono::steady_clock::now();
+      auto duration = std::chrono::duration<double, std::milli>(end - start);
+
+      // Output the duration
+      std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
     }
 
     ROS_INFO_THROTTLE(3.0, "[RBLController]: Setting positional reference [%.2f, %.2f, %.2f] in frame %s, heading = %.2f.", p_ref.position.x, p_ref.position.y, p_ref.position.z, _control_frame_.c_str(), p_ref.heading);

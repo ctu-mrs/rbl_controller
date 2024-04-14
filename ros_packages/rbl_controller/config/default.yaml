@@ -17,14 +17,14 @@ controlled_dimensions: 3
 
 
 d1: 0.2
-d2: 2
+d2: 1
 d3: 0.2
-d4: 2
-radius: 5
+d4: 1
+radius: 3
 encumbrance: 2.3
-betaD: 0.4
-beta_min: 0.2
-dt: 0.01
-step_size: 0.075
-
+betaD: 1.0
+beta_min: 0.5
+dt: 0.05
+step_size: 0.05
+maximum_distance_conn: 17.0
 

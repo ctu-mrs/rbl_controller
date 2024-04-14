@@ -116,7 +116,7 @@ namespace formation_control
     double d3;
     double d4;
     double th = 0;
-
+    double maximum_distance_conn;
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::string _odometry_topic_name_;
@@ -152,6 +152,7 @@ namespace formation_control
         double encumbrance,
         const std::pair<double, double> &destination,
         double beta);
+    bool isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
 
     void apply_rules(double &beta,
                      const std::vector<double> &c1,
@@ -221,6 +222,7 @@ namespace formation_control
     param_loader.loadParam("betaD", betaD);
     param_loader.loadParam("beta_min", beta_min);
     param_loader.loadParam("dt", dt);
+    param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
 
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
@@ -376,7 +378,7 @@ namespace formation_control
             std::pow(new_points[i].first - neighbor.first, 2) +
             std::pow(new_points[i].second - neighbor.second, 2));
 
-        if (distance > 12.0)
+        if (distance > maximum_distance_conn)
         {
           index.push_back(i);
         }
@@ -519,6 +521,24 @@ namespace formation_control
     }
     return new_points;
   }
+  // Function to check if a point is inside a convex polygon
+  bool RBLController::isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint)
+  {
+    int n = polygon.size();
+    bool inside = false;
+
+    // Ray casting algorithm
+    for (int i = 0, j = n - 1; i < n; j = i++)
+    {
+      if (((polygon[i].second > testPoint.second) != (polygon[j].second > testPoint.second)) &&
+          (testPoint.first < (polygon[j].first - polygon[i].first) * (testPoint.second - polygon[i].second) / (polygon[j].second - polygon[i].second) + polygon[i].first))
+      {
+        inside = !inside;
+      }
+    }
+
+    return inside;
+  }
 
   std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<double, double>> RBLController::get_centroid(
       std::pair<double, double> robot_pos,
@@ -562,7 +582,16 @@ namespace formation_control
       voronoi_circle_intersection_connectivity = circle_points;
     }
 
-    std::vector<double> x_in, y_in;
+    /*if (isInsideConvexPolygon(voronoi_circle_intersection_connectivity, robot_pos))
+    {
+    }
+    else
+    {
+      std::cout << "WARNING !!!" << std::endl;
+    }
+    */
+    std::vector<double>
+        x_in, y_in;
     for (const auto &point : voronoi_circle_intersection_connectivity)
     {
       x_in.push_back(point.first);

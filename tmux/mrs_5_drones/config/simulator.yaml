@@ -1,6 +1,6 @@
 simulation_rate: 200.0
 clock_rate: 100.0
-realtime_factor: 0.6
+realtime_factor: 0.5
 
 iterate_without_input: true
 
@@ -46,7 +46,7 @@ uav_names: [
 uav1:
   type: "x500"
   spawn:
-    x: -6.0 #10
+    x: -8.0 #10
     y: 0.0 #0
     z: 2.0
     heading: 0.0
@@ -62,7 +62,7 @@ uav2:
 uav3:
   type: "x500"
   spawn:
-    x: -3.0 #-2.22520933956314
+    x: -4.0 #-2.22520933956314
     y: 6.0 #9.7492791218
     z: 2.0
     heading: 0.0
@@ -70,7 +70,7 @@ uav3:
 uav4:
   type: "x500"
   spawn:
-    x: 3.0 #-9.00968867
+    x: 4.0 #-9.00968867
     y: 6.0 #4.33883739
     z: 2.0
     heading: 0.0
@@ -78,7 +78,7 @@ uav4:
 uav5:
   type: "x500"
   spawn:
-    x: 6.0 #-9.00968
+    x: 8.0 #-9.00968
     y: 0.0 #-4.3388373
     z: 2.0
     heading: 0.0
@@ -86,7 +86,7 @@ uav5:
 uav6:
   type: "x500"
   spawn:
-    x: -1 #-2.225209339
+    x: -3.0 #-2.225209339
     y: 24.0 #-9.7492791218
     z: 2.0
     heading: 0.0
@@ -94,7 +94,7 @@ uav6:
 uav7:
   type: "x500"
   spawn:
-    x: 9.0 #6.2348980185
+    x: 7.0 #6.2348980185
     y: 19.0 #-7.8183148
     z: 2.0
     heading: 0.0
@@ -102,7 +102,7 @@ uav7:
 uav8:
   type: "x500"
   spawn:
-    x: -3.0 #-2.225209339
+    x: -4.5 #-2.225209339
     y: 15.0 #-9.7492791218
     z: 2.0
     heading: 0.0

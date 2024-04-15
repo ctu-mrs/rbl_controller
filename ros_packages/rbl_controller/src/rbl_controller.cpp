@@ -97,16 +97,15 @@ namespace formation_control
     std::pair<double, double> destination;
     // std::vector<double> destinations;
 
-    std::vector<std::pair<double, double>> neighborsO = {
-        {-3.0, 24.0}, // Pair 1
-        {7.0, 19.0},  // Pair 2
-        {-4.5, 15.0}  // Pair 3
-    };
+    std::vector<std::pair<double, double>> obstacles = {
+        {-3.0, 24.0},
+        {7.0, 19.0},
+        {-4.5, 15.0}};
     std::vector<double> goal = {0, 0};
 
     // TODO move this staff in yaml.
     std::vector<double> size_neighbors = {2.3, 2.3, 2.3, 2.3};
-    std::vector<double> size_neighborsO = {2.3, 2.3, 2.3};
+    std::vector<double> size_obstacles = {2.3, 2.3, 2.3};
     std::vector<double> size_neighbors_and_obstacles = {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
 
     double encumbrance;
@@ -886,9 +885,9 @@ namespace formation_control
         neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
       }
 
-      for (int j = 0; j < neighborsO.size(); ++j)
+      for (int j = 0; j < obstacles.size(); ++j)
       {
-        neighbors_and_obstacles.push_back({neighborsO[j].first, neighborsO[j].second});
+        neighbors_and_obstacles.push_back({obstacles[j].first, obstacles[j].second});
       }
 
       /*std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);

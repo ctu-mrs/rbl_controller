@@ -11,6 +11,8 @@
 #include <Eigen/Eigenvalues>
 
 // messages
+#include <visualization_msgs/MarkerArray.h>
+#include <geometry_msgs/Point.h>
 #include <mrs_msgs/ReferenceStampedSrv.h>
 #include <mrs_msgs/ReferenceStamped.h>
 #include <mrs_msgs/Reference.h>
@@ -41,7 +43,6 @@
 #include <chrono>
 namespace formation_control
 {
-
   // | -------------------- class definition --------------------- |
   class RBLController : public nodelet::Nodelet
   {
@@ -61,7 +62,7 @@ namespace formation_control
     int this_uav_idx_;
     double _target_gain_;
     int _c_dimensions_; // controlled dimensions
-    // set reference timer
+
     ros::ServiceClient sc_set_velocity_;
     ros::ServiceClient sc_set_position_;
     ros::Timer timer_set_reference_;
@@ -85,6 +86,9 @@ namespace formation_control
     double step_size;
     double radius;
     std::vector<std::pair<double, double>> neighbors;
+
+    std::vector<std::pair<double, double>> neighbors_and_obstacles;
+
     std::vector<std::pair<double, double>> all_uavs;
     std::pair<double, double> val = {1000.0, 1000.0};
 
@@ -92,19 +96,31 @@ namespace formation_control
 
     std::pair<double, double> destination;
     // std::vector<double> destinations;
+
+    std::vector<std::pair<double, double>> neighborsO = {
+        {-3.0, 24.0}, // Pair 1
+        {7.0, 19.0},  // Pair 2
+        {-4.5, 15.0}  // Pair 3
+    };
     std::vector<double> goal = {0, 0};
-    std::vector<double> size_neighbors = {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
+
+    // TODO move this staff in yaml.
+    std::vector<double> size_neighbors = {2.3, 2.3, 2.3, 2.3};
+    std::vector<double> size_neighborsO = {2.3, 2.3, 2.3};
+    std::vector<double> size_neighbors_and_obstacles = {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
+
     double encumbrance;
     double dt;
     double beta_min;
     double betaD;
     double beta;
-
-    std::vector<std::vector<int>> Adj_matrix = {{0, 1, 1, 0, 0},
-                                                {1, 0, 1, 1, 1},
-                                                {1, 1, 0, 1, 0},
-                                                {0, 1, 1, 0, 1},
-                                                {0, 1, 0, 1, 0}};
+    int init_flag;
+    std::vector<std::vector<int>>
+        Adj_matrix = {{0, 1, 1, 0, 0},
+                      {1, 0, 1, 1, 1},
+                      {1, 1, 0, 1, 0},
+                      {0, 1, 1, 0, 1},
+                      {0, 1, 0, 1, 0}};
 
     /*std::vector<std::vector<int>> Adj_matrix = {{0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0},
@@ -149,6 +165,8 @@ namespace formation_control
         double step_size,
         std::vector<std::pair<double, double>> &neighbors,
         const std::vector<double> &size_neighbors,
+        std::vector<std::pair<double, double>> &neighbors_and_obstacles,
+        const std::vector<double> &size_neighbors_and_obstacles,
         double encumbrance,
         const std::pair<double, double> &destination,
         double beta);
@@ -169,16 +187,6 @@ namespace formation_control
                      double d4,
                      std::pair<double, double> &destinations,
                      std::vector<double> &c1_no_rotation);
-
-    // reference velocity - UNUSED, left here only as an example
-    /* std::mutex                                            mutex_ref_velocity_; */
-    /* Eigen::Vector3d                                       ref_velocity_; */
-    /* mrs_lib::SubscribeHandler<mrs_msgs::ReferenceStamped> sh_reference_velocity_; */
-    /* bool                                                  is_leader_ = false; */
-    /* bool                                                  ref_velocity_subscribed_; */
-    /* mrs_lib::PublisherHandler<mrs_msgs::ReferenceStamped> ph_reference_velocity_; */
-    /* void                                                  publishRefVelocity(); */
-    /* void                                                  updateLeadersRefVelocity(); */
 
     // subscribe position of controlled UAV
     std::mutex mutex_position_command_;
@@ -239,7 +247,6 @@ namespace formation_control
     }
     beta = betaD;
     n_drones_ = _uav_names_.size();
-    //  = {0.7, 0.7, 0.7, 0.7, 0.7, 0.7};
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
@@ -328,6 +335,7 @@ namespace formation_control
     }
     return points;
   }
+
   std::vector<std::pair<double, double>> RBLController::insert_pair_at_index(const std::vector<std::pair<double, double>> &vec, size_t idx, const std::pair<double, double> &value)
   {
 
@@ -398,6 +406,14 @@ namespace formation_control
 
   std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &points, const std::vector<std::pair<double, double>> &neighbors)
   {
+    std::cout << neighbors.size() << std::endl;
+
+    // Print the combined vector
+    std::cout << " vector:" << std::endl;
+    for (const auto &pair : neighbors)
+    {
+      std::cout << "{" << pair.first << ", " << pair.second << "}" << std::endl;
+    }
     std::vector<double> distances_to_robot;
     for (const auto &point : points)
     {
@@ -450,12 +466,18 @@ namespace formation_control
 
   std::vector<std::pair<double, double>> RBLController::account_encumbrance(const std::vector<std::pair<double, double>> &points, const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &neighbors, const std::vector<double> &size_neighbors, double encumbrance)
   {
+    for (auto elem : size_neighbors)
+    {
+      std::cout << elem << " ";
+    }
+    std::cout << std::endl;
     std::vector<size_t> index;
     double robot_x = robot_pos.first;
     double robot_y = robot_pos.second;
 
     for (size_t j = 0; j < neighbors.size(); ++j)
     {
+
       double delta_x = robot_x - neighbors[j].first;
       double delta_y = robot_y - neighbors[j].second;
 
@@ -546,6 +568,8 @@ namespace formation_control
       double step_size,
       std::vector<std::pair<double, double>> &neighbors,
       const std::vector<double> &size_neighbors,
+      std::vector<std::pair<double, double>> &neighbors_and_obstacles,
+      const std::vector<double> &size_neighbors_and_obstacles,
       double encumbrance,
       const std::pair<double, double> &destination,
       double beta)
@@ -555,12 +579,14 @@ namespace formation_control
 
     std::vector<std::pair<double, double>> voronoi_circle_intersection;
     std::vector<std::pair<double, double>> voronoi_circle_intersection_connectivity;
-    if (!neighbors.empty())
+
+    if (!neighbors_and_obstacles.empty())
     {
       // Compute the Voronoi cell
-      voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors);
+      voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors_and_obstacles);
+
       // Account encumbrance
-      voronoi_circle_intersection = account_encumbrance(voronoi_circle_intersection, robot_pos, neighbors, size_neighbors, encumbrance);
+      voronoi_circle_intersection = account_encumbrance(voronoi_circle_intersection, robot_pos, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance);
 
       all_uavs = insert_pair_at_index(neighbors, this_uav_idx_, val);
 
@@ -590,6 +616,7 @@ namespace formation_control
       std::cout << "WARNING !!!" << std::endl;
     }
     */
+
     std::vector<double>
         x_in, y_in;
     for (const auto &point : voronoi_circle_intersection_connectivity)
@@ -846,6 +873,7 @@ namespace formation_control
       auto start = std::chrono::steady_clock::now();
 
       std::vector<std::pair<double, double>> neighbors;
+      std::vector<std::pair<double, double>> neighbors_and_obstacles;
 
       robot_pos = {
           position_command_.x,
@@ -855,20 +883,26 @@ namespace formation_control
       for (int j = 0; j < n_drones_; ++j)
       {
         neighbors.push_back({uav_positions_[j][0], uav_positions_[j][1]});
+        neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
       }
 
-      std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);
+      for (int j = 0; j < neighborsO.size(); ++j)
+      {
+        neighbors_and_obstacles.push_back({neighborsO[j].first, neighborsO[j].second});
+      }
+
+      /*std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);
 
       // Call find_closest_points function
       std::vector<std::pair<double, double>> closest_points = RBLController::find_closest_points(robot_pos, points, neighbors);
 
       // Call account_encumbrance function
-      std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);
+      std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);*/
 
       // Call get_centroid function
-      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, encumbrance, destination, beta);
+      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta);
 
-      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, encumbrance, {goal[0], goal[1]}, beta);
+      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta);
 
       // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
       // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};
@@ -908,7 +942,6 @@ namespace formation_control
       // Output the duration
       std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
     }
-
     ROS_INFO_THROTTLE(3.0, "[RBLController]: Setting positional reference [%.2f, %.2f, %.2f] in frame %s, heading = %.2f.", p_ref.position.x, p_ref.position.y, p_ref.position.z, _control_frame_.c_str(), p_ref.heading);
 
     // set drone velocity

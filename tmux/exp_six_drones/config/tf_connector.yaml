@@ -6,11 +6,11 @@ connections:
   - root_frame_id: "uav1/fcu"
     equal_frame_id: "uav1/gps_origin"
 
-  - root_frame_id: "uav2/fcu"
-    equal_frame_id: "uav2/gps_origin"
+#  - root_frame_id: "uav2/fcu"
+#    equal_frame_id: "uav2/gps_origin"
 
-  - root_frame_id: "uav3/fcu"
-    equal_frame_id: "uav3/gps_origin"
+#  - root_frame_id: "uav3/fcu"
+#    equal_frame_id: "uav3/gps_origin"
 
   - root_frame_id: "uav7/fcu"
     equal_frame_id: "uav7/gps_origin"
@@ -18,8 +18,8 @@ connections:
   - root_frame_id: "uav8/fcu"
     equal_frame_id: "uav8/gps_origin"
 
-  - root_frame_id: "uav13/fcu"
-    equal_frame_id: "uav13/gps_origin"
+#  - root_frame_id: "uav13/fcu"
+#    equal_frame_id: "uav13/gps_origin"
     #
   # you can add further connections here:
   # - root_frame_id: "another_root"

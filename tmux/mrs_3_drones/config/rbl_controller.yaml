@@ -6,7 +6,47 @@ odometry_topic: "estimation_manager/odom_main"
 set_reference_timer:
   rate: 10 # [Hz]
   
-  
-size_neighbors: [2.3,2.3]
+size_neighbors1: 2.5
+size_obstacles1: 2.5
+maximum_distance_conn: 12.0
 
-size_neighbors_and_obstacles: [2.3, 2.3, 2.3, 2.3, 2.3]
+
+
+final_positions: # defined with respect to monitored_area_origin
+
+  uav1:
+    x: 0.0
+    y: 40.0
+    z: 3.0
+
+  uav2:
+    x: 6.0
+    y: 40.0
+    z: 3.0
+
+  uav3:
+    x: -6.0
+    y: 40.0
+    z: 3.0
+
+
+
+obstacle_positions: # defined with respect to monitored_area_origin
+
+  obs1:
+    x: -3.0
+    y: 24.0
+    z: 0
+
+  obs2:
+    x: 7.0
+    y: 19.0
+    z: 0
+    
+  obs3:
+    x: -4.5
+    y: 15.0
+    z: 0 
+    
+    
+

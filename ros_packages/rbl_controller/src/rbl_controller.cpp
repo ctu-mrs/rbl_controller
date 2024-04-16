@@ -97,16 +97,13 @@ namespace formation_control
     std::pair<double, double> destination;
     // std::vector<double> destinations;
 
-    std::vector<std::pair<double, double>> obstacles = {
-        {-3.0, 24.0},
-        {7.0, 19.0},
-        {-4.5, 15.0}};
+    std::vector<std::pair<double, double>> obstacles;
     std::vector<double> goal = {0, 0};
 
     // TODO move this staff in yaml.
-    std::vector<double> size_neighbors = {2.3, 2.3, 2.3, 2.3};
-    std::vector<double> size_obstacles = {2.3, 2.3, 2.3};
-    std::vector<double> size_neighbors_and_obstacles = {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
+    std::vector<double> size_neighbors;
+    std::vector<double> size_obstacles;               // = {2.3, 2.3, 2.3};
+    std::vector<double> size_neighbors_and_obstacles; //= {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
 
     double encumbrance;
     double dt;
@@ -114,18 +111,23 @@ namespace formation_control
     double betaD;
     double beta;
     int init_flag;
-    std::vector<std::vector<int>>
-        Adj_matrix = {{0, 1, 1, 0, 0},
-                      {1, 0, 1, 1, 1},
-                      {1, 1, 0, 1, 0},
-                      {0, 1, 1, 0, 1},
-                      {0, 1, 0, 1, 0}};
+    /*std::vector<std::vector<int>>
+         Adj_matrix = {{0, 1, 1, 0, 0},
+                          {1, 0, 1, 1, 1},
+                          {1, 1, 0, 1, 0},
+                          {0, 1, 1, 0, 1},
+                          {0, 1, 0, 1, 0}};*/
 
     /*std::vector<std::vector<int>> Adj_matrix = {{0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0}};*/
+
+    std::vector<std::vector<int>>
+        Adj_matrix = {{0, 1, 1},
+                      {1, 0, 1},
+                      {1, 1, 0}};
     double d1;
     double d2;
     double d3;
@@ -141,6 +143,8 @@ namespace formation_control
 
     std::vector<ros::Time> last_odom_msg_time_;
     double _odom_msg_max_latency_;
+
+    void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
 
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
@@ -230,6 +234,17 @@ namespace formation_control
     param_loader.loadParam("beta_min", beta_min);
     param_loader.loadParam("dt", dt);
     param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
+    param_loader.loadParam("size_neighbors", size_neighbors);
+    param_loader.loadParam("size_obstacles", size_obstacles);
+    param_loader.loadParam("size_neighbors_and_obstacles", size_neighbors_and_obstacles);
+
+    obstacles = {
+        {-3.0, 24.0},
+        {7.0, 19.0},
+        {-4.5, 15.0}};
+
+    ros::Publisher obstacle_pub = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers", 1, true);
+    publishObstacles(obstacle_pub, obstacles);
 
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
@@ -306,6 +321,35 @@ namespace formation_control
     ROS_INFO("[RBLController]: Initialization completed.");
   }
   //}
+
+  void RBLController::publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles)
+  {
+    visualization_msgs::MarkerArray obstacle_markers;
+
+    for (size_t i = 0; i < obstacles.size(); ++i)
+    {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = "simulator_origin";
+      marker.header.stamp = ros::Time::now();
+      marker.ns = "obstacles";
+      marker.id = i;
+      marker.type = visualization_msgs::Marker::SPHERE;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.pose.position.x = obstacles[i].first;
+      marker.pose.position.y = obstacles[i].second;
+      marker.pose.position.z = 0; // Assuming obstacles are on the ground
+      marker.scale.x = 1.0;       // Adjust size as necessary
+      marker.scale.y = 1.0;
+      marker.scale.z = 1.0;
+      marker.color.r = 1.0; // Red color
+      marker.color.g = 0.0;
+      marker.color.b = 0.0;
+      marker.color.a = 1.0; // Fully opaque
+      obstacle_markers.markers.push_back(marker);
+    }
+
+    pub.publish(obstacle_markers);
+  }
 
   std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size)
   {

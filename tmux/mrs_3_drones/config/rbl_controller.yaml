@@ -1,0 +1,12 @@
+uav_names: ["uav1", "uav2", "uav3"] #, "uav11"]
+
+# odometry_topic: "estimation_manager/ground_truth/odom"
+odometry_topic: "estimation_manager/odom_main"
+
+set_reference_timer:
+  rate: 10 # [Hz]
+  
+  
+size_neighbors: [2.3,2.3]
+
+size_neighbors_and_obstacles: [2.3, 2.3, 2.3, 2.3, 2.3]

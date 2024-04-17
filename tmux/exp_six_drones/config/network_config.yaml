@@ -11,10 +11,13 @@
 network:
 
   robot_names: [
-    uav1,
+    #uav1,
     #uav2,
     #uav3,
-    uav7,
-    uav8,
+    #uav7,
+    #uav8,
+    uav4,
+    uav5,
+    uav6,
    # uav13,
   ]

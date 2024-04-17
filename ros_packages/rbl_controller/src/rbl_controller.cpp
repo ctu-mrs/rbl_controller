@@ -256,6 +256,11 @@ namespace formation_control
     param_loader.loadParam("obstacle3y", obstacles[2].second);*/
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
+    if (!param_loader.loadedSuccessfully()) {
+      ROS_ERROR("[RblController]: Could not load all parameters!");
+      ros::shutdown();
+    }
+
     obstacles = {
         {-45.0, 25.0},
         {-25.0, 15.0},

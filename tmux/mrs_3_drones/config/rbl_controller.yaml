@@ -7,9 +7,12 @@ set_reference_timer:
   rate: 10 # [Hz]
   
 size_neighbors1: 2.5
-size_obstacles1: 2.5
+size_obstacles1: 0.5
 maximum_distance_conn: 12.0
 
+Adj_matrix_uav1: [0,1,1]
+Adj_matrix_uav2: [1,0,1]
+Adj_matrix_uav3: [1,1,0]
 
 
 final_positions: # defined with respect to monitored_area_origin
@@ -31,22 +34,10 @@ final_positions: # defined with respect to monitored_area_origin
 
 
 
-obstacle_positions: # defined with respect to monitored_area_origin
+obstacle1x: -3.0
+obstacle2x: 7
+obstacle3x: -4.5
 
-  obs1:
-    x: -3.0
-    y: 24.0
-    z: 0
-
-  obs2:
-    x: 7.0
-    y: 19.0
-    z: 0
-    
-  obs3:
-    x: -4.5
-    y: 15.0
-    z: 0 
-    
-    
-
+obstacle1y: 24.0
+obstacle2y: 19.0
+obstacle3y: 15.0

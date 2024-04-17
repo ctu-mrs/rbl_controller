@@ -104,7 +104,8 @@ namespace formation_control
     std::vector<double> size_neighbors;
     std::vector<double> size_obstacles;               // = {2.3, 2.3, 2.3};
     std::vector<double> size_neighbors_and_obstacles; //= {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
-
+    double size_neighbors1;
+    double size_obstacles1;
     double encumbrance;
     double dt;
     double beta_min;
@@ -112,11 +113,11 @@ namespace formation_control
     double beta;
     int init_flag;
     /*std::vector<std::vector<int>>
-         Adj_matrix = {{0, 1, 1, 0, 0},
-                          {1, 0, 1, 1, 1},
-                          {1, 1, 0, 1, 0},
-                          {0, 1, 1, 0, 1},
-                          {0, 1, 0, 1, 0}};*/
+        Adj_matrix = {{0, 1, 1, 0, 0},
+                      {1, 0, 1, 1, 1},
+                      {1, 1, 0, 1, 0},
+                      {0, 1, 1, 0, 1},
+                      {0, 1, 0, 1, 0}};*/
 
     /*std::vector<std::vector<int>> Adj_matrix = {{0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0},
@@ -124,10 +125,12 @@ namespace formation_control
                                                 {0, 0, 0, 0, 0},
                                                 {0, 0, 0, 0, 0}};*/
 
-    std::vector<std::vector<int>>
-        Adj_matrix = {{0, 1, 1},
-                      {1, 0, 1},
-                      {1, 1, 0}};
+    std::vector<int> Adj_matrix;
+
+    /*Adj_matrix = {{0, 1, 1},
+                  {1, 0, 1},
+                  {1, 1, 0}};*/
+
     double d1;
     double d2;
     double d3;
@@ -148,7 +151,7 @@ namespace formation_control
 
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
-    std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<std::vector<int>> &adjacency_matrix, size_t my_index);
+    std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix, size_t my_index);
 
     std::vector<std::pair<double, double>> insert_pair_at_index(const std::vector<std::pair<double, double>> &vec, size_t idx, const std::pair<double, double> &value);
 
@@ -234,17 +237,36 @@ namespace formation_control
     param_loader.loadParam("beta_min", beta_min);
     param_loader.loadParam("dt", dt);
     param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
-    param_loader.loadParam("size_neighbors", size_neighbors);
-    param_loader.loadParam("size_obstacles", size_obstacles);
-    param_loader.loadParam("size_neighbors_and_obstacles", size_neighbors_and_obstacles);
+    // param_loader.loadParam("size_neighbors", size_neighbors);
+    // param_loader.loadParam("size_obstacles", size_obstacles);
+    //  param_loader.loadParam("size_neighbors_and_obstacles", size_neighbors_and_obstacles);
+    param_loader.loadParam("size_neighbors1", size_neighbors1);
+    param_loader.loadParam("size_obstacles1", size_obstacles1);
+
+    param_loader.loadParam("final_positions/" + _uav_name_ + "/x", destination.first);
+    param_loader.loadParam("final_positions/" + _uav_name_ + "/y", destination.second);
+    param_loader.loadParam("Adj_matrix_" + _uav_name_, Adj_matrix);
+    /*param_loader.loadParam("obstacle1x", obstacles[0].first);
+    param_loader.loadParam("obstacle2x", obstacles[1].first);
+    param_loader.loadParam("obstacle3x", obstacles[2].first);
+    param_loader.loadParam("obstacle1y", obstacles[0].second);
+    param_loader.loadParam("obstacle2y", obstacles[1].second);
+    param_loader.loadParam("obstacle3y", obstacles[2].second);*/
+    // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     obstacles = {
         {-3.0, 24.0},
         {7.0, 19.0},
         {-4.5, 15.0}};
 
-    ros::Publisher obstacle_pub = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers", 1, true);
-    publishObstacles(obstacle_pub, obstacles);
+    size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
+    size_obstacles.assign(obstacles.size(), size_obstacles1);
+
+    size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
+    size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
+
+    // ros::Publisher obstacle_pub = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers", 1, true);
+    // publishObstacles(obstacle_pub, obstacles);
 
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
@@ -264,7 +286,7 @@ namespace formation_control
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-    destination = {0.0, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))}; //
+    // destination = {0.0 + 6 * this_uav_idx_, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))}; //
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -277,7 +299,6 @@ namespace formation_control
     // iterate through drones except this drone and target
     for (int i = 0; i < _uav_names_.size(); i++)
     {
-
       std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_;
       other_uav_odom_subscribers_.push_back(
           nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
@@ -322,7 +343,7 @@ namespace formation_control
   }
   //}
 
-  void RBLController::publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles)
+  /*void RBLController::publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles)
   {
     visualization_msgs::MarkerArray obstacle_markers;
 
@@ -350,7 +371,7 @@ namespace formation_control
 
     pub.publish(obstacle_markers);
   }
-
+*/
   std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size)
   {
     double x_center = robot_pos.first;
@@ -398,16 +419,17 @@ namespace formation_control
     return new_vec;
   }
 
-  std::vector<std::pair<double, double>> RBLController::fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<std::vector<int>> &adjacency_matrix, size_t my_index)
+  std::vector<std::pair<double, double>> RBLController::fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix, size_t my_index)
   {
     std::vector<std::pair<double, double>> neighbors_filtered;
 
     // Iterate over the row of the adjacency matrix corresponding to my_index
-    for (size_t j = 0; j < adjacency_matrix[my_index].size(); ++j)
+    for (size_t j = 0; j < adjacency_matrix.size(); ++j)
     {
       // Check if the value is 1, indicating a neighbor
-      if (adjacency_matrix[my_index][j] == 1)
+      if (adjacency_matrix[j] == 1)
       {
+        std::cout << "ciao" << std::endl;
         // Add the position of the neighbor to neighbors_filtered
         neighbors_filtered.push_back(positions[j]);
       }

@@ -10,34 +10,27 @@ size_neighbors1: 2.5
 size_obstacles1: 2.5
 maximum_distance_conn: 15.0
 
-Adj_matrix_uav1: [0,1,1]
-Adj_matrix_uav2: [1,0,1]
-Adj_matrix_uav3: [1,1,0]
+Adj_matrix_uav4: [0,1,1]
+Adj_matrix_uav5: [1,0,1]
+Adj_matrix_uav6: [1,1,0]
 
 
 final_positions: # defined with respect to monitored_area_origin
 
-  uav1:
+  uav4:
     x: -15.0
     y: 42.0
     z: 3.0
 
-  uav2:
+  uav5:
     x: -15.0
     y: 36.0
     z: 3.0
 
-  uav3:
+  uav6:
     x: -15.0
     y: 30.0
     z: 3.0
 
 
 
-obstacle1x: -3.0
-obstacle2x: 7
-obstacle3x: -4.5
-
-obstacle1y: 24.0
-obstacle2y: 19.0
-obstacle3y: 15.0

@@ -98,6 +98,7 @@ namespace formation_control
     // std::vector<double> destinations;
 
     std::vector<std::pair<double, double>> obstacles;
+
     std::vector<double> goal = {0, 0};
 
     // TODO move this staff in yaml.
@@ -246,6 +247,7 @@ namespace formation_control
     param_loader.loadParam("final_positions/" + _uav_name_ + "/x", destination.first);
     param_loader.loadParam("final_positions/" + _uav_name_ + "/y", destination.second);
     param_loader.loadParam("Adj_matrix_" + _uav_name_, Adj_matrix);
+
     /*param_loader.loadParam("obstacle1x", obstacles[0].first);
     param_loader.loadParam("obstacle2x", obstacles[1].first);
     param_loader.loadParam("obstacle3x", obstacles[2].first);
@@ -257,7 +259,10 @@ namespace formation_control
     obstacles = {
         {-3.0, 24.0},
         {7.0, 19.0},
-        {-4.5, 15.0}};
+        {-4.5, 15.0},
+        {5.0, 10.0},
+        {-7.5, 20.0},
+        {-10, 10}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);

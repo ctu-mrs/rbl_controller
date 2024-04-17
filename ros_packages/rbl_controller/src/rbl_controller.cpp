@@ -257,12 +257,9 @@ namespace formation_control
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     obstacles = {
-        {-3.0, 24.0},
-        {7.0, 19.0},
-        {-4.5, 15.0},
-        {5.0, 10.0},
-        {-7.5, 20.0},
-        {-10, 10}};
+        {-45.0, 25.0},
+        {-25.0, 15.0},
+        {-35.5, 55.0}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -434,7 +431,7 @@ namespace formation_control
       // Check if the value is 1, indicating a neighbor
       if (adjacency_matrix[j] == 1)
       {
-        std::cout << "ciao" << std::endl;
+        /* std::cout << "ciao" << std::endl; */
         // Add the position of the neighbor to neighbors_filtered
         neighbors_filtered.push_back(positions[j]);
       }
@@ -476,13 +473,13 @@ namespace formation_control
 
   std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &points, const std::vector<std::pair<double, double>> &neighbors)
   {
-    std::cout << neighbors.size() << std::endl;
+    /* std::cout << neighbors.size() << std::endl; */
 
     // Print the combined vector
-    std::cout << " vector:" << std::endl;
+    /* std::cout << " vector:" << std::endl; */
     for (const auto &pair : neighbors)
     {
-      std::cout << "{" << pair.first << ", " << pair.second << "}" << std::endl;
+      /* std::cout << "{" << pair.first << ", " << pair.second << "}" << std::endl; */
     }
     std::vector<double> distances_to_robot;
     for (const auto &point : points)
@@ -538,9 +535,9 @@ namespace formation_control
   {
     for (auto elem : size_neighbors)
     {
-      std::cout << elem << " ";
+      /* std::cout << elem << " "; */
     }
-    std::cout << std::endl;
+    /* std::cout << std::endl; */
     std::vector<size_t> index;
     double robot_x = robot_pos.first;
     double robot_y = robot_pos.second;
@@ -792,7 +789,7 @@ namespace formation_control
       beta = beta - dt * (beta - betaD);
     }
 
-    std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
+    /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */
 
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
@@ -810,7 +807,7 @@ namespace formation_control
     {
       th = 0;
     }
-    std::cout << "theta : " << th << ", beta: " << beta << std::endl;
+    /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -993,24 +990,24 @@ namespace formation_control
       RBLController::apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, destination, c1_no_rotation);
 
       // double ts = 1.0 / double(_rate_timer_set_reference_);
-      if (this_uav_idx_ < 5)
-      {
-        p_ref.position.x = c1[0]; // next_values[0];
-        p_ref.position.y = c1[1];
-        p_ref.position.z = 2.0;
-      }
-      else
-      {
+     // if (this_uav_idx_ < 5)
+      //{
+      //  p_ref.position.x = c1[0]; // next_values[0];
+      //  p_ref.position.y = c1[1];
+      //  p_ref.position.z = 2.0;
+      //}
+      //else
+      //{
         p_ref.position.x = position_command_.x; // next_values[0];
         p_ref.position.y = position_command_.y;
-        p_ref.position.z = 2.0;
-      }
+        p_ref.position.z = 3.0;
+      //}
       // p_ref.heading = std::atan2(c1[1] - position_command_.y, c1[0] - position_command_.x);
       auto end = std::chrono::steady_clock::now();
       auto duration = std::chrono::duration<double, std::milli>(end - start);
 
       // Output the duration
-      std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl;
+      /* std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl; */
     }
     ROS_INFO_THROTTLE(3.0, "[RBLController]: Setting positional reference [%.2f, %.2f, %.2f] in frame %s, heading = %.2f.", p_ref.position.x, p_ref.position.y, p_ref.position.z, _control_frame_.c_str(), p_ref.heading);
 

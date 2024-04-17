@@ -39,7 +39,7 @@ input=(
 '
   'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch
 '
-  'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml `rospack find mrs_uav_deployment`/config/communication_config.yaml
+  'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml
 '
   'HwApi' 'waitForTime; roslaunch mrs_uav_px4_api api.launch
 '
@@ -52,9 +52,8 @@ input=(
   'Monitoring' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 '
   'Activation' 'rosservice call /'"$UAV_NAME"'/rbl_controller/activation'
-  'tf_connector' 'waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
+  'tf_connector' 'waitForTime; roslaunch area_monitoring_controller tf_publisher.launch
 '
-
 # do NOT modify the command list below
   'EstimDiag' 'waitForHw; rostopic echo /'"$UAV_NAME"'/estimation_manager/diagnostics
 '

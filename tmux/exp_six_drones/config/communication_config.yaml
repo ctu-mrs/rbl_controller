@@ -17,7 +17,7 @@ topics: # topics published out of this machine to receivers specified above
  - name: "mrs_uav_status/uav_status_short"
    compress: true # enable bz2 compression
    rate: 10.0
- - name: "estimation/odom_main"
+ - name: "estimation_manager/odom_main"
    compress: true # enable bz2 compression
    rate: 10.0
 

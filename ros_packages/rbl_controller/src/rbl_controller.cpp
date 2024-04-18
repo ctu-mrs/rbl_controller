@@ -87,7 +87,6 @@ namespace formation_control
     void publishObstacles();
     void publishDestination();
 
-
     // formation control variables
     std::pair<double, double> robot_pos;
     double step_size;
@@ -263,15 +262,18 @@ namespace formation_control
     param_loader.loadParam("obstacle3y", obstacles[2].second);*/
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
-    if (!param_loader.loadedSuccessfully()) {
+    if (!param_loader.loadedSuccessfully())
+    {
       ROS_ERROR("[RblController]: Could not load all parameters!");
       ros::shutdown();
     }
 
     obstacles = {
         {-45.0, 25.0},
-        {-25.0, 15.0},
-        {-35.5, 55.0}};
+        {-25.0, 19.7},
+        {-35.5, 55.0},
+        {-29.0, 36.0},
+        {-48.0, 39.0}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -297,7 +299,7 @@ namespace formation_control
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-    
+
     // destination = {0.0 + 6 * this_uav_idx_, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))};
 
     goal[0] = destination.first;
@@ -376,7 +378,7 @@ namespace formation_control
       marker.pose.position.y = obstacles[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
       marker.pose.orientation.w = 1.0;
-      marker.scale.x = 2.0;       // Adjust size as necessary
+      marker.scale.x = 2.0; // Adjust size as necessary
       marker.scale.y = 2.0;
       marker.scale.z = 1.0;
       marker.color.r = 1.0; // Red color
@@ -402,7 +404,7 @@ namespace formation_control
     marker.pose.position.y = destination.second;
     marker.pose.position.z = 0; // Assuming obstacles are on the ground
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = 2.0;       // Adjust size as necessary
+    marker.scale.x = 2.0; // Adjust size as necessary
     marker.scale.y = 2.0;
     marker.scale.z = 1.0;
     marker.color.r = 0.0; // Red color
@@ -698,10 +700,10 @@ namespace formation_control
 
       fixed_neighbors_vec = fixed_neighbors(all_uavs, Adj_matrix, this_uav_idx_);
       // std::cout << "Filtered Neighbors:\n";
-       for (const auto &neighbor : fixed_neighbors_vec)
+      for (const auto &neighbor : fixed_neighbors_vec)
       {
-         /* std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n"; */
-       }
+        /* std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n"; */
+      }
       voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
 
       if (voronoi_circle_intersection_connectivity.empty())
@@ -828,7 +830,7 @@ namespace formation_control
       beta = beta - dt * (beta - betaD);
     }
 
-     /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */ 
+    /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */
 
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
@@ -846,7 +848,7 @@ namespace formation_control
     {
       th = 0;
     }
-     /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */ 
+    /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -1029,17 +1031,17 @@ namespace formation_control
       RBLController::apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, destination, c1_no_rotation);
 
       // double ts = 1.0 / double(_rate_timer_set_reference_);
-     // if (this_uav_idx_ < 5)
+      // if (this_uav_idx_ < 5)
       //{
       p_ref.position.x = c1[0]; // next_values[0];
       p_ref.position.y = c1[1];
       p_ref.position.z = 3.0;
       //}
-      //else
+      // else
       //{
-        /* p_ref.position.x = position_command_.x; // next_values[0]; */
-        /* p_ref.position.y = position_command_.y; */
-        /* p_ref.position.z = 3.0; */
+      /* p_ref.position.x = position_command_.x; // next_values[0]; */
+      /* p_ref.position.y = position_command_.y; */
+      /* p_ref.position.z = 3.0; */
       //}
       // p_ref.heading = std::atan2(c1[1] - position_command_.y, c1[0] - position_command_.x);
       auto end = std::chrono::steady_clock::now();
@@ -1092,15 +1094,21 @@ namespace formation_control
       }
     }
 
-    try {
+    try
+    {
       publishDestination();
-    } catch (...) {
+    }
+    catch (...)
+    {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_destination_.getTopic().c_str());
     }
 
-    try {
+    try
+    {
       publishObstacles();
-    } catch (...) {
+    }
+    catch (...)
+    {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_obstacles_.getTopic().c_str());
     }
 

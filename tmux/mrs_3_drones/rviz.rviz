@@ -9,6 +9,9 @@ Panels:
         - /TF1/Tree1
         - /Predicted trajectories1
         - /Reference trajectories1
+        - /Visualization Markers1
+        - /Visualization Markers1/UAV5 destination1
+        - /Visualization Markers1/Obstacles1
       Splitter Ratio: 0.560869574546814
     Tree Height: 286
   - Class: rviz/Selection
@@ -293,6 +296,58 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Reference trajectories
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/destination_vis
+          Name: UAV1 destination
+          Namespaces:
+            destination: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/destination_vis
+          Name: UAV2 destination
+          Namespaces:
+            destination: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/destination_vis
+          Name: UAV3 destination
+          Namespaces:
+            destination: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/destination_vis
+          Name: UAV4 destination
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/destination_vis
+          Name: UAV5 destination
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            obstacles: true
+          Queue Size: 100
+          Value: true
+      Enabled: true
+      Name: Visualization Markers
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -321,7 +376,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 29.254480361938477
+      Distance: 33.64279556274414
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -329,17 +384,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -36.700111389160156
-        Y: 7.02577018737793
+        X: -36.04008865356445
+        Y: 11.92990779876709
         Z: 1.6633344785077497e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4747976064682007
+      Pitch: 0.8147971630096436
       Target Frame: common_origin
-      Yaw: 3.2972161769866943
+      Yaw: 4.102212429046631
     Saved: ~
 Window Geometry:
   Displays:
@@ -357,5 +412,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1890
-  X: 1932
+  X: 12
   Y: 32

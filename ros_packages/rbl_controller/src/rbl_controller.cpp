@@ -81,6 +81,13 @@ namespace formation_control
     bool control_allowed_ = false;
     bool activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
+    // visualization publishing
+    ros::Publisher pub_obstacles_;
+    ros::Publisher pub_destination_;
+    void publishObstacles();
+    void publishDestination();
+
+
     // formation control variables
     std::pair<double, double> robot_pos;
     double step_size;
@@ -272,9 +279,6 @@ namespace formation_control
     size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
-    // ros::Publisher obstacle_pub = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers", 1, true);
-    // publishObstacles(obstacle_pub, obstacles);
-
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
 
@@ -293,7 +297,8 @@ namespace formation_control
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-    // destination = {0.0 + 6 * this_uav_idx_, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))}; //
+    
+    // destination = {0.0 + 6 * this_uav_idx_, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))};
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -340,6 +345,10 @@ namespace formation_control
     // initialize service clients
     sc_set_position_ = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("ref_pos_out");
 
+    // initialize publishers
+    pub_obstacles_ = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
+    pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
+
     // initialize transformer
     transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
     /* transformer_->setDefaultPrefix(_uav_name_); */
@@ -350,24 +359,25 @@ namespace formation_control
   }
   //}
 
-  /*void RBLController::publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles)
+  void RBLController::publishObstacles()
   {
     visualization_msgs::MarkerArray obstacle_markers;
 
     for (size_t i = 0; i < obstacles.size(); ++i)
     {
       visualization_msgs::Marker marker;
-      marker.header.frame_id = "simulator_origin";
+      marker.header.frame_id = _control_frame_;
       marker.header.stamp = ros::Time::now();
       marker.ns = "obstacles";
       marker.id = i;
-      marker.type = visualization_msgs::Marker::SPHERE;
+      marker.type = visualization_msgs::Marker::CYLINDER;
       marker.action = visualization_msgs::Marker::ADD;
       marker.pose.position.x = obstacles[i].first;
       marker.pose.position.y = obstacles[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
-      marker.scale.x = 1.0;       // Adjust size as necessary
-      marker.scale.y = 1.0;
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 2.0;       // Adjust size as necessary
+      marker.scale.y = 2.0;
       marker.scale.z = 1.0;
       marker.color.r = 1.0; // Red color
       marker.color.g = 0.0;
@@ -376,9 +386,33 @@ namespace formation_control
       obstacle_markers.markers.push_back(marker);
     }
 
-    pub.publish(obstacle_markers);
+    pub_obstacles_.publish(obstacle_markers);
   }
-*/
+
+  void RBLController::publishDestination()
+  {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = _control_frame_;
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "destination";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::CYLINDER;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = destination.first;
+    marker.pose.position.y = destination.second;
+    marker.pose.position.z = 0; // Assuming obstacles are on the ground
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 2.0;       // Adjust size as necessary
+    marker.scale.y = 2.0;
+    marker.scale.z = 1.0;
+    marker.color.r = 0.0; // Red color
+    marker.color.g = 0.0;
+    marker.color.b = 1.0;
+    marker.color.a = 1.0; // Fully opaque
+
+    pub_destination_.publish(marker);
+  }
+
   std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size)
   {
     double x_center = robot_pos.first;
@@ -1056,6 +1090,18 @@ namespace formation_control
         /* ROS_WARN("[RBLController]: Did not receive any message from %s for %.2f s.", _uav_names_[r].c_str(), time_since_last_message); */
         timeout_exceeded = true;
       }
+    }
+
+    try {
+      publishDestination();
+    } catch (...) {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_destination_.getTopic().c_str());
+    }
+
+    try {
+      publishObstacles();
+    } catch (...) {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_obstacles_.getTopic().c_str());
     }
 
     ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());

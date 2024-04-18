@@ -21,7 +21,7 @@ d2: 1
 d3: 0.2
 d4: 1
 radius: 3
-encumbrance: 2.3
+encumbrance: 2.5
 betaD: 1.5
 beta_min: 1.0
 dt: 0.01

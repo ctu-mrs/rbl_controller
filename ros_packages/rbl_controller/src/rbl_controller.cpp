@@ -664,10 +664,10 @@ namespace formation_control
 
       fixed_neighbors_vec = fixed_neighbors(all_uavs, Adj_matrix, this_uav_idx_);
       // std::cout << "Filtered Neighbors:\n";
-      // for (const auto &neighbor : fixed_neighbors_vec)
-      //{
-      //   std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n";
-      // }
+       for (const auto &neighbor : fixed_neighbors_vec)
+      {
+         /* std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n"; */
+       }
       voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
 
       if (voronoi_circle_intersection_connectivity.empty())
@@ -794,7 +794,7 @@ namespace formation_control
       beta = beta - dt * (beta - betaD);
     }
 
-    /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */
+     /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */ 
 
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
@@ -812,7 +812,7 @@ namespace formation_control
     {
       th = 0;
     }
-    /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */
+     /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */ 
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -997,15 +997,15 @@ namespace formation_control
       // double ts = 1.0 / double(_rate_timer_set_reference_);
      // if (this_uav_idx_ < 5)
       //{
-      //  p_ref.position.x = c1[0]; // next_values[0];
-      //  p_ref.position.y = c1[1];
-      //  p_ref.position.z = 2.0;
+      p_ref.position.x = c1[0]; // next_values[0];
+      p_ref.position.y = c1[1];
+      p_ref.position.z = 3.0;
       //}
       //else
       //{
-        p_ref.position.x = position_command_.x; // next_values[0];
-        p_ref.position.y = position_command_.y;
-        p_ref.position.z = 3.0;
+        /* p_ref.position.x = position_command_.x; // next_values[0]; */
+        /* p_ref.position.y = position_command_.y; */
+        /* p_ref.position.z = 3.0; */
       //}
       // p_ref.heading = std::atan2(c1[1] - position_command_.y, c1[0] - position_command_.x);
       auto end = std::chrono::steady_clock::now();

@@ -84,33 +84,29 @@ namespace formation_control
     // visualization publishing
     ros::Publisher pub_obstacles_;
     ros::Publisher pub_destination_;
+    ros::Publisher pub_position_;
     void publishObstacles();
     void publishDestination();
+    void publishPosition();
 
     // formation control variables
     std::pair<double, double> robot_pos;
     double step_size;
     double radius;
     std::vector<std::pair<double, double>> neighbors;
-
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
-
     std::vector<std::pair<double, double>> all_uavs;
     std::pair<double, double> val = {1000.0, 1000.0};
-
     std::vector<std::pair<double, double>> fixed_neighbors_vec;
-
     std::pair<double, double> destination;
-    // std::vector<double> destinations;
-
     std::vector<std::pair<double, double>> obstacles;
-
     std::vector<double> goal = {0, 0};
 
     // TODO move this staff in yaml.
+    std::vector<double> size_neighbors_and_obstacles;
     std::vector<double> size_neighbors;
-    std::vector<double> size_obstacles;               // = {2.3, 2.3, 2.3};
-    std::vector<double> size_neighbors_and_obstacles; //= {2.3, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3};
+    std::vector<double> size_obstacles;
+    
     double size_neighbors1;
     double size_obstacles1;
     double encumbrance;
@@ -119,31 +115,17 @@ namespace formation_control
     double betaD;
     double beta;
     int init_flag;
-    /*std::vector<std::vector<int>>
-        Adj_matrix = {{0, 1, 1, 0, 0},
-                      {1, 0, 1, 1, 1},
-                      {1, 1, 0, 1, 0},
-                      {0, 1, 1, 0, 1},
-                      {0, 1, 0, 1, 0}};*/
-
-    /*std::vector<std::vector<int>> Adj_matrix = {{0, 0, 0, 0, 0},
-                                                {0, 0, 0, 0, 0},
-                                                {0, 0, 0, 0, 0},
-                                                {0, 0, 0, 0, 0},
-                                                {0, 0, 0, 0, 0}};*/
-
     std::vector<int> Adj_matrix;
-
-    /*Adj_matrix = {{0, 1, 1},
-                  {1, 0, 1},
-                  {1, 1, 0}};*/
-
     double d1;
     double d2;
     double d3;
     double d4;
     double th = 0;
     double maximum_distance_conn;
+    std::vector<double> obstacle1;
+    std::vector<double> obstacle2;
+    std::vector<double> obstacle3;
+    
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::string _odometry_topic_name_;
@@ -155,7 +137,7 @@ namespace formation_control
     double _odom_msg_max_latency_;
 
     void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
-
+   
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
     std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix, size_t my_index);
@@ -244,9 +226,6 @@ namespace formation_control
     param_loader.loadParam("beta_min", beta_min);
     param_loader.loadParam("dt", dt);
     param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
-    // param_loader.loadParam("size_neighbors", size_neighbors);
-    // param_loader.loadParam("size_obstacles", size_obstacles);
-    //  param_loader.loadParam("size_neighbors_and_obstacles", size_neighbors_and_obstacles);
     param_loader.loadParam("size_neighbors1", size_neighbors1);
     param_loader.loadParam("size_obstacles1", size_obstacles1);
 
@@ -254,12 +233,9 @@ namespace formation_control
     param_loader.loadParam("final_positions/" + _uav_name_ + "/y", destination.second);
     param_loader.loadParam("Adj_matrix_" + _uav_name_, Adj_matrix);
 
-    /*param_loader.loadParam("obstacle1x", obstacles[0].first);
-    param_loader.loadParam("obstacle2x", obstacles[1].first);
-    param_loader.loadParam("obstacle3x", obstacles[2].first);
-    param_loader.loadParam("obstacle1y", obstacles[0].second);
-    param_loader.loadParam("obstacle2y", obstacles[1].second);
-    param_loader.loadParam("obstacle3y", obstacles[2].second);*/
+    param_loader.loadParam("obstacle1", obstacle1);
+    param_loader.loadParam("obstacle2", obstacle2);
+    param_loader.loadParam("obstacle3", obstacle3);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     if (!param_loader.loadedSuccessfully())
@@ -268,12 +244,11 @@ namespace formation_control
       ros::shutdown();
     }
 
-    obstacles = {
-        {-45.0, 25.0},
-        {-25.0, 19.7},
-        {-35.5, 55.0},
-        {-29.0, 36.0},
-        {-48.0, 39.0}};
+     
+    obstacles = {{obstacle1[0],obstacle1[1]},
+                 {obstacle2[0],obstacle2[1]},
+                 {obstacle3[0],obstacle3[1]}};
+    
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -350,7 +325,7 @@ namespace formation_control
     // initialize publishers
     pub_obstacles_ = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
     pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
-
+    pub_position_ = nh.advertise<visualization_msgs::Marker>("position_our", 1, true);
     // initialize transformer
     transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
     /* transformer_->setDefaultPrefix(_uav_name_); */
@@ -378,9 +353,9 @@ namespace formation_control
       marker.pose.position.y = obstacles[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
       marker.pose.orientation.w = 1.0;
-      marker.scale.x = 2.0; // Adjust size as necessary
-      marker.scale.y = 2.0;
-      marker.scale.z = 1.0;
+      marker.scale.x = 2*size_obstacles1; // Adjust size as necessary
+      marker.scale.y = 2*size_obstacles1;
+      marker.scale.z = 5.0;
       marker.color.r = 1.0; // Red color
       marker.color.g = 0.0;
       marker.color.b = 0.0;
@@ -391,6 +366,35 @@ namespace formation_control
     pub_obstacles_.publish(obstacle_markers);
   }
 
+
+
+  void RBLController::publishPosition()
+  {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = _control_frame_;
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "destination";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::CYLINDER;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = robot_pos.first;
+    marker.pose.position.y = robot_pos.second;
+    marker.pose.position.z = 0; // Assuming obstacles are on the ground
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 1.0; // Adjust size as necessary
+    marker.scale.y = 1.0;
+    marker.scale.z = 1.0;
+    marker.color.r = 0.0; // Red color
+    marker.color.g = 0.0;
+    marker.color.b = 1.0;
+    marker.color.a = 1.0; // Fully opaque
+
+    pub_destination_.publish(marker);
+  }
+
+
+
+
   void RBLController::publishDestination()
   {
     visualization_msgs::Marker marker;
@@ -400,12 +404,12 @@ namespace formation_control
     marker.id = 0;
     marker.type = visualization_msgs::Marker::CYLINDER;
     marker.action = visualization_msgs::Marker::ADD;
-    marker.pose.position.x = destination.first;
-    marker.pose.position.y = destination.second;
+    marker.pose.position.x = goal[0];
+    marker.pose.position.y = goal[1];
     marker.pose.position.z = 0; // Assuming obstacles are on the ground
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = 2.0; // Adjust size as necessary
-    marker.scale.y = 2.0;
+    marker.scale.x = 1.0; // Adjust size as necessary
+    marker.scale.y = 1.0;
     marker.scale.z = 1.0;
     marker.color.r = 0.0; // Red color
     marker.color.g = 0.0;
@@ -1102,6 +1106,15 @@ namespace formation_control
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_destination_.getTopic().c_str());
     }
+
+    /*try
+    {
+      publishPosition();
+    }
+    catch (...)
+    {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_position_.getTopic().c_str());
+    }*/
 
     try
     {

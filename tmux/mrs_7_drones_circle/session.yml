@@ -59,6 +59,17 @@ windows:
         - export UAV_NAME=uav5; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
         - export UAV_NAME=uav6; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
         - export UAV_NAME=uav7; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
+  - fly_to_start:
+      layout: tiled
+      synchronize: after
+      panes:
+        - export UAV_NAME=uav1; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav2; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav3; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav4; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav5; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav6; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
+        - export UAV_NAME=uav7; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/fly_to_start
   - automatic_start:
       layout: tiled
       panes:
@@ -78,7 +89,7 @@ windows:
         - export UAV_NAME=uav4; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
         - export UAV_NAME=uav5; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
         - export UAV_NAME=uav6; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
-        - export UAV_NAME=uav7; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit exit
+        - export UAV_NAME=uav7; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard; exit
   - tf_connector:
       layout: tiled
       panes:

@@ -52,6 +52,7 @@ input=(
   'rbl_control' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 '
   'Activation' 'rosservice call /'"$UAV_NAME"'/rbl_controller/activation'
+  'FlyToStart' 'rosservice call /'"$UAV_NAME"'/rbl_controller/fly_to_start'
   'tf_connector' 'waitForTime; roslaunch area_monitoring_controller tf_publisher.launch
 '
 # do NOT modify the command list below

@@ -987,6 +987,25 @@ namespace formation_control
       return;
     }
 
+    if (!is_at_initial_position_)
+    {
+
+      double dist_to_start = getDistToInitialPosition();
+
+      if (dist_to_start > _dist_to_start_limit_)
+      {
+
+        ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for UAV to arrive at initial position. Current distance: %.2f m.", dist_to_start);
+        return;
+      }
+      else
+      {
+
+        ROS_INFO("[RBLController]: UAV arrived to its initial position.");
+        is_at_initial_position_ = true;
+      }
+    }
+
     if (!control_allowed_)
     {
       ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for activation.");

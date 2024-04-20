@@ -27,6 +27,8 @@ Adj_matrix_uav7: [0,0,0,0,0]
 # control approach params
 controlled_dimensions: 3
 
+max_distance_to_initial_position: 2.0
+
 
 d1: 0.2
 d2: 1.0

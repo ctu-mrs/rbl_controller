@@ -5,10 +5,11 @@ mrs_uav_managers:
     # loaded state estimator plugins
     state_estimators: [
       "gps_baro",
+      "gps_garmin",
     ]
 
-    initial_state_estimator: "gps_baro" # will be used as the first state estimator
-    agl_height_estimator: "" # only slightly filtered height for checking min height (not used in control feedback)
+    initial_state_estimator: "gps_garmin" # will be used as the first state estimator
+    agl_height_estimator: "garmin_agl" # only slightly filtered height for checking min height (not used in control feedback)
 
   uav_manager:
 
@@ -17,6 +18,10 @@ mrs_uav_managers:
 
     max_height_checking:
       enabled: false
+
+    takeoff:
+      after_takeoff:
+        controller: "Se3Controller"
 
   constraint_manager:
 
@@ -32,13 +37,6 @@ mrs_uav_managers:
 
 
 mrs_uav_trackers:
-
-  mpc_tracker:
-
-    wiggle:
-      enabled: false
-      amplitude: 0.5 # [m]
-      frequency: 0.2 # [Hz]
 
     # mrs collision avoidance
     collision_avoidance:

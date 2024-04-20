@@ -1,4 +1,4 @@
-uav_names: ["uav1", "uav3", "uav4", "uav5", "uav6", "uav7","uav8"] #, "uav11"]
+uav_names: ["uav1", "uav3", "uav7", "uav8", "uav31", "uav32", "uav37"] #, "uav11"]
 
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"
@@ -26,6 +26,8 @@ Adj_matrix_uav8: [0,0,0,0,0]
 
 # control approach params
 controlled_dimensions: 3
+
+max_distance_to_initial_position: 2.0
 
 d1: 0.2
 d2: 1.0
@@ -55,27 +57,70 @@ final_positions: # defined with respect to monitored_area_origin
     y: -11.72
     z: 3.0
 
-  uav4:
+  uav7:
     x: 3.33
     y: -14.62
     z: 3.0
   
-  uav5:
+  uav8:
     x: 13.51
     y: -6.50
     z: 3.0
 
-  uav6:
+  uav31:
     x: 13.51
     y: 6.50
     z: 3.0
 
-  uav7:
+  uav32:
     x: 3.33
     y: 14.62
     z: 3.0
 
-  uav8:
+  uav37:
     x: -9.35
     y: 11.72
     z: 3.0
+
+monitored_area_origin:
+  x: 0.0
+  y: 0.0
+  z: 5.0
+
+initial_positions: # defined with respect to monitored_area_origin
+
+  uav1:
+    x: -7.5926
+    y: 19.999
+    z: -2.765
+    
+  uav3:
+    x: 19.728
+    y: -4.364
+    z: -0.814
+
+  uav7:
+    x: -1.187
+    y: -18.05
+    z: 1.7494
+
+  uav8:
+    x: -19.199
+    y: 12.4008
+    z: 2.996
+
+  uav31:
+    x: 9.7320
+    y: 12.538
+    z: 1.9867
+
+  uav32:
+    x: 14.86878
+    y: -17.9810
+    z: -0.518
+
+  uav37:
+    x: -16.34931
+    y: -4.536
+    z: -2.6336
+ 

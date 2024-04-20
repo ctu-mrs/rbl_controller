@@ -8,7 +8,7 @@ set_reference_timer:
   
 size_neighbors1: 2.5
 size_obstacles1: 2.5
-maximum_distance_conn: 12.0
+maximum_distance_conn: 1.0
 encumbrance: 2.5
 
 size_neighbors1: 2.5
@@ -17,11 +17,11 @@ maximum_distance_conn: 15.0
 
 Adj_matrix_uav1: [0,0,0,0,0]
 Adj_matrix_uav3: [0,0,0,0,0]
-Adj_matrix_uav4: [0,0,0,0,0]
-Adj_matrix_uav5: [0,0,0,0,0]
-Adj_matrix_uav6: [0,0,0,0,0]
 Adj_matrix_uav7: [0,0,0,0,0]
 Adj_matrix_uav8: [0,0,0,0,0]
+Adj_matrix_uav31: [0,0,0,0,0]
+Adj_matrix_uav32: [0,0,0,0,0]
+Adj_matrix_uav37: [0,0,0,0,0]
 
 
 # control approach params
@@ -40,9 +40,9 @@ beta_min: 1.0
 dt: 0.01
 step_size: 0.075
 
-obstacle1: [-20.0,1.0] #-3.0,24.0]
-obstacle2 : [-20.0,1.0] #6.5,19.0]
-obstacle3 : [-20.0,1.0] #-4.5,15.0]
+obstacle1: [-50.0,1.0] #-3.0,24.0]
+obstacle2 : [-50.0,1.0] #6.5,19.0]
+obstacle3 : [-50.0,1.0] #-4.5,15.0]
 
 
 final_positions: # defined with respect to monitored_area_origin
@@ -83,44 +83,44 @@ final_positions: # defined with respect to monitored_area_origin
     z: 3.0
 
 monitored_area_origin:
-  x: 0.0
-  y: 0.0
+  x: -30.0
+  y: 10.0
   z: 5.0
 
 initial_positions: # defined with respect to monitored_area_origin
 
   uav1:
-    x: -7.5926
-    y: 19.999
-    z: -2.765
-    
+    x: 15.0
+    y: 0
+    z: 3.0
+
   uav3:
-    x: 19.728
-    y: -4.364
-    z: -0.814
+    x: 9.35
+    y: 11.72
+    z: 3.0
 
   uav7:
-    x: -1.187
-    y: -18.05
-    z: 1.7494
-
+    x: -3.33
+    y: 14.62
+    z: 3.0
+  
   uav8:
-    x: -19.199
-    y: 12.4008
-    z: 2.996
+    x: -13.51
+    y: 6.50
+    z: 3.0
 
   uav31:
-    x: 9.7320
-    y: 12.538
-    z: 1.9867
+    x: -13.51
+    y: -6.50
+    z: 3.0
 
   uav32:
-    x: 14.86878
-    y: -17.9810
-    z: -0.518
+    x: -3.33
+    y: -14.62
+    z: 3.0
 
   uav37:
-    x: -16.34931
-    y: -4.536
-    z: -2.6336
- 
+    x: 9.35
+    y: -11.72
+    z: 3.0
+

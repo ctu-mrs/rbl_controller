@@ -49,7 +49,7 @@ input=(
 '
   'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
 '
-  'Monitoring' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+  'rbl_control' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 '
   'Activation' 'rosservice call /'"$UAV_NAME"'/rbl_controller/activation'
   'tf_connector' 'waitForTime; roslaunch area_monitoring_controller tf_publisher.launch

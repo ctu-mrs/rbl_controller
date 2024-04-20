@@ -1195,7 +1195,7 @@ namespace formation_control
       ROS_INFO("[RBLController]: %s", res.message.c_str());
     }
 
-    return res.success;
+    return true;
   }
 
   //}

@@ -43,9 +43,10 @@
 
             <!-- Service clients (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~ref_pos_out" to="control_manager/reference" />
-
+            <remap from="~goto_out" to="control_manager/goto" />
             <!-- Service servers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~control_activation_in" to="~activation" />
+            <remap from="~fly_to_start_in" to="~fly_to_start" />
 
             <!-- Publishers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~destination_out" to="~destination_vis" />

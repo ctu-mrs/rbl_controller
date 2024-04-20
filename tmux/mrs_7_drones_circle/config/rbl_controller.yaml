@@ -80,3 +80,47 @@ final_positions: # defined with respect to monitored_area_origin
     x: -9.35
     y: 11.72
     z: 3.0
+    
+
+monitored_area_origin:
+  x: 0.0
+  y: 0.0
+  z: 5.0
+
+initial_positions: # defined with respect to monitored_area_origin
+
+  uav1:
+    x: -7.5926
+    y: 19.999
+    z: -2.765
+    
+  uav2:
+    x: 19.728
+    y: -4.364
+    z: -0.814
+
+  uav3:
+    x: -1.187
+    y: -18.05
+    z: 1.7494
+
+  uav4:
+    x: -19.199
+    y: 12.4008
+    z: 2.996
+
+  uav5:
+    x: 9.7320
+    y: 12.538
+    z: 1.9867
+
+  uav6:
+    x: 14.86878
+    y: -17.9810
+    z: -0.518
+
+  uav7:
+    x: -16.34931
+    y: -4.536
+    z: -2.6336
+ 

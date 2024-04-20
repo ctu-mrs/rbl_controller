@@ -21,6 +21,7 @@
 #include <geometry_msgs/PoseArray.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
+#include <mrs_msgs/Vec4.h>
 
 // custom helper functions from mrs library
 #include <mrs_lib/param_loader.h>
@@ -81,6 +82,18 @@ namespace formation_control
     bool control_allowed_ = false;
     bool activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
+    // trigger goto service
+    ros::ServiceServer service_fly_to_start_;
+    bool fly_to_start_called_ = false;
+    bool flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    ros::ServiceClient sc_goto_position_;
+    Eigen::Vector3d _required_initial_position_;
+    bool is_at_initial_position_ = false;
+    double _dist_to_start_limit_;
+    double getDistToInitialPosition();
+
+    Eigen::Vector3d _monitored_area_origin_;
+
     // visualization publishing
     ros::Publisher pub_obstacles_;
     ros::Publisher pub_destination_;
@@ -106,7 +119,7 @@ namespace formation_control
     std::vector<double> size_neighbors_and_obstacles;
     std::vector<double> size_neighbors;
     std::vector<double> size_obstacles;
-    
+
     double size_neighbors1;
     double size_obstacles1;
     double encumbrance;
@@ -125,7 +138,7 @@ namespace formation_control
     std::vector<double> obstacle1;
     std::vector<double> obstacle2;
     std::vector<double> obstacle3;
-    
+
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::string _odometry_topic_name_;
@@ -137,7 +150,7 @@ namespace formation_control
     double _odom_msg_max_latency_;
 
     void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
-   
+
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
     std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix, size_t my_index);
@@ -225,6 +238,14 @@ namespace formation_control
     param_loader.loadParam("betaD", betaD);
     param_loader.loadParam("beta_min", beta_min);
     param_loader.loadParam("dt", dt);
+    param_loader.loadParam("initial_positions/" + _uav_name_ + "/x", _required_initial_position_[0]);
+    param_loader.loadParam("initial_positions/" + _uav_name_ + "/y", _required_initial_position_[1]);
+    param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", _required_initial_position_[2]);
+    param_loader.loadParam("monitored_area_origin/x", _monitored_area_origin_[0]);
+    param_loader.loadParam("monitored_area_origin/y", _monitored_area_origin_[1]);
+    param_loader.loadParam("monitored_area_origin/z", _monitored_area_origin_[2]);
+    param_loader.loadParam("max_distance_to_initial_position", _dist_to_start_limit_);
+
     param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
     param_loader.loadParam("size_neighbors1", size_neighbors1);
     param_loader.loadParam("size_obstacles1", size_obstacles1);
@@ -244,11 +265,13 @@ namespace formation_control
       ros::shutdown();
     }
 
-     
-    obstacles = {{obstacle1[0],obstacle1[1]},
-                 {obstacle2[0],obstacle2[1]},
-                 {obstacle3[0],obstacle3[1]}};
-    
+    _required_initial_position_ += _monitored_area_origin_;
+    destination.first += _monitored_area_origin_[0];
+    destination.first += _monitored_area_origin_[1];
+
+    obstacles = {{obstacle1[0], obstacle1[1]},
+                 {obstacle2[0], obstacle2[1]},
+                 {obstacle3[0], obstacle3[1]}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -318,9 +341,11 @@ namespace formation_control
 
     // initialize service servers
     service_activate_control_ = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
+    service_fly_to_start_ = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
 
     // initialize service clients
     sc_set_position_ = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("ref_pos_out");
+    sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
 
     // initialize publishers
     pub_obstacles_ = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
@@ -353,8 +378,8 @@ namespace formation_control
       marker.pose.position.y = obstacles[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
       marker.pose.orientation.w = 1.0;
-      marker.scale.x = 2*size_obstacles1; // Adjust size as necessary
-      marker.scale.y = 2*size_obstacles1;
+      marker.scale.x = 2 * size_obstacles1; // Adjust size as necessary
+      marker.scale.y = 2 * size_obstacles1;
       marker.scale.z = 5.0;
       marker.color.r = 1.0; // Red color
       marker.color.g = 0.0;
@@ -365,8 +390,6 @@ namespace formation_control
 
     pub_obstacles_.publish(obstacle_markers);
   }
-
-
 
   void RBLController::publishPosition()
   {
@@ -391,9 +414,6 @@ namespace formation_control
 
     pub_destination_.publish(marker);
   }
-
-
-
 
   void RBLController::publishDestination()
   {
@@ -1161,7 +1181,64 @@ namespace formation_control
 
   //}
 
+  /* flyToStartServiceCallback() //{ */
+  bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+  {
+    // service for activation of planning
+    ROS_INFO("[RBLController]: Fly to start service called.");
+    res.success = true;
+
+    if (fly_to_start_called_)
+    {
+      res.message = "Fly to start was already allowed.";
+      ROS_WARN("[RBLController]: %s", res.message.c_str());
+    }
+    else if (!all_robots_positions_valid_)
+    {
+      res.message = "Robots are not ready,  fly to start cannot be called.";
+      ROS_WARN("[RBLController]: %s", res.message.c_str());
+      res.success = false;
+    }
+    else
+    {
+      mrs_msgs::Vec4 srv;
+      srv.request.goal = {_required_initial_position_[0], _required_initial_position_[1], _required_initial_position_[2], 0.0};
+      ;
+      if (sc_goto_position_.call(srv))
+      {
+        if (srv.response.success)
+        {
+          res.message = "Fly to start called.";
+          fly_to_start_called_ = true;
+        }
+        else
+        {
+          res.success = false;
+          res.message = "GoTo service returned success false.";
+        }
+      }
+      else
+      {
+        res.success = false;
+        res.message = "Call to GoTo service failed.";
+      }
+
+      ROS_INFO("[RBLController]: %s", res.message.c_str());
+    }
+
+    return true;
+  }
+
   /* SUPPORT FUNCTIONS //{ */
+
+  double RBLController::getDistToInitialPosition()
+  {
+
+    getPositionCmd();
+    double dist = sqrt(pow(position_command_.x - _required_initial_position_[0], 2) + pow(position_command_.y - _required_initial_position_[1], 2) +
+                       pow(position_command_.z - _required_initial_position_[2], 2));
+    return dist;
+  }
 
   //}
 

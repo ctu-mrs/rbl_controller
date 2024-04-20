@@ -14,10 +14,10 @@ network:
     uav1,
     #uav2,
     uav3,
-    uav4,
-    uav5,
-    uav6,
     uav7,
     uav8,
+    uav31,
+    uav32,
+    uav37,
     # uav13,
   ]

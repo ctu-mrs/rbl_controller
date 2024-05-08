@@ -67,8 +67,10 @@ namespace formation_control
     ros::ServiceClient sc_set_velocity_;
     ros::ServiceClient sc_set_position_;
     ros::Timer timer_set_reference_;
+    ros::Timer timer_pub_;
     int _rate_timer_set_reference_;
     void callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
+    //void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
 
     // diag timer
     ros::Timer timer_diagnostics_;
@@ -93,7 +95,6 @@ namespace formation_control
     double getDistToInitialPosition();
 
     Eigen::Vector3d _monitored_area_origin_;
-
     // visualization publishing
     ros::Publisher pub_obstacles_;
     ros::Publisher pub_destination_;
@@ -215,7 +216,6 @@ namespace formation_control
     ros::NodeHandle &nh = getPrivateNodeHandle();
     NODELET_DEBUG("Initializing nodelet...");
     ros::Time::waitForValid();
-
     // load parameters
     std::string _leader_name;
     mrs_lib::ParamLoader param_loader(nh, "RBLController");
@@ -227,7 +227,6 @@ namespace formation_control
     param_loader.loadParam("odom_msg_max_latency", _odom_msg_max_latency_);
     param_loader.loadParam("diagnostics/odom_timeout", _odom_timeout_);
     param_loader.loadParam("diagnostics/rate", _rate_timer_diagnostics_);
-
     param_loader.loadParam("d1", d1);
     param_loader.loadParam("d2", d2);
     param_loader.loadParam("d3", d3);
@@ -245,15 +244,12 @@ namespace formation_control
     param_loader.loadParam("monitored_area_origin/y", _monitored_area_origin_[1]);
     param_loader.loadParam("monitored_area_origin/z", _monitored_area_origin_[2]);
     param_loader.loadParam("max_distance_to_initial_position", _dist_to_start_limit_);
-
     param_loader.loadParam("maximum_distance_conn", maximum_distance_conn);
     param_loader.loadParam("size_neighbors1", size_neighbors1);
     param_loader.loadParam("size_obstacles1", size_obstacles1);
-
     param_loader.loadParam("final_positions/" + _uav_name_ + "/x", destination.first);
     param_loader.loadParam("final_positions/" + _uav_name_ + "/y", destination.second);
     param_loader.loadParam("Adj_matrix_" + _uav_name_, Adj_matrix);
-
     param_loader.loadParam("obstacle1", obstacle1);
     param_loader.loadParam("obstacle2", obstacle2);
     param_loader.loadParam("obstacle3", obstacle3);
@@ -266,8 +262,9 @@ namespace formation_control
     }
 
     _required_initial_position_ += _monitored_area_origin_;
+
     destination.first += _monitored_area_origin_[0];
-    destination.first += _monitored_area_origin_[1];
+    destination.second += _monitored_area_origin_[1];
 
     obstacles = {{obstacle1[0], obstacle1[1]},
                  {obstacle2[0], obstacle2[1]},
@@ -338,7 +335,8 @@ namespace formation_control
     // initialize timers
     timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
     timer_diagnostics_ = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
-
+    //timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
+    
     // initialize service servers
     service_activate_control_ = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
     service_fly_to_start_ = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
@@ -396,7 +394,7 @@ namespace formation_control
     visualization_msgs::Marker marker;
     marker.header.frame_id = _control_frame_;
     marker.header.stamp = ros::Time::now();
-    marker.ns = "destination";
+    marker.ns = "position";
     marker.id = 0;
     marker.type = visualization_msgs::Marker::CYLINDER;
     marker.action = visualization_msgs::Marker::ADD;
@@ -404,15 +402,15 @@ namespace formation_control
     marker.pose.position.y = robot_pos.second;
     marker.pose.position.z = 0; // Assuming obstacles are on the ground
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = 1.0; // Adjust size as necessary
-    marker.scale.y = 1.0;
+    marker.scale.x = 2 * encumbrance; // Adjust size as necessary
+    marker.scale.y = 2 * encumbrance;
     marker.scale.z = 1.0;
     marker.color.r = 0.0; // Red color
     marker.color.g = 0.0;
     marker.color.b = 1.0;
     marker.color.a = 1.0; // Fully opaque
 
-    pub_destination_.publish(marker);
+    pub_position_.publish(marker);
   }
 
   void RBLController::publishDestination()
@@ -872,7 +870,7 @@ namespace formation_control
     {
       th = 0;
     }
-    /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */
+    std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -1136,6 +1134,7 @@ namespace formation_control
         timeout_exceeded = true;
       }
     }
+  
 
     try
     {
@@ -1146,14 +1145,14 @@ namespace formation_control
       ROS_ERROR("exception caught during publishing topic '%s'", pub_destination_.getTopic().c_str());
     }
 
-    /*try
+    try
     {
       publishPosition();
     }
     catch (...)
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_position_.getTopic().c_str());
-    }*/
+    }
 
     try
     {
@@ -1163,12 +1162,11 @@ namespace formation_control
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_obstacles_.getTopic().c_str());
     }
-
+  
     ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());
-
     all_robots_positions_valid_ = !timeout_exceeded;
   }
-  //}
+//}
 
   /* activationServiceCallback() //{ */
   bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)

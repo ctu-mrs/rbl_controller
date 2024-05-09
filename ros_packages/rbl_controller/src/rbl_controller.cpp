@@ -40,6 +40,8 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
+#include <random>
+#include <deque>
 
 #include <chrono>
 namespace formation_control
@@ -49,6 +51,38 @@ namespace formation_control
   {
   public:
     virtual void onInit();
+
+    // Function to compute the distance between two points
+    double distance(const std::pair<double, double> &p1, const std::pair<double, double> &p2)
+    {
+      return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
+    }
+
+    // Function to add Gaussian noise to a value
+    double addRandomNoise(double value, double percentage)
+    {
+      // Define the range of noise as ±10% of the value
+      double noise_range = percentage * value;
+
+      // Random number generator
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_real_distribution<double> distribution(-noise_range, noise_range);
+
+      // Generate random noise
+      double noise = distribution(gen);
+
+      // Add noise to the original value
+      double noisy_value = value + noise;
+
+      return noisy_value;
+    }
+
+    // Function to compute the angle between two points (in radians)
+    double angle(const std::pair<double, double> &p1, const std::pair<double, double> &p2)
+    {
+      return std::atan2(p2.second - p1.second, p2.first - p1.first);
+    }
 
   private:
     // general variables
@@ -70,7 +104,7 @@ namespace formation_control
     ros::Timer timer_pub_;
     int _rate_timer_set_reference_;
     void callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
-    //void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
+    // void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
 
     // diag timer
     ros::Timer timer_diagnostics_;
@@ -120,7 +154,7 @@ namespace formation_control
     std::vector<double> size_neighbors_and_obstacles;
     std::vector<double> size_neighbors;
     std::vector<double> size_obstacles;
-
+    std::vector<std::deque<double>> dist_windows;
     double size_neighbors1;
     double size_obstacles1;
     double encumbrance;
@@ -178,7 +212,9 @@ namespace formation_control
         const std::vector<double> &size_neighbors_and_obstacles,
         double encumbrance,
         const std::pair<double, double> &destination,
-        double beta);
+        double beta,
+        std::vector<std::deque<double>> &dist_windows);
+
     bool isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
 
     void apply_rules(double &beta,
@@ -276,6 +312,13 @@ namespace formation_control
     size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
+    dist_windows.resize(size_neighbors_and_obstacles.size());
+
+    // Resize each deque in dist_windows to have a size of 100
+    for (auto &dist_window : dist_windows)
+    {
+      dist_window.resize(10, 0.0);
+    }
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
 
@@ -335,8 +378,8 @@ namespace formation_control
     // initialize timers
     timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
     timer_diagnostics_ = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
-    //timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
-    
+    // timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
+
     // initialize service servers
     service_activate_control_ = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
     service_fly_to_start_ = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
@@ -501,6 +544,7 @@ namespace formation_control
     }
     return neighbors_filtered;
   }
+
   std::vector<std::pair<double, double>> RBLController::communication_constraint(
       const std::vector<std::pair<double, double>> &points,
       const std::vector<std::pair<double, double>> &neighbors)
@@ -702,30 +746,77 @@ namespace formation_control
       const std::vector<double> &size_neighbors_and_obstacles,
       double encumbrance,
       const std::pair<double, double> &destination,
-      double beta)
+      double beta,
+      std::vector<std::deque<double>> &dist_windows)
   {
+
+    // Vector to hold distances between robot_pos and neighbors_and_obstacles
+    std::vector<double> distances;
+    // Vector to hold angles between robot_pos and neighbors_and_obstacles
+    std::vector<double> angles;
+    // Vector to hold updated positions of neighbors_and_obstacles
+    std::vector<std::pair<double, double>> neighbors_and_obstacles_noisy;
+
+    for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i)
+    {
+
+      // Calculate distance
+      double dist = distance(robot_pos, neighbors_and_obstacles[i]);
+      // Add Gaussian noise of 10% to the distance
+      dist = addRandomNoise(dist, 0.1);
+
+      // Get the rolling window for this point
+      auto &dist_window = dist_windows[i];
+
+      // Add the current distance to the window and remove the oldest one if necessary
+      dist_window.pop_front();
+      dist_window.push_back(dist);
+
+      /*std::cout << "Distances in dist_window for neighbor/obstacle " << i << ": ";
+      for (const auto &val : dist_window)
+      {
+        std::cout << val << " ";
+      }
+      std::cout << std::endl;
+      */
+      // Calculate the average of the last three distances
+      double avg_dist = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
+      std::cout << avg_dist << " " << std::endl;
+
+      // std::cout << "size" << dist_window.size() << std::endl;
+      distances.push_back(avg_dist);
+      // distances.push_back(dist);
+
+      // Calculate angle
+      double ang = angle(robot_pos, neighbors_and_obstacles[i]);
+      angles.push_back(ang);
+
+      // Update point with perturbed distance
+      double new_x = robot_pos.first + avg_dist * std::cos(ang);
+      double new_y = robot_pos.second + avg_dist * std::sin(ang);
+      neighbors_and_obstacles_noisy.push_back(std::make_pair(new_x, new_y));
+    }
+
     // Get points inside the circle
-    std::vector<std::pair<double, double>> circle_points = points_inside_circle(robot_pos, radius, step_size);
+    std::vector<std::pair<double, double>>
+        circle_points = points_inside_circle(robot_pos, radius, step_size);
 
     std::vector<std::pair<double, double>> voronoi_circle_intersection;
     std::vector<std::pair<double, double>> voronoi_circle_intersection_connectivity;
 
-    if (!neighbors_and_obstacles.empty())
+    if (!neighbors_and_obstacles_noisy.empty())
     {
       // Compute the Voronoi cell
-      voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors_and_obstacles);
+      voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors_and_obstacles_noisy);
 
       // Account encumbrance
-      voronoi_circle_intersection = account_encumbrance(voronoi_circle_intersection, robot_pos, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance);
+      voronoi_circle_intersection = account_encumbrance(voronoi_circle_intersection, robot_pos, neighbors_and_obstacles_noisy, size_neighbors_and_obstacles, encumbrance);
 
       all_uavs = insert_pair_at_index(neighbors, this_uav_idx_, val);
 
       fixed_neighbors_vec = fixed_neighbors(all_uavs, Adj_matrix, this_uav_idx_);
       // std::cout << "Filtered Neighbors:\n";
-      for (const auto &neighbor : fixed_neighbors_vec)
-      {
-        /* std::cout << "(" << neighbor.first << ", " << neighbor.second << ")\n"; */
-      }
+
       voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
 
       if (voronoi_circle_intersection_connectivity.empty())
@@ -858,17 +949,18 @@ namespace formation_control
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
-      th = std::min(th + dt, M_PI / 2);
+      th = std::min(th + 10 * dt, M_PI / 2);
     }
     else
     {
-      th = std::max(0.0, th - dt);
+      th = std::max(0.0, th - 10 * dt);
     }
 
     // third condition
     if (th == M_PI / 2 && sqrt(pow((current_j_x - c1_no_rotation[0]), 2) + pow((current_j_y - c1_no_rotation[1]), 2)) > sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)))
     {
       th = 0;
+      std::cout << "reset" << std::endl;
     }
     std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
@@ -1049,9 +1141,9 @@ namespace formation_control
       std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);*/
 
       // Call get_centroid function
-      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta);
+      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows);
 
-      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta);
+      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows);
 
       // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
       // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};
@@ -1071,20 +1163,10 @@ namespace formation_control
 
       RBLController::apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, destination, c1_no_rotation);
 
-      // double ts = 1.0 / double(_rate_timer_set_reference_);
-      // if (this_uav_idx_ < 5)
-      //{
       p_ref.position.x = c1[0]; // next_values[0];
       p_ref.position.y = c1[1];
       p_ref.position.z = 3.0;
-      //}
-      // else
-      //{
-      /* p_ref.position.x = position_command_.x; // next_values[0]; */
-      /* p_ref.position.y = position_command_.y; */
-      /* p_ref.position.z = 3.0; */
-      //}
-      // p_ref.heading = std::atan2(c1[1] - position_command_.y, c1[0] - position_command_.x);
+
       auto end = std::chrono::steady_clock::now();
       auto duration = std::chrono::duration<double, std::milli>(end - start);
 
@@ -1134,7 +1216,6 @@ namespace formation_control
         timeout_exceeded = true;
       }
     }
-  
 
     try
     {
@@ -1162,11 +1243,11 @@ namespace formation_control
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_obstacles_.getTopic().c_str());
     }
-  
+
     ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());
     all_robots_positions_valid_ = !timeout_exceeded;
   }
-//}
+  //}
 
   /* activationServiceCallback() //{ */
   bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)

@@ -7,8 +7,7 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Predicted trajectories1
-        - /Reference trajectories1
+        - /Destinations1
       Splitter Ratio: 0.560869574546814
     Tree Height: 291
   - Class: rviz/Selection
@@ -115,88 +114,179 @@ Visualization Manager:
       Topic: /multirotor_simulator/uav_poses
       Unreliable: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav10/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
     - Class: rviz/Group
       Displays:
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 25; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav1/rbl_controller/destination_vis
           Name: UAV1
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav1/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 0; 255; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav2/rbl_controller/destination_vis
           Name: UAV2
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav2/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 0; 12; 255
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav3/rbl_controller/destination_vis
           Name: UAV3
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav3/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 0; 255
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav4/rbl_controller/destination_vis
           Name: UAV4
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav5/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 164; 73
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav5/rbl_controller/destination_vis
           Name: UAV5
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav4/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 0; 147; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav6/rbl_controller/destination_vis
           Name: UAV6
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav6/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 255; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav7/rbl_controller/destination_vis
           Name: UAV7
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav7/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 164; 73
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav8/rbl_controller/destination_vis
           Name: UAV8
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav8/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Class: rviz/Marker
-          Color: 0; 147; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav9/rbl_controller/destination_vis
           Name: UAV9
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav9/rbl_controller/position_our
           Value: true
-        - Alpha: 1
-          Class: rviz/Marker
-          Color: 255; 255; 0
+        - Class: rviz/Marker
           Enabled: true
+          Marker Topic: /uav10/rbl_controller/destination_vis
           Name: UAV10
+          Namespaces:
+            destination: true
           Queue Size: 10
-          Topic: /uav10/rbl_controller/position_our
+          Value: true
+      Enabled: true
+      Name: Destinations
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/position_our
+          Name: UAV1
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/position_our
+          Name: UAV2
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/position_our
+          Name: UAV3
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/position_our
+          Name: UAV4
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/position_our
+          Name: UAV5
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav6/rbl_controller/position_our
+          Name: UAV6
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav7/rbl_controller/position_our
+          Name: UAV7
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav8/rbl_controller/position_our
+          Name: UAV8
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav9/rbl_controller/position_our
+          Name: UAV9
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav10/rbl_controller/position_our
+          Name: UAV10
+          Namespaces:
+            position: true
+          Queue Size: 10
           Value: true
       Enabled: true
       Name: Encumbrances
@@ -575,34 +665,28 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/ThirdPersonFollower
-      Distance: 14.542839050292969
+      Angle: 0
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
-      Focal Point:
-        X: -2.8872127532958984
-        Y: 5.822535514831543
-        Z: 3.6554110920405947e-06
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5647963285446167
+      Scale: 10.879761695861816
       Target Frame: common_origin
-      Yaw: 3.1322121620178223
+      X: 5.209953784942627
+      Y: -0.21475772559642792
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
   Height: 506
   Hide Left Dock: false
-  Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd0000000400000000000001ce000001a4fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000004c6000001a1000001a900000153fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000001a4000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006502000003c9000003450000025b000000c90000000100000116000001b0fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000031000001b0000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000038f0000003efc0100000002fb0000000800540069006d006500000000000000038f0000035700fffffffb0000000800540069006d006501000000000000045000000000000000000000058e000001a400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000400000000000001ce000001a4fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000004c6000001a1000001a900000153fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b000001a4000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006502000003c9000003450000025b000000c90000000100000116000001a4fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003b000001a4000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000038f0000003efc0100000002fb0000000800540069006d006500000000000000038f0000035c00fffffffb0000000800540069006d006501000000000000045000000000000000000000044a000001a400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
@@ -610,7 +694,7 @@ Window Geometry:
   Tool Properties:
     collapsed: false
   Views:
-    collapsed: true
-  Width: 1890
-  X: 1932
-  Y: 556
+    collapsed: false
+  Width: 1850
+  X: 70
+  Y: 1227

@@ -170,10 +170,14 @@ namespace formation_control
     double d4;
     double th = 0;
     double maximum_distance_conn;
+    double noisy_measurements;
     std::vector<double> obstacle1;
     std::vector<double> obstacle2;
     std::vector<double> obstacle3;
-
+    std::vector<double> obstacle4;
+    std::vector<double> obstacle5;
+    std::vector<double> obstacle6;
+    std::vector<double> obstacle7;
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::string _odometry_topic_name_;
@@ -289,6 +293,11 @@ namespace formation_control
     param_loader.loadParam("obstacle1", obstacle1);
     param_loader.loadParam("obstacle2", obstacle2);
     param_loader.loadParam("obstacle3", obstacle3);
+    param_loader.loadParam("obstacle4", obstacle4);
+    param_loader.loadParam("obstacle5", obstacle5);
+    param_loader.loadParam("obstacle6", obstacle6);
+    param_loader.loadParam("obstacle7", obstacle7);
+    param_loader.loadParam("noisy_measurements", noisy_measurements);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     if (!param_loader.loadedSuccessfully())
@@ -304,7 +313,11 @@ namespace formation_control
 
     obstacles = {{obstacle1[0], obstacle1[1]},
                  {obstacle2[0], obstacle2[1]},
-                 {obstacle3[0], obstacle3[1]}};
+                 {obstacle3[0], obstacle3[1]},
+                 {obstacle4[0], obstacle4[1]},
+                 {obstacle5[0], obstacle5[1]},
+                 {obstacle6[0], obstacle6[1]},
+                 {obstacle7[0], obstacle7[1]}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -763,7 +776,7 @@ namespace formation_control
       // Calculate distance
       double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
-      dist = addRandomNoise(dist, 0.1);
+      dist = addRandomNoise(dist, noisy_measurements);
 
       // Get the rolling window for this point
       auto &dist_window = dist_windows[i];
@@ -781,7 +794,7 @@ namespace formation_control
       */
       // Calculate the average of the last three distances
       double avg_dist = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
-      std::cout << avg_dist << " " << std::endl;
+      //std::cout << avg_dist << " " << std::endl;
 
       // std::cout << "size" << dist_window.size() << std::endl;
       distances.push_back(avg_dist);
@@ -943,17 +956,17 @@ namespace formation_control
       beta = beta - dt * (beta - betaD);
     }
 
-    /* std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; */
+    std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; 
 
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
-      th = std::min(th + 10 * dt, M_PI / 2);
+      th = std::min(th +  dt, M_PI / 2);
     }
     else
     {
-      th = std::max(0.0, th - 10 * dt);
+      th = std::max(0.0, th -  dt);
     }
 
     // third condition

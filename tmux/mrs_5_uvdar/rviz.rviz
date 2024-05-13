@@ -114,14 +114,6 @@ Visualization Manager:
       Topic: /multirotor_simulator/uav_poses
       Unreliable: false
       Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav10/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
     - Class: rviz/Group
       Displays:
         - Class: rviz/Marker
@@ -169,7 +161,7 @@ Visualization Manager:
           Marker Topic: /uav6/rbl_controller/destination_vis
           Name: UAV6
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -177,7 +169,7 @@ Visualization Manager:
           Marker Topic: /uav7/rbl_controller/destination_vis
           Name: UAV7
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -185,7 +177,7 @@ Visualization Manager:
           Marker Topic: /uav8/rbl_controller/destination_vis
           Name: UAV8
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -193,7 +185,7 @@ Visualization Manager:
           Marker Topic: /uav9/rbl_controller/destination_vis
           Name: UAV9
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -201,7 +193,7 @@ Visualization Manager:
           Marker Topic: /uav10/rbl_controller/destination_vis
           Name: UAV10
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
       Enabled: true
@@ -253,7 +245,7 @@ Visualization Manager:
           Marker Topic: /uav6/rbl_controller/position_our
           Name: UAV6
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -261,7 +253,7 @@ Visualization Manager:
           Marker Topic: /uav7/rbl_controller/position_our
           Name: UAV7
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -269,7 +261,7 @@ Visualization Manager:
           Marker Topic: /uav8/rbl_controller/position_our
           Name: UAV8
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -277,7 +269,7 @@ Visualization Manager:
           Marker Topic: /uav9/rbl_controller/position_our
           Name: UAV9
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -285,7 +277,7 @@ Visualization Manager:
           Marker Topic: /uav10/rbl_controller/position_our
           Name: UAV10
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
       Enabled: true
@@ -638,6 +630,14 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Reference trajectories
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav1/rbl_controller/obstacles_vis
+      Name: MarkerArray
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -675,10 +675,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 10.879761695861816
+      Scale: 7.950372695922852
       Target Frame: common_origin
-      X: 5.209953784942627
-      Y: -0.21475772559642792
+      X: 3.990981340408325
+      Y: 19.4327335357666
     Saved: ~
 Window Geometry:
   Displays:

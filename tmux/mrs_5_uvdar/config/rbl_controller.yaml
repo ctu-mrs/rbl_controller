@@ -9,9 +9,8 @@ set_reference_timer:
 size_neighbors1: 2.5
 size_obstacles1: 0.5
 maximum_distance_conn: 15.0
-encumbrance: 2.5
-noisy_measurements: 0.1
-
+noisy_measurements: 0.15
+threshold: 1.5
 
 Adj_matrix_uav1: [0,1,1,0,0]
 Adj_matrix_uav2: [1,0,1,1,1]
@@ -32,8 +31,8 @@ d3: 0.5
 d4: 4.0
 radius: 10.0 
 encumbrance: 2.5
-betaD: 4.0
-beta_min: 2.0
+betaD: 1.5
+beta_min: 0.1
 dt: 0.01
 step_size: 0.075
 
@@ -84,26 +83,26 @@ initial_positions: # defined with respect to monitored_area_origin
 
   uav1:
     x: -8.0 #10
-    y: 0.0 #0
+    y: -10.0 #0
     z: 2.0
 
   uav2:
     x: -0.0 #6.2348980185873355
-    y: 0.0 #7.818314824680298
+    y: -10.0 #7.818314824680298
     z: 2.0
 
   uav3:
     x: -4.0 #-2.22520933956314
-    y: 6.0 #9.7492791218
+    y: -4.0 #9.7492791218
     z: 2.0
   
   uav4:
     x: 4.0 #-9.00968867
-    y: 6.0 #4.33883739
+    y: -4.0 #4.33883739
     z: 2.0
 
   uav5:
     x: 8.0 #-9.00968
-    y: 0.0 #-4.3388373
+    y: -10.0 #-4.3388373
     z: 2.0
 

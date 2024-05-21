@@ -77,11 +77,78 @@ namespace formation_control
 
       return noisy_value;
     }
+    // Function to add Gaussian noise to a value
+    double addRandomNoise1(double value, double noise_range)
+    {
+
+      // Random number generator
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      std::uniform_real_distribution<double> distribution(-noise_range, noise_range);
+
+      // Generate random noise
+      double noise = distribution(gen);
+
+      // Add noise to the original value
+      double noisy_value = value + noise;
+
+      return noisy_value;
+    }
 
     // Function to compute the angle between two points (in radians)
     double angle(const std::pair<double, double> &p1, const std::pair<double, double> &p2)
     {
       return std::atan2(p2.second - p1.second, p2.first - p1.first);
+    }
+
+    typedef std::pair<double, double> Point;
+
+    // Function to compute the cross product of two vectors OA and OB
+    // A positive cross product indicates a counter-clockwise turn,
+    // a negative cross product indicates a clockwise turn,
+    // and a zero cross product indicates the points are collinear.
+    double cross(const Point &O, const Point &A, const Point &B)
+    {
+      return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
+    }
+
+    // Function to find the convex hull using Andrew's monotone chain algorithm
+    std::vector<Point> convexHull(std::vector<Point> points)
+    {
+      int n = points.size(), k = 0;
+      if (n <= 3)
+        return points; // A set of 3 or fewer points is already a convex set
+
+      std::vector<Point> hull(2 * n);
+
+      // Sort points lexicographically (first by x coordinate, then by y coordinate)
+      sort(points.begin(), points.end());
+
+      // Build the lower hull
+      for (int i = 0; i < n; ++i)
+      {
+        while (k >= 2 && cross(hull[k - 2], hull[k - 1], points[i]) <= 0)
+          k--;
+        hull[k++] = points[i];
+      }
+
+      // Build the upper hull
+      for (int i = n - 1, t = k + 1; i > 0; --i)
+      {
+        while (k >= t && cross(hull[k - 2], hull[k - 1], points[i - 1]) <= 0)
+          k--;
+        hull[k++] = points[i - 1];
+      }
+
+      hull.resize(k - 1); // Remove the last point because it is repeated at the beginning of the upper hull
+      return hull;
+    }
+    // Function to compute the Euclidean distance between two points
+    double euclideanDistance(const Point &a, const Point &b)
+    {
+      double dx = a.first - b.first;
+      double dy = a.second - b.second;
+      return sqrt(dx * dx + dy * dy);
     }
 
   private:
@@ -155,6 +222,7 @@ namespace formation_control
     std::vector<double> size_neighbors;
     std::vector<double> size_obstacles;
     std::vector<std::deque<double>> dist_windows;
+    std::vector<std::deque<double>> angle_windows;
     double size_neighbors1;
     double size_obstacles1;
     double encumbrance;
@@ -171,6 +239,7 @@ namespace formation_control
     double th = 0;
     double maximum_distance_conn;
     double noisy_measurements;
+    double threshold;
     std::vector<double> obstacle1;
     std::vector<double> obstacle2;
     std::vector<double> obstacle3;
@@ -216,8 +285,9 @@ namespace formation_control
         const std::vector<double> &size_neighbors_and_obstacles,
         double encumbrance,
         const std::pair<double, double> &destination,
-        double beta,
-        std::vector<std::deque<double>> &dist_windows);
+        double &beta,
+        std::vector<std::deque<double>> &dist_windows,
+        std::vector<std::deque<double>> &angle_windows);
 
     bool isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
 
@@ -298,6 +368,7 @@ namespace formation_control
     param_loader.loadParam("obstacle6", obstacle6);
     param_loader.loadParam("obstacle7", obstacle7);
     param_loader.loadParam("noisy_measurements", noisy_measurements);
+    param_loader.loadParam("threshold",threshold);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     if (!param_loader.loadedSuccessfully())
@@ -326,11 +397,17 @@ namespace formation_control
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
     dist_windows.resize(size_neighbors_and_obstacles.size());
+    angle_windows.resize(size_neighbors_and_obstacles.size());
 
     // Resize each deque in dist_windows to have a size of 100
     for (auto &dist_window : dist_windows)
     {
       dist_window.resize(10, 0.0);
+    }
+
+    for (auto &angle_window : angle_windows)
+    {
+      angle_window.resize(10, 0.0);
     }
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
@@ -653,11 +730,6 @@ namespace formation_control
 
   std::vector<std::pair<double, double>> RBLController::account_encumbrance(const std::vector<std::pair<double, double>> &points, const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &neighbors, const std::vector<double> &size_neighbors, double encumbrance)
   {
-    for (auto elem : size_neighbors)
-    {
-      /* std::cout << elem << " "; */
-    }
-    /* std::cout << std::endl; */
     std::vector<size_t> index;
     double robot_x = robot_pos.first;
     double robot_y = robot_pos.second;
@@ -759,8 +831,9 @@ namespace formation_control
       const std::vector<double> &size_neighbors_and_obstacles,
       double encumbrance,
       const std::pair<double, double> &destination,
-      double beta,
-      std::vector<std::deque<double>> &dist_windows)
+      double &beta,
+      std::vector<std::deque<double>> &dist_windows,
+      std::vector<std::deque<double>> &angle_windows)
   {
 
     // Vector to hold distances between robot_pos and neighbors_and_obstacles
@@ -785,28 +858,23 @@ namespace formation_control
       dist_window.pop_front();
       dist_window.push_back(dist);
 
-      /*std::cout << "Distances in dist_window for neighbor/obstacle " << i << ": ";
-      for (const auto &val : dist_window)
-      {
-        std::cout << val << " ";
-      }
-      std::cout << std::endl;
-      */
       // Calculate the average of the last three distances
       double avg_dist = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
-      //std::cout << avg_dist << " " << std::endl;
 
-      // std::cout << "size" << dist_window.size() << std::endl;
       distances.push_back(avg_dist);
-      // distances.push_back(dist);
 
       // Calculate angle
       double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-      angles.push_back(ang);
+      ang = addRandomNoise1(ang, 3.1415 / 8);
+      auto &angle_window = angle_windows[i];
+      angle_window.pop_front();
+      angle_window.push_back(ang);
+
+      double avg_angle = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
 
       // Update point with perturbed distance
-      double new_x = robot_pos.first + avg_dist * std::cos(ang);
-      double new_y = robot_pos.second + avg_dist * std::sin(ang);
+      double new_x = robot_pos.first + avg_dist * std::cos(avg_angle);
+      double new_y = robot_pos.second + avg_dist * std::sin(avg_angle);
       neighbors_and_obstacles_noisy.push_back(std::make_pair(new_x, new_y));
     }
 
@@ -892,6 +960,40 @@ namespace formation_control
 
     std::pair<double, double> centroid = std::make_pair(sum_x_in_times_scalar_values / sum_scalar_values, sum_y_in_times_scalar_values / sum_scalar_values);
 
+    std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
+    //double threshold = 0.5;
+    for (const Point &p : hull)
+    {
+      double distance = euclideanDistance(p, centroid);
+      while (distance < threshold)
+      {
+
+        beta = beta + 1 * dt;
+        std::vector<double> scalar_values1 = compute_scalar_value(x_in, y_in, destination, beta);
+        // Compute the weighted centroid
+        double sum_x_in_times_scalar_values1 = 0.0;
+        double sum_y_in_times_scalar_values1 = 0.0;
+        double sum_scalar_values1 = 0.0;
+
+        for (size_t i = 0; i < x_in.size(); ++i)
+        {
+          sum_x_in_times_scalar_values1 += x_in[i] * scalar_values1[i];
+          sum_y_in_times_scalar_values1 += y_in[i] * scalar_values1[i];
+          sum_scalar_values1 += scalar_values1[i];
+        }
+        centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
+        distance = euclideanDistance(p, centroid);
+        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+
+        // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
+        // break;
+        if (beta > 5)
+        {
+        break;
+        }
+      }
+    }
+
     // Compute the centroid without neighbors
     double sum_x_in_no_neigh_times_scalar_values = 0.0;
     double sum_y_in_no_neigh_times_scalar_values = 0.0;
@@ -956,17 +1058,17 @@ namespace formation_control
       beta = beta - dt * (beta - betaD);
     }
 
-    std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl; 
+    // std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
 
     // second condition
     bool dist_c1_c2_d4 = dist_c1_c2 > d4;
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
-      th = std::min(th +  dt, M_PI / 2);
+      th = std::min(th + dt, M_PI / 2);
     }
     else
     {
-      th = std::max(0.0, th -  dt);
+      th = std::max(0.0, th - dt);
     }
 
     // third condition
@@ -975,7 +1077,7 @@ namespace formation_control
       th = 0;
       std::cout << "reset" << std::endl;
     }
-    std::cout << "theta : " << th << ", beta: " << beta << std::endl;
+    //std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;
@@ -1154,9 +1256,9 @@ namespace formation_control
       std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);*/
 
       // Call get_centroid function
-      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows);
+      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
 
-      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows);
+      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows, angle_windows);
 
       // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
       // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};

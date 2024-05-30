@@ -150,7 +150,6 @@ namespace formation_control
       double dy = a.second - b.second;
       return sqrt(dx * dx + dy * dy);
     }
-
   private:
     // general variables
     bool is_initialized_ = false;
@@ -247,6 +246,12 @@ namespace formation_control
     std::vector<double> obstacle5;
     std::vector<double> obstacle6;
     std::vector<double> obstacle7;
+    std::vector<double> obstacle8;
+    std::vector<double> obstacle9;
+    std::vector<double> obstacle10;
+    std::vector<double> obstacle11;
+    std::vector<double> obstacle12;
+    std::vector<double> obstacle13;
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::string _odometry_topic_name_;
@@ -367,6 +372,12 @@ namespace formation_control
     param_loader.loadParam("obstacle5", obstacle5);
     param_loader.loadParam("obstacle6", obstacle6);
     param_loader.loadParam("obstacle7", obstacle7);
+    param_loader.loadParam("obstacle8", obstacle8);
+    param_loader.loadParam("obstacle9", obstacle9);
+    param_loader.loadParam("obstacle10", obstacle10);
+    param_loader.loadParam("obstacle11", obstacle11);
+    param_loader.loadParam("obstacle12", obstacle12);
+    param_loader.loadParam("obstacle13", obstacle13);
     param_loader.loadParam("noisy_measurements", noisy_measurements);
     param_loader.loadParam("threshold",threshold);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
@@ -388,7 +399,13 @@ namespace formation_control
                  {obstacle4[0], obstacle4[1]},
                  {obstacle5[0], obstacle5[1]},
                  {obstacle6[0], obstacle6[1]},
-                 {obstacle7[0], obstacle7[1]}};
+                 {obstacle7[0], obstacle7[1]},
+                 {obstacle8[0], obstacle8[1]},
+                 {obstacle9[0], obstacle9[1]},
+                 {obstacle10[0], obstacle10[1]},
+                 {obstacle11[0], obstacle11[1]},
+                 {obstacle12[0], obstacle12[1]},
+                 {obstacle13[0], obstacle13[1]}};
 
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
@@ -865,16 +882,16 @@ namespace formation_control
 
       // Calculate angle
       double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-      ang = addRandomNoise1(ang, 3.1415 / 8);
-      auto &angle_window = angle_windows[i];
-      angle_window.pop_front();
-      angle_window.push_back(ang);
+      //ang = addRandomNoise1(ang, 3.1415 / 8);
+      //auto &angle_window = angle_windows[i];
+      //angle_window.pop_front();
+      //angle_window.push_back(ang);
 
-      double avg_angle = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
+      //double avg_angle = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
 
       // Update point with perturbed distance
-      double new_x = robot_pos.first + avg_dist * std::cos(avg_angle);
-      double new_y = robot_pos.second + avg_dist * std::sin(avg_angle);
+      double new_x = robot_pos.first + avg_dist * std::cos(ang);
+      double new_y = robot_pos.second + avg_dist * std::sin(ang);
       neighbors_and_obstacles_noisy.push_back(std::make_pair(new_x, new_y));
     }
 
@@ -962,13 +979,14 @@ namespace formation_control
 
     std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
     //double threshold = 0.5;
+    double distance;
     for (const Point &p : hull)
     {
-      double distance = euclideanDistance(p, centroid);
+      distance = euclideanDistance(p, centroid);
       while (distance < threshold)
       {
 
-        beta = beta + 1 * dt;
+        beta = beta + dt*0.1;
         std::vector<double> scalar_values1 = compute_scalar_value(x_in, y_in, destination, beta);
         // Compute the weighted centroid
         double sum_x_in_times_scalar_values1 = 0.0;
@@ -987,7 +1005,7 @@ namespace formation_control
 
         // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
-        if (beta > 5)
+        if (beta > 20.0)
         {
         break;
         }
@@ -1065,6 +1083,7 @@ namespace formation_control
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
       th = std::min(th + dt, M_PI / 2);
+      std::cout << "RHSrule" << std::endl;
     }
     else
     {

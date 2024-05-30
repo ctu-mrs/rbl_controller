@@ -11,6 +11,9 @@ size_obstacles1: 2.5
 maximum_distance_conn: 12.0
 encumbrance: 2.5
 
+noisy_measurements: 0.10
+threshold: 1.25
+
 size_neighbors1: 2.5
 size_obstacles1: 2.5
 maximum_distance_conn: 15.0

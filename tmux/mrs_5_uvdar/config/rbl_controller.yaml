@@ -6,11 +6,11 @@ odometry_topic: "estimation_manager/odom_main"
 set_reference_timer:
   rate: 10 # [Hz]
   
-size_neighbors1: 2.5
-size_obstacles1: 0.5
-maximum_distance_conn: 15.0
-noisy_measurements: 0.15
-threshold: 1.5
+size_neighbors1: 1.0
+size_obstacles1: 1.0
+maximum_distance_conn: 10.0
+noisy_measurements: 0.2
+threshold: 1.0
 
 Adj_matrix_uav1: [0,1,1,0,0]
 Adj_matrix_uav2: [1,0,1,1,1]
@@ -18,6 +18,11 @@ Adj_matrix_uav3: [1,1,0,1,0]
 Adj_matrix_uav4: [0,1,1,0,1]
 Adj_matrix_uav5: [0,1,0,1,0]
 
+#Adj_matrix_uav1: [0,0,0,0,0]
+#Adj_matrix_uav2: [0,0,0,0,0]
+#Adj_matrix_uav3: [0,0,0,0,0]
+#Adj_matrix_uav4: [0,0,0,0,0]
+#Adj_matrix_uav5: [0,0,0,0,0]
 
 # control approach params
 controlled_dimensions: 3
@@ -25,15 +30,15 @@ controlled_dimensions: 3
 max_distance_to_initial_position: 2.0
 
 
-d1: 0.5
-d2: 4.0
-d3: 0.5
-d4: 4.0
-radius: 10.0 
-encumbrance: 2.5
-betaD: 1.5
-beta_min: 0.1
-dt: 0.01
+d1: 0.1
+d2: 2.0
+d3: 0.1
+d4: 2.0
+radius: 6.0 
+encumbrance: 1.0
+betaD: 1.2
+beta_min: 0.2
+dt: 0.033
 step_size: 0.075
 
 obstacle1 : [-3.0,24.0]
@@ -43,12 +48,17 @@ obstacle4 : [-12.0,20.0]
 obstacle5 : [7.0,30.0]
 obstacle6 : [17.0,25.0]
 obstacle7 : [-10.0,35.0]
+obstacle8 : [0.0,0.0]
+obstacle9 : [-4.0,-15.0]
+obstacle10 : [-12.0,-20.0]
+obstacle11 : [7.0,-30.0]
+obstacle12 : [17.0,-25.0]
+obstacle13 : [-10.0,-35.0]
 
 monitored_area_origin:
   x: 0.0
   y: 0.0
   z: 0.0
-
 
 
 final_positions: # defined with respect to monitored_area_origin
@@ -83,26 +93,26 @@ initial_positions: # defined with respect to monitored_area_origin
 
   uav1:
     x: -8.0 #10
-    y: -10.0 #0
+    y: -45.0 #0
     z: 2.0
 
   uav2:
     x: -0.0 #6.2348980185873355
-    y: -10.0 #7.818314824680298
+    y: -45.0 #7.818314824680298
     z: 2.0
 
   uav3:
     x: -4.0 #-2.22520933956314
-    y: -4.0 #9.7492791218
+    y: -39.0 #9.7492791218
     z: 2.0
   
   uav4:
     x: 4.0 #-9.00968867
-    y: -4.0 #4.33883739
+    y: -39.0 #4.33883739
     z: 2.0
 
   uav5:
     x: 8.0 #-9.00968
-    y: -10.0 #-4.3388373
+    y: -45.0 #-4.3388373
     z: 2.0
 

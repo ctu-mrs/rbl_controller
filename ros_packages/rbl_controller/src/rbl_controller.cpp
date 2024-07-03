@@ -882,16 +882,16 @@ namespace formation_control
 
       // Calculate angle
       double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-      //ang = addRandomNoise1(ang, 3.1415 / 8);
-      //auto &angle_window = angle_windows[i];
-      //angle_window.pop_front();
-      //angle_window.push_back(ang);
+      ang = addRandomNoise1(ang, 0.0);
+      auto &angle_window = angle_windows[i];
+      angle_window.pop_front();
+      angle_window.push_back(ang);
 
-      //double avg_angle = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
+      double avg_ang = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
 
       // Update point with perturbed distance
-      double new_x = robot_pos.first + avg_dist * std::cos(ang);
-      double new_y = robot_pos.second + avg_dist * std::sin(ang);
+      double new_x = robot_pos.first + avg_dist * std::cos(avg_ang);
+      double new_y = robot_pos.second + avg_dist * std::sin(avg_ang);
       neighbors_and_obstacles_noisy.push_back(std::make_pair(new_x, new_y));
     }
 

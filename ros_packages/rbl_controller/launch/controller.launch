@@ -51,7 +51,9 @@
             <!-- Publishers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~destination_out" to="~destination_vis" />
             <remap from="~obstacle_markers_out" to="~obstacles_vis" />
-
+            <remap from="~neighbors_markers_out" to="~neighbors_vis" />
+            
+            
 
         </node>
 

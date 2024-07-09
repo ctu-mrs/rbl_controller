@@ -197,11 +197,13 @@ namespace formation_control
     Eigen::Vector3d _monitored_area_origin_;
     // visualization publishing
     ros::Publisher pub_obstacles_;
+    ros::Publisher pub_neighbors_;
     ros::Publisher pub_destination_;
     ros::Publisher pub_position_;
     void publishObstacles();
     void publishDestination();
     void publishPosition();
+    void publishNeighbors();
 
     // formation control variables
     std::pair<double, double> robot_pos;
@@ -209,6 +211,7 @@ namespace formation_control
     double radius;
     std::vector<std::pair<double, double>> neighbors;
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
+    std::vector<std::pair<double, double>> neighbors_and_obstacles_noisy;
     std::vector<std::pair<double, double>> all_uavs;
     std::pair<double, double> val = {1000.0, 1000.0};
     std::vector<std::pair<double, double>> fixed_neighbors_vec;
@@ -238,7 +241,9 @@ namespace formation_control
     double th = 0;
     double maximum_distance_conn;
     double noisy_measurements;
+    double noisy_angle;
     double threshold;
+    int window_length;
     std::vector<double> obstacle1;
     std::vector<double> obstacle2;
     std::vector<double> obstacle3;
@@ -263,6 +268,9 @@ namespace formation_control
     double _odom_msg_max_latency_;
 
     void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
+    void publishNeighbors(ros::Publisher &pub, const std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
+  
+
 
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
@@ -292,7 +300,9 @@ namespace formation_control
         const std::pair<double, double> &destination,
         double &beta,
         std::vector<std::deque<double>> &dist_windows,
-        std::vector<std::deque<double>> &angle_windows);
+        std::vector<std::deque<double>> &angle_windows,     
+        std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
+
 
     bool isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
 
@@ -379,7 +389,9 @@ namespace formation_control
     param_loader.loadParam("obstacle12", obstacle12);
     param_loader.loadParam("obstacle13", obstacle13);
     param_loader.loadParam("noisy_measurements", noisy_measurements);
+    param_loader.loadParam("noisy_angle", noisy_angle);
     param_loader.loadParam("threshold",threshold);
+    param_loader.loadParam("window_length",window_length);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     if (!param_loader.loadedSuccessfully())
@@ -419,12 +431,12 @@ namespace formation_control
     // Resize each deque in dist_windows to have a size of 100
     for (auto &dist_window : dist_windows)
     {
-      dist_window.resize(10, 0.0);
+      dist_window.resize(window_length, 0.0);
     }
 
     for (auto &angle_window : angle_windows)
     {
-      angle_window.resize(10, 0.0);
+      angle_window.resize(window_length, 0.0);
     }
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
@@ -497,6 +509,7 @@ namespace formation_control
 
     // initialize publishers
     pub_obstacles_ = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
+    pub_neighbors_ = nh.advertise<visualization_msgs::MarkerArray>("neighbors_markers_out", 1, true);
     pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
     pub_position_ = nh.advertise<visualization_msgs::Marker>("position_our", 1, true);
     // initialize transformer
@@ -539,6 +552,36 @@ namespace formation_control
     pub_obstacles_.publish(obstacle_markers);
   }
 
+  void RBLController::publishNeighbors()
+  {
+    visualization_msgs::MarkerArray neighbors_markers;
+    
+
+    for (size_t i = 0; i < neighbors_and_obstacles_noisy.size(); ++i)
+    {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = _control_frame_;
+      marker.header.stamp = ros::Time::now();
+      marker.ns = "neighbors_and_obstacles_noisy";
+      marker.id = i;
+      marker.type = visualization_msgs::Marker::CYLINDER;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.pose.position.x = neighbors_and_obstacles_noisy[i].first;
+      marker.pose.position.y = neighbors_and_obstacles_noisy[i].second;
+      marker.pose.position.z = 0; // Assuming obstacles are on the ground
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 0.3; // Adjust size as necessary
+      marker.scale.y = 0.3;
+      marker.scale.z = 5.0;
+      marker.color.r = 0.0; // Red color
+      marker.color.g = 1.0;
+      marker.color.b = 0.0;
+      marker.color.a = 1.0; // Fully opaque
+      neighbors_markers.markers.push_back(marker);
+    }
+
+    pub_neighbors_.publish(neighbors_markers);
+  }
   void RBLController::publishPosition()
   {
     visualization_msgs::Marker marker;
@@ -850,7 +893,9 @@ namespace formation_control
       const std::pair<double, double> &destination,
       double &beta,
       std::vector<std::deque<double>> &dist_windows,
-      std::vector<std::deque<double>> &angle_windows)
+      std::vector<std::deque<double>> &angle_windows,
+      std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy
+      )
   {
 
     // Vector to hold distances between robot_pos and neighbors_and_obstacles
@@ -858,7 +903,7 @@ namespace formation_control
     // Vector to hold angles between robot_pos and neighbors_and_obstacles
     std::vector<double> angles;
     // Vector to hold updated positions of neighbors_and_obstacles
-    std::vector<std::pair<double, double>> neighbors_and_obstacles_noisy;
+    neighbors_and_obstacles_noisy.clear();
 
     for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i)
     {
@@ -882,7 +927,7 @@ namespace formation_control
 
       // Calculate angle
       double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-      ang = addRandomNoise1(ang, 0.0);
+      ang = addRandomNoise1(ang, noisy_angle);
       auto &angle_window = angle_windows[i];
       angle_window.pop_front();
       angle_window.push_back(ang);
@@ -1275,9 +1320,9 @@ namespace formation_control
       std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);*/
 
       // Call get_centroid function
-      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
+      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows, neighbors_and_obstacles_noisy);
 
-      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows, angle_windows);
+      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows, angle_windows, neighbors_and_obstacles_noisy);
 
       // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
       // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};
@@ -1376,6 +1421,15 @@ namespace formation_control
     catch (...)
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_obstacles_.getTopic().c_str());
+    }
+
+    try
+    {
+      publishNeighbors();
+    }
+    catch (...)
+    {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_neighbors_.getTopic().c_str());
     }
 
     ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());

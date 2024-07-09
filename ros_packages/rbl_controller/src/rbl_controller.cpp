@@ -22,6 +22,7 @@
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
 #include <mrs_msgs/Vec4.h>
+#include <sensor_msgs/LaserScan.h>
 
 // custom helper functions from mrs library
 #include <mrs_lib/param_loader.h>
@@ -32,6 +33,9 @@
 #include <mrs_lib/msg_extractor.h>
 #include <mrs_lib/geometry/misc.h>
 #include <mrs_lib/transformer.h>
+
+
+
 
 // helper libraries
 #include <string>
@@ -243,6 +247,7 @@ namespace formation_control
     double noisy_measurements;
     double noisy_angle;
     double threshold;
+    double bias_error;
     int window_length;
     std::vector<double> obstacle1;
     std::vector<double> obstacle2;
@@ -392,6 +397,7 @@ namespace formation_control
     param_loader.loadParam("noisy_angle", noisy_angle);
     param_loader.loadParam("threshold",threshold);
     param_loader.loadParam("window_length",window_length);
+    param_loader.loadParam("bias_error",bias_error);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
 
     if (!param_loader.loadedSuccessfully())
@@ -457,7 +463,6 @@ namespace formation_control
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
 
-    // destination = {0.0 + 6 * this_uav_idx_, 40.0}; //{-10 * cos(2 * this_uav_idx_ * M_PI / (n_drones_ + 1)), -10 * sin(2 * this_uav_idx_ * M_PI / (n_drones_ + 1))};
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -911,9 +916,12 @@ namespace formation_control
       // Calculate distance
       double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
+       if (i<4){
+      dist = addRandomNoise(dist+bias_error, noisy_measurements);
+       }
+      
       dist = addRandomNoise(dist, noisy_measurements);
-
-      // Get the rolling window for this point
+       // Get the rolling window for this point
       auto &dist_window = dist_windows[i];
 
       // Add the current distance to the window and remove the oldest one if necessary
@@ -1299,6 +1307,9 @@ namespace formation_control
           position_command_.x,
           position_command_.y,
       };
+
+      //TODO: HERE I COMPUTE NEIGHBORS AND OBSTACLES! FOR EXPERIMENT SUBSTITUTE IT WITH UVDAR OUTPUT AND LIDAR OUTPUT
+
 
       for (int j = 0; j < n_drones_; ++j)
       {

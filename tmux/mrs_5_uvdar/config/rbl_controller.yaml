@@ -4,16 +4,17 @@ uav_names: ["uav1", "uav2", "uav3", "uav4", "uav5"] #, "uav11"]
 odometry_topic: "estimation_manager/odom_main"
 
 set_reference_timer:
-  rate: 20 # [Hz]
+  rate: 2 # [Hz]
   
 size_neighbors1: 0.5
 size_obstacles1: 1.0
 encumbrance: 0.5
 maximum_distance_conn: 15.0
 noisy_measurements: 0.15
-noisy_angle: 0.2
+noisy_angle: 0.3
 threshold: 1.5
-window_length: 10
+window_length: 1 #10
+bias_error: 0.5
 
 
 Adj_matrix_uav1: [0,1,1,0,0]

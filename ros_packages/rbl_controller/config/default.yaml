@@ -4,10 +4,10 @@ uav_names: ["uav1", "uav2", "uav3", "uav4", "uav5"] #, "uav6", "uav7", "uav8"]
 odometry_topic: "estimation_manager/odom_main"
 
 set_reference_timer:
-  rate: 10 # [Hz]
+  rate: 2 #10 [Hz]
 
 diagnostics:
-  rate: 10 # [Hz]
+  rate: 2 #10 [Hz]
   odom_timeout: 1.0 # [s]
 
 odom_msg_max_latency: 1.0 # [s]

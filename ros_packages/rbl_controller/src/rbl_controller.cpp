@@ -23,6 +23,7 @@
 #include <std_srvs/Trigger.h>
 #include <mrs_msgs/Vec4.h>
 #include <sensor_msgs/LaserScan.h>
+#include <mrs_msgs/PoseWithCovarianceArrayStamped.h>
 
 // custom helper functions from mrs library
 #include <mrs_lib/param_loader.h>
@@ -209,6 +210,20 @@ namespace formation_control
     void publishPosition();
     void publishNeighbors();
 
+
+
+    void  callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
+    /* UVDAR */
+    std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
+
+    // | --------------------------- timer callbacks ----------------------------- |
+
+    void           callbackTimerPubNeighbors(const ros::TimerEvent& event);
+    ros::Timer     timer_pub_neighbors_;
+    ros::Publisher neigbor_pub_;
+    std::map<unsigned int, geometry_msgs::PointStamped> neighbors_position_;
+    std::mutex                                          mutex_neighbors_position_;
+
     // formation control variables
     std::pair<double, double> robot_pos;
     double step_size;
@@ -222,7 +237,7 @@ namespace formation_control
     std::pair<double, double> destination;
     std::vector<std::pair<double, double>> obstacles;
     std::vector<double> goal = {0, 0};
-
+    bool has_this_pose_  = false;
     // TODO move this staff in yaml.
     std::vector<double> size_neighbors_and_obstacles;
     std::vector<double> size_neighbors;
@@ -264,10 +279,13 @@ namespace formation_control
     std::vector<double> obstacle13;
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
+    std::mutex mutex_uav_uvdar_;
     std::string _odometry_topic_name_;
     std::vector<ros::Subscriber> other_uav_odom_subscribers_;
     void odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx);
+    //void neighCallback(const mrs_msgs::PoseWithCovarianceArraySamped::ConstPtr& msg);
     std::vector<Eigen::Vector3d> uav_positions_;
+    std::vector<Eigen::Vector3d> uav_neighbors_;
 
     std::vector<ros::Time> last_odom_msg_time_;
     double _odom_msg_max_latency_;
@@ -399,7 +417,7 @@ namespace formation_control
     param_loader.loadParam("window_length",window_length);
     param_loader.loadParam("bias_error",bias_error);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
-
+    std::cout<< "controlframe: " <<_control_frame_ << std::endl;
     if (!param_loader.loadedSuccessfully())
     {
       ROS_ERROR("[RblController]: Could not load all parameters!");
@@ -462,7 +480,9 @@ namespace formation_control
 
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-
+    uav_neighbors_.resize(n_drones_);
+      
+    //std::cout<< uav_positions_.size()<< std::endl;
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -478,10 +498,11 @@ namespace formation_control
       std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_;
       other_uav_odom_subscribers_.push_back(
           nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
-
       ROS_INFO("Subscribing to %s", topic_name.c_str());
     }
 
+      sub_uvdar_filtered_poses_.push_back(
+          nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>("/" + _uav_name_ + "/uvdar/measuredPoses", 1, boost::bind(&RBLController::callbackNeighborsUsingUVDAR, this, _1)));
     mrs_lib::SubscribeHandlerOptions shopts;
     shopts.nh = nh;
     shopts.node_name = "RBLController";
@@ -498,6 +519,7 @@ namespace formation_control
     /* } else { */
     /*   sh_reference_velocity_ = mrs_lib::SubscribeHandler<mrs_msgs::ReferenceStamped>(shopts, "vel_leader_in"); */
     /* } */
+    
 
     // initialize timers
     timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
@@ -521,6 +543,7 @@ namespace formation_control
     transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
     /* transformer_->setDefaultPrefix(_uav_name_); */
     transformer_->retryLookupNewest(true);
+
 
     is_initialized_ = true;
     ROS_INFO("[RBLController]: Initialization completed.");
@@ -916,9 +939,7 @@ namespace formation_control
       // Calculate distance
       double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
-       if (i<4){
       dist = addRandomNoise(dist+bias_error, noisy_measurements);
-       }
       
       dist = addRandomNoise(dist, noisy_measurements);
        // Get the rolling window for this point
@@ -1054,7 +1075,7 @@ namespace formation_control
         }
         centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
         distance = euclideanDistance(p, centroid);
-        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+        //std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
         // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
@@ -1136,7 +1157,7 @@ namespace formation_control
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
       th = std::min(th + dt, M_PI / 2);
-      std::cout << "RHSrule" << std::endl;
+      //std::cout << "RHSrule" << std::endl;
     }
     else
     {
@@ -1147,7 +1168,7 @@ namespace formation_control
     if (th == M_PI / 2 && sqrt(pow((current_j_x - c1_no_rotation[0]), 2) + pow((current_j_y - c1_no_rotation[1]), 2)) > sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)))
     {
       th = 0;
-      std::cout << "reset" << std::endl;
+      //std::cout << "reset" << std::endl;
     }
     //std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
@@ -1189,7 +1210,6 @@ namespace formation_control
       ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform position command to control frame.");
       return;
     }
-
     mrs_lib::set_mutexed(mutex_position_command_, new_point.point, position_command_);
 
     got_position_command_ = true;
@@ -1200,7 +1220,6 @@ namespace formation_control
   /* odomCallback() //{ */
   void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx)
   {
-
     if (!is_initialized_)
     {
       return;
@@ -1241,35 +1260,100 @@ namespace formation_control
     {
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
     }
-
+    
+    has_this_pose_ = true;
     mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_positions_[idx]);
 
     last_odom_msg_time_[idx] = ros::Time::now();
   }
-  //}
 
-  /* callbackTimerSetVelocity() //{ */
-  void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te)
-  {
+void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
+
 
     if (!is_initialized_)
     {
       return;
     }
 
-    if (!all_robots_positions_valid_ && !got_position_command_)
-    {
-      ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for valid robots' positions.");
-      getPositionCmd();
-      return;
+  // Process the received message
+    ROS_INFO("Received pose from uvdar");
+    
+
+    for (int i = 0; i < array_poses->poses.size(); i++) {
+      /* create new msg */
+      geometry_msgs::PointStamped new_point;
+
+      Eigen::Vector3d transformed_position;
+      new_point.point.x = array_poses->poses[i].pose.position.x;
+      new_point.point.y = array_poses->poses[i].pose.position.y;
+      new_point.point.z = array_poses->poses[i].pose.position.z;
+      int uav_id = array_poses->poses[i].id;
+    //auto res = transformer_->transformSingle(new_point, "world_origin");
+    //if (res)
+    // {
+    //  new_point = res.value();
+    // }
+    // else
+    // {
+    //   ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform uvdar  msg to control frame.");
+    // return;
+    // }
+
+      if (_c_dimensions_ == 3)
+      {
+        transformed_position = Eigen::Vector3d(new_point.point.x , new_point.point.y , new_point.point.z  );
+      }
+      else
+      {
+        transformed_position = Eigen::Vector3d(new_point.point.x , new_point.point.y , 0.0);
+      }
+      //std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[0]   << "," << transformed_position[1]<< std::endl;
+  
+      has_this_pose_ = true;
+      //uav_neighbors_[idx] = transformed_position;
+      mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[i]);
+    //mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[i]);
     }
+}
+// | --------------------------- timer callbacks ----------------------------- |
 
-    if (!is_at_initial_position_)
-    {
+/* callbackTimerPubNeighbors() //{ */
 
-      double dist_to_start = getDistToInitialPosition();
+void RBLController::callbackTimerPubNeighbors([[maybe_unused]] const ros::TimerEvent& event) {
+if (!is_initialized_ || !has_this_pose_) {
+  return;
+}
+}
 
-      if (dist_to_start > _dist_to_start_limit_)
+
+
+
+
+
+//}
+
+/* callbackTimerSetVelocity() //{ */
+void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te)
+{
+
+  if (!is_initialized_)
+  {
+    return;
+  }
+
+  if (!all_robots_positions_valid_ && !got_position_command_)
+  {
+    ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for valid robots' positions.");
+    getPositionCmd();
+    return;
+  }
+
+  if (!is_at_initial_position_)
+  {
+
+    double dist_to_start = getDistToInitialPosition();
+
+    if (dist_to_start > _dist_to_start_limit_)
       {
 
         ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for UAV to arrive at initial position. Current distance: %.2f m.", dist_to_start);
@@ -1296,7 +1380,7 @@ namespace formation_control
     mrs_msgs::Reference p_ref;
 
     {
-      std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_);
+      std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
 
       auto start = std::chrono::steady_clock::now();
 
@@ -1313,8 +1397,12 @@ namespace formation_control
 
       for (int j = 0; j < n_drones_; ++j)
       {
-        neighbors.push_back({uav_positions_[j][0], uav_positions_[j][1]});
-        neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
+       // neighbors.push_back({uav_positions_[j][0], uav_positions_[j][1]});
+       // neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
+       //std::cout<<"uavneigh "<<uav_neighbors_[j][0]<<std::endl; 
+       neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
+       neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
+       std::cout<< uav_positions_[j][0]<<"j" << j << std::endl;
       }
 
       for (int j = 0; j < obstacles.size(); ++j)

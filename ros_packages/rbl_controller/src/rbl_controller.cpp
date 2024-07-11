@@ -939,10 +939,11 @@ namespace formation_control
       // Calculate distance
       double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
-      dist = addRandomNoise(dist+bias_error, noisy_measurements);
+    
+    
+      //dist = addRandomNoise(dist+bias_error, noisy_measurements);
       
-      dist = addRandomNoise(dist, noisy_measurements);
-       // Get the rolling window for this point
+      // Get the rolling window for this point
       auto &dist_window = dist_windows[i];
 
       // Add the current distance to the window and remove the oldest one if necessary
@@ -956,7 +957,7 @@ namespace formation_control
 
       // Calculate angle
       double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-      ang = addRandomNoise1(ang, noisy_angle);
+      //ang = addRandomNoise1(ang, noisy_angle);
       auto &angle_window = angle_windows[i];
       angle_window.pop_front();
       angle_window.push_back(ang);
@@ -1075,7 +1076,7 @@ namespace formation_control
         }
         centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
         distance = euclideanDistance(p, centroid);
-        //std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
         // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
@@ -1157,7 +1158,7 @@ namespace formation_control
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
       th = std::min(th + dt, M_PI / 2);
-      //std::cout << "RHSrule" << std::endl;
+      std::cout << "RHSrule" << std::endl;
     }
     else
     {
@@ -1276,7 +1277,8 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     }
 
   // Process the received message
-    ROS_INFO("Received pose from uvdar");
+  //:w
+  //ROS_INFO("Received pose from uvdar");
     
 
     for (int i = 0; i < array_poses->poses.size(); i++) {
@@ -1402,7 +1404,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
        //std::cout<<"uavneigh "<<uav_neighbors_[j][0]<<std::endl; 
        neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
        neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-       std::cout<< uav_positions_[j][0]<<"j" << j << std::endl;
+       //std::cout<< uav_positions_[j][0]<<"j" << j << std::endl;
       }
 
       for (int j = 0; j < obstacles.size(); ++j)

@@ -9,11 +9,11 @@ set_reference_timer:
 size_neighbors1: 0.25
 size_obstacles1: 0.25
 encumbrance: 0.25
-maximum_distance_conn: 6.0
+maximum_distance_conn: 8.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
 threshold: 1.0
-window_length: 10 #10
+window_length: 1 #10
 bias_error: 0.0 #0.5
 
 
@@ -45,8 +45,8 @@ d1: 0.1
 d2: 1.0
 d3: 0.1
 d4: 1.0
-radius: 6 
-betaD: 3.0
+radius: 6.0 
+betaD: 2.0
 beta_min: 0.1
 dt: 0.033
 step_size: 0.075
@@ -101,7 +101,7 @@ final_positions: # defined with respect to monitored_area_origin
 initial_positions: # defined with respect to monitored_area_origin
 
   uav1:
-    x: -8.0 #10
+    x: -6.0 #10
     y: -45.0 #0
     z: 2.0
 
@@ -111,17 +111,17 @@ initial_positions: # defined with respect to monitored_area_origin
     z: 2.0
 
   uav3:
-    x: -4.0 #-2.22520933956314
+    x: -3.0 #-2.22520933956314
     y: -39.0 #9.7492791218
     z: 2.0
   
   uav4:
-    x: 4.0 #-9.00968867
+    x: 3.0 #-9.00968867
     y: -39.0 #4.33883739
     z: 2.0
 
   uav5:
-    x: 8.0 #-9.00968
+    x: 6.0 #-9.00968
     y: -45.0 #-4.3388373
     z: 2.0
 

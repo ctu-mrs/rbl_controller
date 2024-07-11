@@ -1399,13 +1399,17 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
       for (int j = 0; j < n_drones_; ++j)
       {
+
+
+       //if (!std::isnan(uav_neighbors_[j][0]) && !std::isinf(uav_neighbors_[j][0]) && uav_neighbors_[j][0]<100000){ 
        // neighbors.push_back({uav_positions_[j][0], uav_positions_[j][1]});
        // neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
-       //std::cout<<"uavneigh "<<uav_neighbors_[j][0]<<std::endl; 
-       neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-       neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-       //std::cout<< uav_positions_[j][0]<<"j" << j << std::endl;
-      }
+       //std::cout<<"uavneigh "<<uav_neighbors_[j][0]<<std::endl;
+         neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
+         neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
+      //   std::cout<< uav_neighbors_[j][0]<<"j" << j << std::endl;
+      // }
+       }
 
       for (int j = 0; j < obstacles.size(); ++j)
       {

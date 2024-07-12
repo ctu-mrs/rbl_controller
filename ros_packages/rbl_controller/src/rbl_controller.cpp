@@ -205,11 +205,14 @@ namespace formation_control
     ros::Publisher pub_neighbors_;
     ros::Publisher pub_destination_;
     ros::Publisher pub_position_;
+    ros::Publisher pub_centroid_;
+    ros::Publisher pub_hull_;
     void publishObstacles();
     void publishDestination();
     void publishPosition();
     void publishNeighbors();
-
+    void publishHull();
+    void publishCentroid();
 
 
     void  callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
@@ -232,6 +235,7 @@ namespace formation_control
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
     std::vector<std::pair<double, double>> neighbors_and_obstacles_noisy;
     std::vector<std::pair<double, double>> all_uavs;
+    std::vector<std::pair<double, double>> hull_voro;
     std::pair<double, double> val = {1000.0, 1000.0};
     std::vector<std::pair<double, double>> fixed_neighbors_vec;
     std::pair<double, double> destination;
@@ -286,13 +290,15 @@ namespace formation_control
     //void neighCallback(const mrs_msgs::PoseWithCovarianceArraySamped::ConstPtr& msg);
     std::vector<Eigen::Vector3d> uav_positions_;
     std::vector<Eigen::Vector3d> uav_neighbors_;
+    std::vector<double> largest_eigenvalue_;
     std::vector<ros::Time> last_odom_msg_time_;
     double _odom_msg_max_latency_;
-
+    //std::vector<double> c1;
     void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
+    void publishCentroid(ros::Publisher &pub, const std::vector<double> &c1);
     void publishNeighbors(ros::Publisher &pub, const std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
-  
-
+    void publishHull(ros::Publisher &pub, const std::vector<std::pair<double, double>> &hull_voro); 
+    
 
     std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
@@ -416,7 +422,6 @@ namespace formation_control
     param_loader.loadParam("window_length",window_length);
     param_loader.loadParam("bias_error",bias_error);
     // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
-    std::cout<< "controlframe: " <<_control_frame_ << std::endl;
     if (!param_loader.loadedSuccessfully())
     {
       ROS_ERROR("[RblController]: Could not load all parameters!");
@@ -535,7 +540,9 @@ namespace formation_control
     pub_obstacles_ = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
     pub_neighbors_ = nh.advertise<visualization_msgs::MarkerArray>("neighbors_markers_out", 1, true);
     pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
-    pub_position_ = nh.advertise<visualization_msgs::Marker>("position_our", 1, true);
+    pub_position_ = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
+    pub_hull_ = nh.advertise<visualization_msgs::MarkerArray>("hull_markers_out", 1, true);
+    pub_centroid_= nh.advertise<visualization_msgs::Marker>("centroid_out", 1, true);
     // initialize transformer
     transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
     /* transformer_->setDefaultPrefix(_uav_name_); */
@@ -607,7 +614,41 @@ namespace formation_control
 
     pub_neighbors_.publish(neighbors_markers);
   }
-  void RBLController::publishPosition()
+
+
+  void RBLController::publishHull()
+  {
+    visualization_msgs::MarkerArray hull_voro_markers;
+    
+
+    for (size_t i = 0; i < hull_voro.size(); ++i)
+    {
+      visualization_msgs::Marker marker;
+      marker.header.frame_id = _control_frame_;
+      marker.header.stamp = ros::Time::now();
+      marker.ns = "hull_voro";
+      marker.id = i;
+      marker.type = visualization_msgs::Marker::CYLINDER;
+      marker.action = visualization_msgs::Marker::ADD;
+      marker.pose.position.x = hull_voro[i].first;
+      marker.pose.position.y = hull_voro[i].second;
+      marker.pose.position.z = 0; // Assuming obstacles are on the ground
+      marker.pose.orientation.w = 1.0;
+      marker.scale.x = 0.1; // Adjust size as necessary
+      marker.scale.y = 0.1;
+      marker.scale.z = 5.0;
+      marker.color.r = 0.0; // Red color
+      marker.color.g = 1.0;
+      marker.color.b = 0.0;
+      marker.color.a = 1.0; // Fully opaque
+      hull_voro_markers.markers.push_back(marker);
+    }
+
+    pub_hull_.publish(hull_voro_markers);
+  }
+
+
+void RBLController::publishPosition()
   {
     visualization_msgs::Marker marker;
     marker.header.frame_id = _control_frame_;
@@ -629,6 +670,30 @@ namespace formation_control
     marker.color.a = 1.0; // Fully opaque
 
     pub_position_.publish(marker);
+  }
+
+void RBLController::publishCentroid()
+  {
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = _control_frame_;
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "centroid";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::CYLINDER;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0;
+    marker.pose.position.y = 1;
+    marker.pose.position.z = 0; // Assuming obstacles are on the ground
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 0.1; // Adjust size as necessary
+    marker.scale.y = 0.1;
+    marker.scale.z = 1.0;
+    marker.color.r = 1.0; // Red color
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+    marker.color.a = 1.0; // Fully opaque
+
+    pub_centroid_.publish(marker);
   }
 
   void RBLController::publishDestination()
@@ -990,7 +1055,9 @@ namespace formation_control
       voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
 
       if (voronoi_circle_intersection_connectivity.empty())
+      
       {
+       std::cout << "WARNING" <<std::endl;
         voronoi_circle_intersection_connectivity.push_back(robot_pos);
       }
     }
@@ -1052,10 +1119,18 @@ namespace formation_control
     std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
     //double threshold = 0.5;
     double distance;
+    hull_voro.clear();
+
+    
     for (const Point &p : hull)
+
     {
+      //hull_voro.push_back(std::make_pair(p.first, p.second));
+
       distance = euclideanDistance(p, centroid);
       //TODO: value of the threshold should change depending on covarince matrices and positions of neighbors
+      
+      if (voronoi_circle_intersection_connectivity.empty()){
       while (distance < threshold)
       {
 
@@ -1074,9 +1149,10 @@ namespace formation_control
         }
         centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
         distance = euclideanDistance(p, centroid);
-        //std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
-        // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
+
+         //auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
         if (beta > 20.0)
         {
@@ -1084,7 +1160,7 @@ namespace formation_control
         }
       }
     }
-
+    }
     // Compute the centroid without neighbors
     double sum_x_in_no_neigh_times_scalar_values = 0.0;
     double sum_y_in_no_neigh_times_scalar_values = 0.0;
@@ -1167,7 +1243,7 @@ namespace formation_control
     if (th == M_PI / 2 && sqrt(pow((current_j_x - c1_no_rotation[0]), 2) + pow((current_j_y - c1_no_rotation[1]), 2)) > sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)))
     {
       th = 0;
-      //std::cout << "reset" << std::endl;
+      //sWARNINGcout << "reset" << std::endl;
     }
     //std::cout << "theta : " << th << ", beta: " << beta << std::endl;
     // Compute the angle and new position
@@ -1279,7 +1355,8 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
   //ROS_INFO("Received pose from uvdar");
     
     uav_neighbors_.assign(n_drones_+1, Eigen::Vector3d(1000, 0, 0));
-
+    largest_eigenvalue_.assign(n_drones_+1,0);
+    Eigen::Matrix2d CovarianceMatrix;
     for (int i = 0; i < array_poses->poses.size(); i++) {
       /* create new msg */
       geometry_msgs::PointStamped new_point;
@@ -1289,6 +1366,18 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
       new_point.point.y = array_poses->poses[i].pose.position.y;
       new_point.point.z = array_poses->poses[i].pose.position.z;
       int uav_id = array_poses->poses[i].id;
+      CovarianceMatrix << array_poses->poses[i].covariance[0], array_poses->poses[i].covariance[1], array_poses->poses[i].covariance[6],array_poses->poses[i].covariance[7];
+    
+      Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> solver(CovarianceMatrix);
+      Eigen::Vector2d eigenvalues = solver.eigenvalues();
+
+      double largest_eigenvalue= eigenvalues.maxCoeff();
+
+    // Step 5: Print the matrix and the largest eigenvalue
+    //std::cout << "Matrix:\n" << CovarianceMatrix<< std::endl;
+    //std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
+    //std::cout << "Largest eigenvalue: " << uav_id << " eig: "<< largest_eigenvalue_ << std::endl;
+
     //auto res = transformer_->transformSingle(new_point, "world_origin");
     //if (res)
     // {
@@ -1308,10 +1397,11 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
       {
         transformed_position = Eigen::Vector3d(new_point.point.x , new_point.point.y , 0.0);
       }
-      std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[1]   << "," << transformed_position[1]<< std::endl;
+     //std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[1]   << "," << transformed_position[1]<< std::endl;
   
       has_this_pose_ = true;
       mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[uav_id-1]);
+      mrs_lib::set_mutexed(mutex_uav_uvdar_,  largest_eigenvalue, largest_eigenvalue_[uav_id-1]);
     }
 }
 // | --------------------------- timer callbacks ----------------------------- |
@@ -1393,13 +1483,28 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
       //TODO: HERE I COMPUTE NEIGHBORS AND OBSTACLES! FOR EXPERIMENT SUBSTITUTE IT WITH UVDAR OUTPUT AND LIDAR OUTPUT
 
-
+      double distance2neigh;
       for (int j = 0; j < n_drones_+1; ++j)
       {
         if (this_uav_idx_ != j){ 
          neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
          neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-         std::cout<< uav_neighbors_[j][0]<<"j" << j << std::endl;
+        // std::cout<< largest_eigenvalue_[j]<<"j" << j << std::endl;
+
+        
+       distance2neigh = std::sqrt(std::pow((uav_neighbors_[j][0] - position_command_.x), 2) + std::pow((uav_neighbors_[j][1] - position_command_.y), 2));
+       //std::cout << "dis2neigh/2 " << distance2neigh/2.0<< " largesteig/2+encum " <<  largest_eigenvalue_[j]/2.0 + encumbrance << std::endl;
+
+
+
+         if (largest_eigenvalue_[j]/2.0 + encumbrance > distance2neigh/2.0 && distance2neigh<5.0){
+           std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl;
+         }
+        if (Adj_matrix[j]==1){
+          std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl;
+
+        }
+ 
         }
       }
 
@@ -1513,6 +1618,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     try
     {
+      publishCentroid();
+    }
+    catch (...)
+    {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_centroid_.getTopic().c_str());
+    }
+    try
+    {
       publishObstacles();
     }
     catch (...)
@@ -1527,6 +1640,15 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     catch (...)
     {
       ROS_ERROR("exception caught during publishing topic '%s'", pub_neighbors_.getTopic().c_str());
+    }
+    
+    try
+    {
+      publishHull();
+    }
+    catch (...)
+    {
+      ROS_ERROR("exception caught during publishing topic '%s'", pub_hull_.getTopic().c_str());
     }
 
     ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());

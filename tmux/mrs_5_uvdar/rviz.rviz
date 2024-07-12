@@ -7,9 +7,7 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Destinations1
-        - /UAV2_perception1
-        - /UAV1_UVDAR1
+        - /Encumbrances1
       Splitter Ratio: 0.560869574546814
     Tree Height: 783
   - Class: rviz/Selection
@@ -158,53 +156,13 @@ Visualization Manager:
             destination: true
           Queue Size: 10
           Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav6/rbl_controller/destination_vis
-          Name: UAV6
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav7/rbl_controller/destination_vis
-          Name: UAV7
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav8/rbl_controller/destination_vis
-          Name: UAV8
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav9/rbl_controller/destination_vis
-          Name: UAV9
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav10/rbl_controller/destination_vis
-          Name: UAV10
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
       Enabled: true
       Name: Destinations
     - Class: rviz/Group
       Displays:
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /uav1/rbl_controller/position_our
+          Marker Topic: /uav1/rbl_controller/position_vis
           Name: UAV1
           Namespaces:
             position: true
@@ -212,7 +170,7 @@ Visualization Manager:
           Value: true
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /uav2/rbl_controller/position_our
+          Marker Topic: /uav2/rbl_controller/position_vis
           Name: UAV2
           Namespaces:
             position: true
@@ -220,7 +178,7 @@ Visualization Manager:
           Value: true
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /uav3/rbl_controller/position_our
+          Marker Topic: /uav3/rbl_controller/position_vis
           Name: UAV3
           Namespaces:
             position: true
@@ -228,7 +186,7 @@ Visualization Manager:
           Value: true
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /uav4/rbl_controller/position_our
+          Marker Topic: /uav4/rbl_controller/position_vis
           Name: UAV4
           Namespaces:
             position: true
@@ -236,50 +194,10 @@ Visualization Manager:
           Value: true
         - Class: rviz/Marker
           Enabled: true
-          Marker Topic: /uav5/rbl_controller/position_our
+          Marker Topic: /uav5/rbl_controller/position_vis
           Name: UAV5
           Namespaces:
             position: true
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav6/rbl_controller/position_our
-          Name: UAV6
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav7/rbl_controller/position_our
-          Name: UAV7
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav8/rbl_controller/position_our
-          Name: UAV8
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav9/rbl_controller/position_our
-          Name: UAV9
-          Namespaces:
-            {}
-          Queue Size: 10
-          Value: true
-        - Class: rviz/Marker
-          Enabled: true
-          Marker Topic: /uav10/rbl_controller/position_our
-          Name: UAV10
-          Namespaces:
-            {}
           Queue Size: 10
           Value: true
       Enabled: true
@@ -371,91 +289,6 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/predicted_trajectory_debugging
           Unreliable: false
           Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 0; 147; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV6
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav6/control_manager/mpc_tracker/predicted_trajectory_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 255; 255; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV7
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav7/control_manager/mpc_tracker/predicted_trajectory_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 255; 164; 73
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV8
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav8/control_manager/mpc_tracker/predicted_trajectory_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 0; 147; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV9
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav9/control_manager/mpc_tracker/predicted_trajectory_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 255; 255; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV10
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav10/control_manager/mpc_tracker/predicted_trajectory_debugging
-          Unreliable: false
-          Value: true
       Enabled: true
       Name: Predicted trajectories
     - Class: rviz/Group
@@ -545,91 +378,6 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/mpc_reference_debugging
           Unreliable: false
           Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 0; 85; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV6
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav6/control_manager/mpc_tracker/mpc_reference_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 167; 167; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV7
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav7/control_manager/mpc_tracker/mpc_reference_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 161; 103; 46
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV8
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav8/control_manager/mpc_tracker/mpc_reference_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 0; 85; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV9
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav9/control_manager/mpc_tracker/mpc_reference_debugging
-          Unreliable: false
-          Value: true
-        - Alpha: 1
-          Arrow Length: 2
-          Axes Length: 0.30000001192092896
-          Axes Radius: 0.009999999776482582
-          Class: rviz/PoseArray
-          Color: 167; 167; 0
-          Enabled: true
-          Head Length: 0.07000000029802322
-          Head Radius: 0.029999999329447746
-          Name: UAV10
-          Queue Size: 10
-          Shaft Length: 0.23000000417232513
-          Shaft Radius: 0.009999999776482582
-          Shape: Arrow (Flat)
-          Topic: /uav10/control_manager/mpc_tracker/mpc_reference_debugging
-          Unreliable: false
-          Value: true
       Enabled: false
       Name: Reference trajectories
     - Class: rviz/MarkerArray
@@ -641,13 +389,13 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /uav5/rbl_controller/neighbors_vis
       Name: UAV2_perception
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
@@ -668,7 +416,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: UAV1_UVDAR
@@ -678,6 +426,58 @@ Visualization Manager:
       Shape: FastArrow
       Topic: /uav5/uvdar/measuredPoses
       Unreliable: false
+      Value: false
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/centroid_vis
+          Name: UAV1
+          Namespaces:
+            centroid: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/centroid_vis
+          Name: UAV2
+          Namespaces:
+            centroid: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/centroid_vis
+          Name: UAV3
+          Namespaces:
+            centroid: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/centroid_vis
+          Name: UAV4
+          Namespaces:
+            centroid: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/centroid_vis
+          Name: UAV5
+          Namespaces:
+            centroid: true
+          Queue Size: 10
+          Value: true
+      Enabled: true
+      Name: Centroids
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav1/rbl_controller/hull_vis
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -716,10 +516,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 17.210956573486328
+      Scale: 30.331586837768555
       Target Frame: common_origin
-      X: 0.12267563492059708
-      Y: -17.972938537597656
+      X: 2.0981664657592773
+      Y: -45.106807708740234
     Saved: ~
 Window Geometry:
   Displays:

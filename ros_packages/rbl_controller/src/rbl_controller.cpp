@@ -286,7 +286,6 @@ namespace formation_control
     //void neighCallback(const mrs_msgs::PoseWithCovarianceArraySamped::ConstPtr& msg);
     std::vector<Eigen::Vector3d> uav_positions_;
     std::vector<Eigen::Vector3d> uav_neighbors_;
-
     std::vector<ros::Time> last_odom_msg_time_;
     double _odom_msg_max_latency_;
 
@@ -478,11 +477,10 @@ namespace formation_control
     beta = betaD;
     n_drones_ = _uav_names_.size();
 
+    uav_neighbors_.assign(n_drones_+1, Eigen::Vector3d(1000, 0, 0));
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
-    uav_neighbors_.resize(n_drones_);
       
-    //std::cout<< uav_positions_.size()<< std::endl;
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -490,7 +488,6 @@ namespace formation_control
     // std::vector<Eigen::Vector3d> uav_positionsN_(uav_positions_);
 
     last_odom_msg_time_.resize(n_drones_);
-
     /* create multiple subscribers to read uav odometries */
     // iterate through drones except this drone and target
     for (int i = 0; i < _uav_names_.size(); i++)
@@ -1058,6 +1055,7 @@ namespace formation_control
     for (const Point &p : hull)
     {
       distance = euclideanDistance(p, centroid);
+      //TODO: value of the threshold should change depending on covarince matrices and positions of neighbors
       while (distance < threshold)
       {
 
@@ -1076,7 +1074,7 @@ namespace formation_control
         }
         centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
         distance = euclideanDistance(p, centroid);
-        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+        //std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
         // auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
@@ -1158,7 +1156,7 @@ namespace formation_control
     if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3)
     {
       th = std::min(th + dt, M_PI / 2);
-      std::cout << "RHSrule" << std::endl;
+      //std::cout << "RHSrule" << std::endl;
     }
     else
     {
@@ -1280,6 +1278,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
   //:w
   //ROS_INFO("Received pose from uvdar");
     
+    uav_neighbors_.assign(n_drones_+1, Eigen::Vector3d(1000, 0, 0));
 
     for (int i = 0; i < array_poses->poses.size(); i++) {
       /* create new msg */
@@ -1309,12 +1308,10 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
       {
         transformed_position = Eigen::Vector3d(new_point.point.x , new_point.point.y , 0.0);
       }
-      //std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[0]   << "," << transformed_position[1]<< std::endl;
+      std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[1]   << "," << transformed_position[1]<< std::endl;
   
       has_this_pose_ = true;
-      //uav_neighbors_[idx] = transformed_position;
-      mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[i]);
-    //mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[i]);
+      mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[uav_id-1]);
     }
 }
 // | --------------------------- timer callbacks ----------------------------- |
@@ -1397,19 +1394,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       //TODO: HERE I COMPUTE NEIGHBORS AND OBSTACLES! FOR EXPERIMENT SUBSTITUTE IT WITH UVDAR OUTPUT AND LIDAR OUTPUT
 
 
-      for (int j = 0; j < n_drones_; ++j)
+      for (int j = 0; j < n_drones_+1; ++j)
       {
-
-
-       //if (!std::isnan(uav_neighbors_[j][0]) && !std::isinf(uav_neighbors_[j][0]) && uav_neighbors_[j][0]<100000){ 
-       // neighbors.push_back({uav_positions_[j][0], uav_positions_[j][1]});
-       // neighbors_and_obstacles.push_back({uav_positions_[j][0], uav_positions_[j][1]});
-       //std::cout<<"uavneigh "<<uav_neighbors_[j][0]<<std::endl;
+        if (this_uav_idx_ != j){ 
          neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
          neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-      //   std::cout<< uav_neighbors_[j][0]<<"j" << j << std::endl;
-      // }
-       }
+         std::cout<< uav_neighbors_[j][0]<<"j" << j << std::endl;
+        }
+      }
 
       for (int j = 0; j < obstacles.size(); ++j)
       {

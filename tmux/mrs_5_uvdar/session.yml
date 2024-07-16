@@ -47,13 +47,17 @@ windows:
   - uvdar:
       layout: tiled
       panes:
-        - waitForRos; roslaunch uvdar_multirobot_simulator example.launch
+        - waitForControl; roslaunch uvdar_multirobot_simulator example.launch
         
   - lidar:
       layout: tiled
       panes:
-        - waitForRos; roslrun lidar_publisher lidar_publisher_node
-  
+        - export UAV_NAME=uav1; waitForControl; roslaunch lidar_simulator example.launch
+        - export UAV_NAME=uav2; waitForControl; roslaunch lidar_simulator example.launch
+        - export UAV_NAME=uav3; waitForControl; roslaunch lidar_simulator example.launch
+        - export UAV_NAME=uav4; waitForControl; roslaunch lidar_simulator example.launch
+        - export UAV_NAME=uav5; waitForControl; roslaunch lidar_simulator example.launch
+        
   - activation:
       layout: tiled
       synchronize: after

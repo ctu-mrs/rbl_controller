@@ -18,6 +18,8 @@
   <depend>mrs_lib</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>pcl_ros</depend>
+  
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

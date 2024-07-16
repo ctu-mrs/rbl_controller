@@ -214,7 +214,8 @@ namespace formation_control
     void publishHull();
     void publishCentroid();
 
-
+    std::vector<ros::Subscriber> marker_array_sub_;
+    void markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
     void  callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
     /* UVDAR */
     std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
@@ -240,6 +241,8 @@ namespace formation_control
     std::vector<std::pair<double, double>> fixed_neighbors_vec;
     std::pair<double, double> destination;
     std::vector<std::pair<double, double>> obstacles;
+    std::vector<std::pair<double, double>> obstacles_;
+
     std::vector<double> goal = {0, 0};
     bool has_this_pose_  = false;
     // TODO move this staff in yaml.
@@ -367,6 +370,8 @@ namespace formation_control
   {
     // initialize nodelet
     ros::NodeHandle &nh = getPrivateNodeHandle();
+
+
     NODELET_DEBUG("Initializing nodelet...");
     ros::Time::waitForValid();
     // load parameters
@@ -446,7 +451,7 @@ namespace formation_control
                  {obstacle11[0], obstacle11[1]},
                  {obstacle12[0], obstacle12[1]},
                  {obstacle13[0], obstacle13[1]}};
-
+    
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
     size_obstacles.assign(obstacles.size(), size_obstacles1);
 
@@ -522,6 +527,7 @@ namespace formation_control
     /*   sh_reference_velocity_ = mrs_lib::SubscribeHandler<mrs_msgs::ReferenceStamped>(shopts, "vel_leader_in"); */
     /* } */
     
+    marker_array_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/clusters_" + _uav_name_, 1, &RBLController::markerArrayCallback, this));
 
     // initialize timers
     timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
@@ -1342,6 +1348,50 @@ void RBLController::publishCentroid()
     last_odom_msg_time_[idx] = ros::Time::now();
   }
 
+
+void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg)
+    {
+        // Clear the previous list of obstacles
+        obstacles_.clear();
+
+        // Iterate through markers to compute centroids
+        for (const auto &marker : marker_array_msg->markers)
+        {
+            if (marker.type == visualization_msgs::Marker::POINTS)
+            {
+                // Compute the centroid of the points in this marker
+                double x_sum = 0.0;
+                double y_sum = 0.0;
+                int num_points = marker.points.size();
+
+                for (const auto &point : marker.points)
+                {
+                    x_sum += point.x;
+                    y_sum += point.y;
+                }
+
+                if (num_points > 0)
+                {
+                    double x_centroid = x_sum / num_points;
+                    double y_centroid = y_sum / num_points;
+                    
+                    // Store centroid in obstacles vector
+                    obstacles_.emplace_back(x_centroid, y_centroid);
+                }
+            }
+        }
+
+        // Optionally, print out the computed centroids
+        ROS_INFO("Computed Obsacle position:");
+        for (const auto &obstacle : obstacles_)
+        {
+            ROS_INFO("OBSTACLE: x = %.2f, y = %.2f", obstacle.first, obstacle.second);
+        }
+    }
+
+
+
+
 void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
 
 
@@ -1498,19 +1548,19 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
 
          if (largest_eigenvalue_[j]/2.0 + encumbrance > distance2neigh/2.0 && distance2neigh<5.0){
-           std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl;
+           //std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl;
          }
         if (Adj_matrix[j]==1){
-          std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl;
+          //std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl;
 
         }
  
         }
       }
 
-      for (int j = 0; j < obstacles.size(); ++j)
+      for (int j = 0; j < obstacles_.size(); ++j)
       {
-        neighbors_and_obstacles.push_back({obstacles[j].first, obstacles[j].second});
+        neighbors_and_obstacles.push_back({obstacles_[j].first, obstacles_[j].second});
       }
 
       /*std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);

@@ -28,6 +28,8 @@
             args="$(arg nodelet) formation_control/RBLController $(arg nodelet_manager)"
             launch-prefix="$(arg launch_prefix_debug)" output="screen">
 
+        <!-- lidar clustering to measure distance to leader -->
+        <!-- <node name="lidar_clusters$(arg UAV_NAME)" pkg="rbl_controller" type="lidar_clusters" output="screen"/> -->
             <!-- Parameters loaded from launch file -->
             <param name="simulation" value="$(eval arg('RUN_TYPE') == 'simulation')" />
             <param name="uav_name" value="$(arg UAV_NAME)" />
@@ -57,6 +59,7 @@
             <remap from="~hull_markers_out" to="~hull_vis" />
 
             
+
             
 
         </node>

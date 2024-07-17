@@ -381,14 +381,6 @@ Visualization Manager:
       Enabled: false
       Name: Reference trajectories
     - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav1/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
       Enabled: false
       Marker Topic: /uav5/rbl_controller/neighbors_vis
       Name: UAV2_perception
@@ -432,7 +424,7 @@ Visualization Manager:
       Marker Topic: /clusters_uav1
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -440,7 +432,7 @@ Visualization Manager:
       Marker Topic: /clusters_uav2
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -448,7 +440,7 @@ Visualization Manager:
       Marker Topic: /clusters_uav3
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -456,7 +448,7 @@ Visualization Manager:
       Marker Topic: /clusters_uav4
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -464,7 +456,47 @@ Visualization Manager:
       Marker Topic: /clusters_uav5
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav1/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav2/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav3/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav4/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /uav5/rbl_controller/obstacles_vis
+      Name: Obstacles
+      Namespaces:
+        obstacles: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -504,10 +536,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 23.073280334472656
+      Scale: 41.32358169555664
       Target Frame: common_origin
-      X: 0.7120128870010376
-      Y: 1.6586538553237915
+      X: 6.495144367218018
+      Y: -11.089665412902832
     Saved: ~
 Window Geometry:
   Displays:

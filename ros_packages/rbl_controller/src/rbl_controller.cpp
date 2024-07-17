@@ -491,6 +491,7 @@ namespace formation_control
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
       
+    neighbors_and_obstacles_noisy.resize(n_drones_);
 
     goal[0] = destination.first;
     goal[1] = destination.second;
@@ -560,42 +561,64 @@ namespace formation_control
   }
   //}
 
-  void RBLController::publishObstacles()
-  {
-    visualization_msgs::MarkerArray obstacle_markers;
 
-    for (size_t i = 0; i < obstacles.size(); ++i)
+void RBLController::publishObstacles()
+{
+    visualization_msgs::MarkerArray obstacle_markers;
+    size_t current_obstacle_count = obstacles_.size();
+
+    // Add or update markers for existing obstacles
+    for (size_t i = 0; i < current_obstacle_count; ++i)
     {
-      visualization_msgs::Marker marker;
-      marker.header.frame_id = _control_frame_;
-      marker.header.stamp = ros::Time::now();
-      marker.ns = "obstacles";
-      marker.id = i;
-      marker.type = visualization_msgs::Marker::CYLINDER;
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = obstacles[i].first;
-      marker.pose.position.y = obstacles[i].second;
-      marker.pose.position.z = 0; // Assuming obstacles are on the ground
-      marker.pose.orientation.w = 1.0;
-      marker.scale.x = 2 * size_obstacles1; // Adjust size as necessary
-      marker.scale.y = 2 * size_obstacles1;
-      marker.scale.z = 5.0;
-      marker.color.r = 1.0; // Red color
-      marker.color.g = 0.0;
-      marker.color.b = 0.0;
-      marker.color.a = 1.0; // Fully opaque
-      obstacle_markers.markers.push_back(marker);
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = _control_frame_;
+        marker.header.stamp = ros::Time::now();
+        marker.ns = "obstacles";
+        marker.id = i;
+        marker.type = visualization_msgs::Marker::CYLINDER;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.pose.position.x = obstacles_[i].first;
+        marker.pose.position.y = obstacles_[i].second;
+        marker.pose.position.z = 0; // Assuming obstacles are on the ground
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = 2 * size_obstacles1; // Adjust size as necessary
+        marker.scale.y = 2 * size_obstacles1;
+        marker.scale.z = 5.0;
+        marker.color.r = 1.0; // Red color
+        marker.color.g = 0.0;
+        marker.color.b = 0.0;
+        marker.color.a = 1.0; // Fully opaque
+
+        obstacle_markers.markers.push_back(marker);
     }
 
-    pub_obstacles_.publish(obstacle_markers);
-  }
+    // Remove any leftover markers if the obstacle count has decreased
+    static size_t previous_obstacle_count = 0;
+    for (size_t i = current_obstacle_count; i < previous_obstacle_count; ++i)
+    {
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = _control_frame_;
+        marker.header.stamp = ros::Time::now();
+        marker.ns = "obstacles";
+        marker.id = i;
+        marker.action = visualization_msgs::Marker::DELETE;
 
-  void RBLController::publishNeighbors()
+        obstacle_markers.markers.push_back(marker);
+    }
+
+    // Update the previous obstacle count
+    previous_obstacle_count = current_obstacle_count;
+
+    // Publish the marker array
+    pub_obstacles_.publish(obstacle_markers);
+}
+
+void RBLController::publishNeighbors()
   {
     visualization_msgs::MarkerArray neighbors_markers;
     
 
-    for (size_t i = 0; i < neighbors_and_obstacles_noisy.size(); ++i)
+    for (size_t i = 0; i < n_drones_; ++i)
     {
       visualization_msgs::Marker marker;
       marker.header.frame_id = _control_frame_;
@@ -620,6 +643,8 @@ namespace formation_control
 
     pub_neighbors_.publish(neighbors_markers);
   }
+
+
 
 
   void RBLController::publishHull()
@@ -1353,7 +1378,7 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
     {
         // Clear the previous list of obstacles
         obstacles_.clear();
-
+        //obstacles_.shrink_to_fit();
         // Iterate through markers to compute centroids
         for (const auto &marker : marker_array_msg->markers)
         {

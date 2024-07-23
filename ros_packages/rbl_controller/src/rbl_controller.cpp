@@ -271,19 +271,6 @@ namespace formation_control
     double threshold;
     double bias_error;
     int window_length;
-    std::vector<double> obstacle1;
-    std::vector<double> obstacle2;
-    std::vector<double> obstacle3;
-    std::vector<double> obstacle4;
-    std::vector<double> obstacle5;
-    std::vector<double> obstacle6;
-    std::vector<double> obstacle7;
-    std::vector<double> obstacle8;
-    std::vector<double> obstacle9;
-    std::vector<double> obstacle10;
-    std::vector<double> obstacle11;
-    std::vector<double> obstacle12;
-    std::vector<double> obstacle13;
     // callbacks definitions
     std::mutex mutex_uav_odoms_;
     std::mutex mutex_uav_uvdar_;
@@ -408,19 +395,6 @@ namespace formation_control
     param_loader.loadParam("final_positions/" + _uav_name_ + "/x", destination.first);
     param_loader.loadParam("final_positions/" + _uav_name_ + "/y", destination.second);
     param_loader.loadParam("Adj_matrix_" + _uav_name_, Adj_matrix);
-    param_loader.loadParam("obstacle1", obstacle1);
-    param_loader.loadParam("obstacle2", obstacle2);
-    param_loader.loadParam("obstacle3", obstacle3);
-    param_loader.loadParam("obstacle4", obstacle4);
-    param_loader.loadParam("obstacle5", obstacle5);
-    param_loader.loadParam("obstacle6", obstacle6);
-    param_loader.loadParam("obstacle7", obstacle7);
-    param_loader.loadParam("obstacle8", obstacle8);
-    param_loader.loadParam("obstacle9", obstacle9);
-    param_loader.loadParam("obstacle10", obstacle10);
-    param_loader.loadParam("obstacle11", obstacle11);
-    param_loader.loadParam("obstacle12", obstacle12);
-    param_loader.loadParam("obstacle13", obstacle13);
     param_loader.loadParam("noisy_measurements", noisy_measurements);
     param_loader.loadParam("noisy_angle", noisy_angle);
     param_loader.loadParam("threshold",threshold);
@@ -437,40 +411,21 @@ namespace formation_control
 
     destination.first += _monitored_area_origin_[0];
     destination.second += _monitored_area_origin_[1];
-
-    obstacles = {{obstacle1[0], obstacle1[1]},
-                 {obstacle2[0], obstacle2[1]},
-                 {obstacle3[0], obstacle3[1]},
-                 {obstacle4[0], obstacle4[1]},
-                 {obstacle5[0], obstacle5[1]},
-                 {obstacle6[0], obstacle6[1]},
-                 {obstacle7[0], obstacle7[1]},
-                 {obstacle8[0], obstacle8[1]},
-                 {obstacle9[0], obstacle9[1]},
-                 {obstacle10[0], obstacle10[1]},
-                 {obstacle11[0], obstacle11[1]},
-                 {obstacle12[0], obstacle12[1]},
-                 {obstacle13[0], obstacle13[1]}};
-    
     size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
-    size_obstacles.assign(obstacles.size(), size_obstacles1);
 
-    size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
-    size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
-
-    dist_windows.resize(size_neighbors_and_obstacles.size());
-    angle_windows.resize(size_neighbors_and_obstacles.size());
+    //dist_windows.resize(size_neighbors_and_obstacles.size());
+    //angle_windows.resize(size_neighbors_and_obstacles.size());
 
     // Resize each deque in dist_windows to have a size of 100
-    for (auto &dist_window : dist_windows)
-    {
-      dist_window.resize(window_length, 0.0);
-    }
+    //for (auto &dist_window : dist_windows)
+    //{
+    //  dist_window.resize(window_length, 0.0);
+    //}
 
-    for (auto &angle_window : angle_windows)
-    {
-      angle_window.resize(window_length, 0.0);
-    }
+    //for (auto &angle_window : angle_windows)
+    //{
+    //  angle_window.resize(window_length, 0.0);
+    //}
     // erase this uav from the list of uavs
     auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
 
@@ -1028,9 +983,9 @@ void RBLController::publishCentroid()
 
     for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i)
     {
-
+     // std::cout<<"ciaoooo" <<neighbors.size()<<std::endl;
       // Calculate distance
-      double dist = distance(robot_pos, neighbors_and_obstacles[i]);
+      //double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
     
     
@@ -1041,28 +996,30 @@ void RBLController::publishCentroid()
 
       // Add the current distance to the window and remove the oldest one if necessary
       dist_window.pop_front();
-      dist_window.push_back(dist);
+      dist_window.push_back(neighbors_and_obstacles[i].first);
 
       // Calculate the average of the last three distances
-      double avg_dist = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
+      double avg_X = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
 
-      distances.push_back(avg_dist);
+      distances.push_back(avg_X);
 
       // Calculate angle
-      double ang = angle(robot_pos, neighbors_and_obstacles[i]);
+      //double ang = angle(robot_pos, neighbors_and_obstacles[i]);
       //ang = addRandomNoise1(ang, noisy_angle);
       auto &angle_window = angle_windows[i];
       angle_window.pop_front();
-      angle_window.push_back(ang);
+      angle_window.push_back(neighbors_and_obstacles[i].second);
 
-      double avg_ang = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
+      double avg_Y = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
 
       // Update point with perturbed distance
-      double new_x = robot_pos.first + avg_dist * std::cos(avg_ang);
-      double new_y = robot_pos.second + avg_dist * std::sin(avg_ang);
-      neighbors_and_obstacles_noisy.push_back(std::make_pair(new_x, new_y));
+      //double new_x = robot_pos.first + avg_dist * std::cos(avg_ang);
+      //double new_y = robot_pos.second + avg_dist * std::sin(avg_ang);
+      neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
     }
 
+    
+    //neighbors_and_obstacles_noisy = neighbors_and_obstacles;
     // Get points inside the circle
     std::vector<std::pair<double, double>>
         circle_points = points_inside_circle(robot_pos, radius, step_size);
@@ -1407,11 +1364,11 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
         }
 
         // Optionally, print out the computed centroids
-        ROS_INFO("Computed Obsacle position:");
-        for (const auto &obstacle : obstacles_)
-        {
-            ROS_INFO("OBSTACLE: x = %.2f, y = %.2f", obstacle.first, obstacle.second);
-        }
+       // ROS_INFO("Computed Obsacle position:");
+       // for (const auto &obstacle : obstacles_)
+       // {
+          //  ROS_INFO("OBSTACLE: x = %.2f, y = %.2f", obstacle.first, obstacle.second);
+       // }
     }
 
 
@@ -1583,11 +1540,29 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
         }
       }
 
+
       for (int j = 0; j < obstacles_.size(); ++j)
       {
         neighbors_and_obstacles.push_back({obstacles_[j].first, obstacles_[j].second});
       }
 
+      size_neighbors_and_obstacles.clear();
+      size_obstacles.assign(obstacles_.size(), size_obstacles1);
+      size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
+      size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
+
+      dist_windows.resize(neighbors_and_obstacles.size());
+      angle_windows.resize(neighbors_and_obstacles.size());
+
+    // Resize each deque in dist_windows to have a size of 100
+      for (auto &dist_window : dist_windows)
+      {
+       dist_window.resize(window_length, 0.0);
+      }
+      for (auto &angle_window : angle_windows)
+      {
+      angle_window.resize(window_length, 0.0);
+      }
       /*std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);
 
       // Call find_closest_points function

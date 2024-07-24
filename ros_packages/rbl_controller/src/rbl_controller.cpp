@@ -447,7 +447,7 @@ namespace formation_control
     beta = betaD;
     n_drones_ = _uav_names_.size();
 
-    uav_neighbors_.assign(n_drones_+1, Eigen::Vector3d(1000, 0, 0));
+    uav_neighbors_.assign(n_drones_+1, Eigen::Vector3d(10000 , 0 , 0));
     // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
     uav_positions_.resize(n_drones_);
       
@@ -578,7 +578,7 @@ void RBLController::publishNeighbors()
     visualization_msgs::MarkerArray neighbors_markers;
     
 
-    for (size_t i = 0; i < new_neighbors.size(); ++i)
+    for (size_t i = 0; i < neighbors_and_obstacles_noisy.size(); ++i)
     {
       visualization_msgs::Marker marker;
       marker.header.frame_id = _control_frame_;
@@ -587,8 +587,8 @@ void RBLController::publishNeighbors()
       marker.id = i;
       marker.type = visualization_msgs::Marker::CYLINDER;
       marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = new_neighbors[i].first;
-      marker.pose.position.y = new_neighbors[i].second;
+      marker.pose.position.x = neighbors_and_obstacles_noisy[i].first;
+      marker.pose.position.y = neighbors_and_obstacles_noisy[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
       marker.pose.orientation.w = 1.0;
       marker.scale.x = 0.3; // Adjust size as necessary
@@ -793,7 +793,7 @@ void RBLController::publishCentroid()
         const auto& neighbor = neighbors[j];
         
         // Add current neighbor to past measurements
-        if (neighbors_past_measurements[j].size() >= 20) {
+        if (neighbors_past_measurements[j].size() >= 10) {
             neighbors_past_measurements[j].erase(neighbors_past_measurements[j].begin());
         }
         neighbors_past_measurements[j].push_back(neighbor);
@@ -810,19 +810,17 @@ void RBLController::publishCentroid()
                 return sum + p.second;
             }) / neighbors_past_measurements[j].size();
 
-        double mean_distance = std::sqrt(
-            std::pow(neighbor.first - mean_x, 2) +
-            std::pow(neighbor.second - mean_y, 2));
        // Check distance from robot_pos to neighbor mean position
             double dx = mean_x - robot_pos.first;
             double dy = mean_y - robot_pos.second;
-            double distance = std::sqrt(dx * dx + dy * dy);
-
-            if (distance > maximum_distance_conn) {
+            double distance_1 = std::sqrt(dx * dx + dy * dy);
+            double bearing_angle = std::atan2(dy,dx);
+            if (distance_1 > maximum_distance_conn) {
                 // Project the neighbor position in the same direction but at maximum_distance_conn
-                double scale = (maximum_distance_conn-threshold) / distance;
-                mean_x = robot_pos.first + dx * scale;
-                mean_y = robot_pos.second + dy * scale;
+                mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle);
+                mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle);
+               std::cout<< "distance!!!!! :  "<<distance_1 <<std::endl;
+
             }
 
             new_neighbors.push_back({mean_x, mean_y});
@@ -1238,8 +1236,8 @@ void RBLController::publishCentroid()
         distance = euclideanDistance(p, centroid);
         std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
-        std::cout << "size cell " << voronoi_circle_intersection_connectivity.size() << std::endl;
-        std::cout << "size cell " << voronoi_circle_intersection.size() << std::endl;
+        //std::cout << "size cell " << voronoi_circle_intersection_connectivity.size() << std::endl;
+        //std::cout << "size cell " << voronoi_circle_intersection.size() << std::endl;
 
          //auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;
@@ -1653,6 +1651,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
       x_windows.resize(neighbors_and_obstacles.size());
+    
+      
       y_windows.resize(neighbors_and_obstacles.size());
 
     // Resize each deque in dist_windows to have a size of 100

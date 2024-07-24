@@ -9,10 +9,10 @@ set_reference_timer:
 size_neighbors1: 0.2
 size_obstacles1: 0.5
 encumbrance: 0.2
-maximum_distance_conn: 7.5
+maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
-threshold: 2.0
+threshold: 1.5
 window_length: 1 #10
 bias_error: 0.0 #0.5
 
@@ -25,6 +25,12 @@ Adj_matrix_uav4: [0,0,0,0,0]
 Adj_matrix_uav5: [0,0,0,0,0]
 
 
+#Adj_matrix_uav1: [0,1,1,1,1]
+#Adj_matrix_uav2: [1,0,1,1,1]
+#Adj_matrix_uav3: [1,1,0,1,1]
+#Adj_matrix_uav4: [1,1,1,0,1]
+#Adj_matrix_uav5: [1,1,1,1,0]
+
 # control approach params
 controlled_dimensions: 3
 
@@ -32,28 +38,15 @@ max_distance_to_initial_position: 2.0
 
 
 d1: 0.1
-d2: 2.0
+d2: 0.5 
 d3: 0.1
-d4: 2.0
+d4: 0.5
 radius: 6.0 
-betaD: 3.0
+betaD: 2.0
 beta_min: 0.1
-dt: 0.033
-step_size: 0.085
+dt: 0.01
+step_size: 0.075
 
-obstacle1 : [-30.0,24.0]
-obstacle2 : [60.5,19.0]
-obstacle3 : [-40.5,15.0]
-obstacle4 : [-120.0,20.0]
-obstacle5 : [70.0,30.0]
-obstacle6 : [170.0,25.0]
-obstacle7 : [-100.0,35.0]
-obstacle8 : [100.0,0.0]
-obstacle9 : [-40.0,-15.0]
-obstacle10 : [-120.0,-20.0]
-obstacle11 : [70.0,-30.0]
-obstacle12 : [170.0,-25.0]
-obstacle13 : [-100.0,-35.0]
 
 monitored_area_origin:
   x: 0.0

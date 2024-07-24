@@ -7,6 +7,7 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /NeighborsFiltered1/Neighbors1
         - /ObstaclesFiltered1/Obstacles5
       Splitter Ratio: 0.560869574546814
     Tree Height: 800
@@ -289,7 +290,7 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/predicted_trajectory_debugging
           Unreliable: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Predicted trajectories
     - Class: rviz/Group
       Displays:
@@ -378,7 +379,7 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/mpc_reference_debugging
           Unreliable: false
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Reference trajectories
     - Alpha: 1
       Axes Length: 1
@@ -415,18 +416,10 @@ Visualization Manager:
       Displays:
         - Class: rviz/MarkerArray
           Enabled: true
-          Marker Topic: /uav1/rbl_controller/neighbors_vis
+          Marker Topic: /uav5/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            {}
-          Queue Size: 100
-          Value: true
-        - Class: rviz/MarkerArray
-          Enabled: true
-          Marker Topic: /uav5/rbl_controller/obstacles_vis
-          Name: Neighbors
-          Namespaces:
-            {}
+            neighbors_and_obstacles_noisy: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -434,7 +427,15 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            {}
+            neighbors_and_obstacles_noisy: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/neighbors_vis
+          Name: Neighbors
+          Namespaces:
+            neighbors_and_obstacles_noisy: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -450,7 +451,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            {}
+            neighbors_and_obstacles_noisy: true
           Queue Size: 100
           Value: true
       Enabled: true
@@ -462,7 +463,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            {}
+            hull_voro: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -470,7 +471,7 @@ Visualization Manager:
           Marker Topic: /uav1/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            {}
+            hull_voro: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -478,7 +479,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            {}
+            hull_voro: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -486,7 +487,7 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            {}
+            hull_voro: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -494,7 +495,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            {}
+            hull_voro: true
           Queue Size: 100
           Value: true
       Enabled: true
@@ -550,7 +551,7 @@ Visualization Manager:
           Marker Topic: /uav1/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            {}
+            obstacles: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -558,7 +559,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            {}
+            obstacles: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -566,7 +567,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            {}
+            obstacles: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -574,7 +575,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            {}
+            obstacles: true
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -582,7 +583,7 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            {}
+            obstacles: true
           Queue Size: 100
           Value: true
       Enabled: true
@@ -624,10 +625,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 12.761068344116211
+      Scale: 37.39986801147461
       Target Frame: common_origin
-      X: 1.329464077949524
-      Y: -11.817119598388672
+      X: 2.408085584640503
+      Y: -32.398963928222656
     Saved: ~
 Window Geometry:
   Displays:

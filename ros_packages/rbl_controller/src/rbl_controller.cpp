@@ -793,7 +793,7 @@ void RBLController::publishCentroid()
         const auto& neighbor = neighbors[j];
         
         // Add current neighbor to past measurements
-        if (neighbors_past_measurements[j].size() >= 10) {
+        if (neighbors_past_measurements[j].size() >= 20) {
             neighbors_past_measurements[j].erase(neighbors_past_measurements[j].begin());
         }
         neighbors_past_measurements[j].push_back(neighbor);
@@ -813,14 +813,21 @@ void RBLController::publishCentroid()
         double mean_distance = std::sqrt(
             std::pow(neighbor.first - mean_x, 2) +
             std::pow(neighbor.second - mean_y, 2));
-        
-        // If the distance from the mean is within the allowed range, consider the neighbor
-        if (mean_distance <= threshold - 0.5) {
-            new_neighbors.push_back({mean_x,mean_y});
-        }
-    }
+       // Check distance from robot_pos to neighbor mean position
+            double dx = mean_x - robot_pos.first;
+            double dy = mean_y - robot_pos.second;
+            double distance = std::sqrt(dx * dx + dy * dy);
 
+            if (distance > maximum_distance_conn) {
+                // Project the neighbor position in the same direction but at maximum_distance_conn
+                double scale = (maximum_distance_conn-threshold) / distance;
+                mean_x = robot_pos.first + dx * scale;
+                mean_y = robot_pos.second + dy * scale;
+            }
 
+            new_neighbors.push_back({mean_x, mean_y});
+        } 
+ 
 
     std::vector<int> index;
     std::vector<std::pair<double, double>> new_points = points;
@@ -1022,7 +1029,7 @@ void RBLController::publishCentroid()
   {
 
     neighbors_and_obstacles_noisy.clear();
-
+/*
     for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i) {
         // Get the rolling window for this point
         auto &x_window = x_windows[i];
@@ -1042,6 +1049,7 @@ void RBLController::publishCentroid()
 
             // If the distance is too far, discard the measurement
             if (distance > threshold-0.5) {
+                //std::cout << "Discard UVDAR Measurement" << std::endl;
                 continue;
             }
         }
@@ -1060,8 +1068,7 @@ void RBLController::publishCentroid()
         // Update point with perturbed distance
         neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
     }
-  
-
+*/
 
     /*
     // Vector to hold distances between robot_pos and neighbors_and_obstacles
@@ -1198,7 +1205,6 @@ void RBLController::publishCentroid()
     std::pair<double, double> centroid = std::make_pair(sum_x_in_times_scalar_values / sum_scalar_values, sum_y_in_times_scalar_values / sum_scalar_values);
 
     std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
-    //double threshold = 0.5;
     double distance;
     hull_voro.clear();
 
@@ -1232,6 +1238,8 @@ void RBLController::publishCentroid()
         distance = euclideanDistance(p, centroid);
         std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
+        std::cout << "size cell " << voronoi_circle_intersection_connectivity.size() << std::endl;
+        std::cout << "size cell " << voronoi_circle_intersection.size() << std::endl;
 
          //auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows);
         // break;

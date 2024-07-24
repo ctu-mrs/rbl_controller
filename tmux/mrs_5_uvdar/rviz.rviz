@@ -7,8 +7,7 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Encumbrances1
-        - /UAV2_perception1
+        - /ObstaclesFiltered1/Obstacles5
       Splitter Ratio: 0.560869574546814
     Tree Height: 800
   - Class: rviz/Selection
@@ -381,14 +380,6 @@ Visualization Manager:
           Value: true
       Enabled: false
       Name: Reference trajectories
-    - Class: rviz/MarkerArray
-      Enabled: false
-      Marker Topic: /uav2/rbl_controller/neighbors_vis
-      Name: UAV2_perception
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: false
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
@@ -420,86 +411,182 @@ Visualization Manager:
       Topic: /uav5/uvdar/measuredPoses
       Unreliable: false
       Value: false
-    - Class: rviz/MarkerArray
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/neighbors_vis
+          Name: Neighbors
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/obstacles_vis
+          Name: Neighbors
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/neighbors_vis
+          Name: Neighbors
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/obstacles_vis
+          Name: Neighbors
+          Namespaces:
+            obstacles: true
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/neighbors_vis
+          Name: Neighbors
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
-      Marker Topic: /clusters_uav1
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
+      Name: NeighborsFiltered
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/hull_vis
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/hull_vis
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/hull_vis
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/hull_vis
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/hull_vis
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
-      Marker Topic: /clusters_uav2
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
+      Name: VoroCells
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /clusters_uav5
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /clusters_uav3
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /clusters_uav2
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /clusters_uav4
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
+        - Class: rviz/MarkerArray
+          Enabled: false
+          Marker Topic: /clusters_uav1
+          Name: MarkerArray
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: false
+      Enabled: false
+      Name: Clouds
+    - Class: rviz/Group
+      Displays:
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav1/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav2/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav3/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav4/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
+        - Class: rviz/MarkerArray
+          Enabled: true
+          Marker Topic: /uav5/rbl_controller/obstacles_vis
+          Name: Obstacles
+          Namespaces:
+            {}
+          Queue Size: 100
+          Value: true
       Enabled: true
-      Marker Topic: /clusters_uav3
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /clusters_uav4
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /clusters_uav5
-      Name: MarkerArray
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav1/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav2/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav3/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav4/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /uav5/rbl_controller/obstacles_vis
-      Name: Obstacles
-      Namespaces:
-        obstacles: true
-      Queue Size: 100
-      Value: true
+      Name: ObstaclesFiltered
   Enabled: true
   Global Options:
     Background Color: 255; 255; 255
@@ -527,7 +614,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 1.7695128917694092e-07
+      Angle: -0.004999672062695026
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -537,10 +624,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 37.23286437988281
+      Scale: 12.761068344116211
       Target Frame: common_origin
-      X: 1.2540206909179688
-      Y: -34.22530746459961
+      X: 1.329464077949524
+      Y: -11.817119598388672
     Saved: ~
 Window Geometry:
   Displays:

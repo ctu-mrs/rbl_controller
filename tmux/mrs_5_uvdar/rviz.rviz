@@ -382,13 +382,13 @@ Visualization Manager:
       Enabled: false
       Name: Reference trajectories
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /uav2/rbl_controller/neighbors_vis
       Name: UAV2_perception
       Namespaces:
-        neighbors_and_obstacles_noisy: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
@@ -537,7 +537,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 42.31007385253906
+      Scale: 37.23286437988281
       Target Frame: common_origin
       X: 1.2540206909179688
       Y: -34.22530746459961

@@ -62,7 +62,10 @@ namespace formation_control
     {
       return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
     }
-
+    // Function to check if a window contains any zeros
+    bool windowContainsZeros(const std::deque<double>& window) {
+    return std::any_of(window.begin(), window.end(), [](double value) { return value == 0.0; });
+    }
     // Function to add Gaussian noise to a value
     double addRandomNoise(double value, double percentage)
     {
@@ -158,7 +161,9 @@ namespace formation_control
   private:
     // general variables
     bool is_initialized_ = false;
-
+    
+    std::vector<std::pair<double, double>> new_neighbors;
+    std::vector<std::vector<std::pair<double, double>>> neighbors_past_measurements; // For storing past measurements
     // parameters from config file definitions
     int n_drones_; // Number of drones
     std::vector<std::string> _uav_names_;
@@ -249,8 +254,8 @@ namespace formation_control
     std::vector<double> size_neighbors_and_obstacles;
     std::vector<double> size_neighbors;
     std::vector<double> size_obstacles;
-    std::vector<std::deque<double>> dist_windows;
-    std::vector<std::deque<double>> angle_windows;
+    std::vector<std::deque<double>> x_windows;
+    std::vector<std::deque<double>> y_windows;
     double size_neighbors1;
     double size_obstacles1;
     double encumbrance;
@@ -317,8 +322,8 @@ namespace formation_control
         double encumbrance,
         const std::pair<double, double> &destination,
         double &beta,
-        std::vector<std::deque<double>> &dist_windows,
-        std::vector<std::deque<double>> &angle_windows,     
+        std::vector<std::deque<double>> &x_windows,
+        std::vector<std::deque<double>> &y_windows,     
         std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
 
 
@@ -573,7 +578,7 @@ void RBLController::publishNeighbors()
     visualization_msgs::MarkerArray neighbors_markers;
     
 
-    for (size_t i = 0; i < n_drones_; ++i)
+    for (size_t i = 0; i < new_neighbors.size(); ++i)
     {
       visualization_msgs::Marker marker;
       marker.header.frame_id = _control_frame_;
@@ -582,8 +587,8 @@ void RBLController::publishNeighbors()
       marker.id = i;
       marker.type = visualization_msgs::Marker::CYLINDER;
       marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = neighbors_and_obstacles_noisy[i].first;
-      marker.pose.position.y = neighbors_and_obstacles_noisy[i].second;
+      marker.pose.position.x = new_neighbors[i].first;
+      marker.pose.position.y = new_neighbors[i].second;
       marker.pose.position.z = 0; // Assuming obstacles are on the ground
       marker.pose.orientation.w = 1.0;
       marker.scale.x = 0.3; // Adjust size as necessary
@@ -775,10 +780,52 @@ void RBLController::publishCentroid()
       const std::vector<std::pair<double, double>> &points,
       const std::vector<std::pair<double, double>> &neighbors)
   {
+
+
+    //std::vector<std::pair<double, double>> new_neighbors;
+    new_neighbors.clear();
+    // Initialize neighbors_past_measurements if empty
+    if (neighbors_past_measurements.size() < neighbors.size()) {
+        neighbors_past_measurements.resize(neighbors.size());
+    }
+
+    for (size_t j = 0; j < neighbors.size(); ++j) {
+        const auto& neighbor = neighbors[j];
+        
+        // Add current neighbor to past measurements
+        if (neighbors_past_measurements[j].size() >= 10) {
+            neighbors_past_measurements[j].erase(neighbors_past_measurements[j].begin());
+        }
+        neighbors_past_measurements[j].push_back(neighbor);
+
+        // Calculate mean of past measurements
+        double mean_x = std::accumulate(
+            neighbors_past_measurements[j].begin(), neighbors_past_measurements[j].end(), 0.0,
+            [](double sum, const std::pair<double, double>& p) {
+                return sum + p.first;
+            }) / neighbors_past_measurements[j].size();
+        double mean_y = std::accumulate(
+            neighbors_past_measurements[j].begin(), neighbors_past_measurements[j].end(), 0.0,
+            [](double sum, const std::pair<double, double>& p) {
+                return sum + p.second;
+            }) / neighbors_past_measurements[j].size();
+
+        double mean_distance = std::sqrt(
+            std::pow(neighbor.first - mean_x, 2) +
+            std::pow(neighbor.second - mean_y, 2));
+        
+        // If the distance from the mean is within the allowed range, consider the neighbor
+        if (mean_distance <= threshold - 0.5) {
+            new_neighbors.push_back({mean_x,mean_y});
+        }
+    }
+
+
+
     std::vector<int> index;
     std::vector<std::pair<double, double>> new_points = points;
 
-    for (const auto &neighbor : neighbors)
+    for (const auto &neighbor : new_neighbors)
     {
       for (size_t i = 0; i < new_points.size(); ++i)
       {
@@ -968,16 +1015,59 @@ void RBLController::publishCentroid()
       double encumbrance,
       const std::pair<double, double> &destination,
       double &beta,
-      std::vector<std::deque<double>> &dist_windows,
-      std::vector<std::deque<double>> &angle_windows,
+      std::vector<std::deque<double>> &x_windows,
+      std::vector<std::deque<double>> &y_windows,
       std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy
       )
   {
 
+    neighbors_and_obstacles_noisy.clear();
+
+    for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i) {
+        // Get the rolling window for this point
+        auto &x_window = x_windows[i];
+        auto &y_window = y_windows[i];
+
+        // Ensure the rolling window is full before processing
+        if ( !windowContainsZeros(x_window) &&  !windowContainsZeros(y_window)) {
+
+            // Calculate the average of the last three distances
+            double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
+            double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
+
+            //std::cout << x_window.size() << ", " << avg_X << std::endl;
+            // Calculate the distance between the new position and the average position
+            std::pair<double, double> avg_position = std::make_pair(avg_X, avg_Y);
+            double distance = euclideanDistance(neighbors_and_obstacles[i], avg_position);
+
+            // If the distance is too far, discard the measurement
+            if (distance > threshold-0.5) {
+                continue;
+            }
+        }
+        //std::cout <<"onf"<<std::endl;
+        // Add the current distance to the window and remove the oldest one if necessary
+        if (x_window.size() == window_length) x_window.pop_front();
+        x_window.push_back(neighbors_and_obstacles[i].first);
+
+        if (y_window.size() == window_length) y_window.pop_front();
+        y_window.push_back(neighbors_and_obstacles[i].second);
+
+        // Calculate the average of the current window
+        double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
+        double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
+
+        // Update point with perturbed distance
+        neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
+    }
+  
+
+
+    /*
     // Vector to hold distances between robot_pos and neighbors_and_obstacles
-    std::vector<double> distances;
+    //std::vector<double> distances;
     // Vector to hold angles between robot_pos and neighbors_and_obstacles
-    std::vector<double> angles;
+    //std::vector<double> angles;
     // Vector to hold updated positions of neighbors_and_obstacles
     neighbors_and_obstacles_noisy.clear();
 
@@ -985,41 +1075,44 @@ void RBLController::publishCentroid()
     {
      // std::cout<<"ciaoooo" <<neighbors.size()<<std::endl;
       // Calculate distance
-      //double dist = distance(robot_pos, neighbors_and_obstacles[i]);
+      std::pair<double, double> avg_position = std::make_pair(avg_X, avg_Y);
+      double dist = distance(robot_pos, neighbors_and_obstacles[i]);
       // Add Gaussian noise of 10% to the distance
     
     
       //dist = addRandomNoise(dist+bias_error, noisy_measurements);
       
       // Get the rolling window for this point
-      auto &dist_window = dist_windows[i];
+      auto &x_window = x_windows[i];
 
       // Add the current distance to the window and remove the oldest one if necessary
-      dist_window.pop_front();
-      dist_window.push_back(neighbors_and_obstacles[i].first);
+      x_window.pop_front();
+      x_window.push_back(neighbors_and_obstacles[i].first);
 
       // Calculate the average of the last three distances
-      double avg_X = std::accumulate(dist_window.begin(), dist_window.end(), 0.0) / dist_window.size();
+      double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
 
-      distances.push_back(avg_X);
+      //distances.push_back(avg_X);
 
       // Calculate angle
       //double ang = angle(robot_pos, neighbors_and_obstacles[i]);
       //ang = addRandomNoise1(ang, noisy_angle);
-      auto &angle_window = angle_windows[i];
-      angle_window.pop_front();
-      angle_window.push_back(neighbors_and_obstacles[i].second);
+      auto &y_window = y_windows[i];
+      y_window.pop_front();
+      y_window.push_back(neighbors_and_obstacles[i].second);
 
-      double avg_Y = std::accumulate(angle_window.begin(), angle_window.end(), 0.0) / angle_window.size();
+      double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
 
       // Update point with perturbed distance
       //double new_x = robot_pos.first + avg_dist * std::cos(avg_ang);
       //double new_y = robot_pos.second + avg_dist * std::sin(avg_ang);
       neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
-    }
+      }
+*/
+
 
     
-    //neighbors_and_obstacles_noisy = neighbors_and_obstacles;
+    neighbors_and_obstacles_noisy = neighbors_and_obstacles;
     // Get points inside the circle
     std::vector<std::pair<double, double>>
         circle_points = points_inside_circle(robot_pos, radius, step_size);
@@ -1113,12 +1206,12 @@ void RBLController::publishCentroid()
     for (const Point &p : hull)
 
     {
-      //hull_voro.push_back(std::make_pair(p.first, p.second));
+      hull_voro.push_back(std::make_pair(p.first, p.second));
 
       distance = euclideanDistance(p, centroid);
       //TODO: value of the threshold should change depending on covarince matrices and positions of neighbors
       
-      if (voronoi_circle_intersection_connectivity.empty()){
+      //if (voronoi_circle_intersection_connectivity.empty()){
       while (distance < threshold)
       {
 
@@ -1148,7 +1241,7 @@ void RBLController::publishCentroid()
         }
       }
     }
-    }
+    //}
     // Compute the centroid without neighbors
     double sum_x_in_no_neigh_times_scalar_values = 0.0;
     double sum_y_in_no_neigh_times_scalar_values = 0.0;
@@ -1551,17 +1644,17 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       size_neighbors_and_obstacles = size_neighbors; // Copy vec1 to vec3
       size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
-      dist_windows.resize(neighbors_and_obstacles.size());
-      angle_windows.resize(neighbors_and_obstacles.size());
+      x_windows.resize(neighbors_and_obstacles.size());
+      y_windows.resize(neighbors_and_obstacles.size());
 
     // Resize each deque in dist_windows to have a size of 100
-      for (auto &dist_window : dist_windows)
+      for (auto &x_window :x_windows)
       {
-       dist_window.resize(window_length, 0.0);
+       x_window.resize(window_length, 0.0);
       }
-      for (auto &angle_window : angle_windows)
+      for (auto &y_window : y_windows)
       {
-      angle_window.resize(window_length, 0.0);
+      y_window.resize(window_length, 0.0);
       }
       /*std::vector<std::pair<double, double>> points = RBLController::points_inside_circle(robot_pos, radius, step_size);
 
@@ -1572,9 +1665,9 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       std::vector<std::pair<double, double>> accounted_points = RBLController::account_encumbrance(closest_points, robot_pos, neighbors, size_neighbors, encumbrance);*/
 
       // Call get_centroid function
-      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, dist_windows, angle_windows, neighbors_and_obstacles_noisy);
+      auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
 
-      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, dist_windows, angle_windows, neighbors_and_obstacles_noisy);
+      auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance, {goal[0], goal[1]}, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
 
       // std::vector<double> c1 = {c1_c2.first.first, c1_c2.first.second};
       // std::vector<double> c2 = {c1_c2.second.first, c1_c2.second.second};

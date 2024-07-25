@@ -191,8 +191,10 @@ namespace formation_control
 
     // trigger service
     ros::ServiceServer service_activate_control_;
+    ros::ServiceServer service_deactivate_control_;
     bool control_allowed_ = false;
     bool activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+    bool deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
     // trigger goto service
     ros::ServiceServer service_fly_to_start_;
@@ -497,6 +499,7 @@ namespace formation_control
 
     // initialize service servers
     service_activate_control_ = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
+    service_deactivate_control_ = nh.advertiseService("control_deactivation_in", &RBLController::deactivationServiceCallback, this);
     service_fly_to_start_ = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
 
     // initialize service clients
@@ -1835,6 +1838,34 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     return true;
   }
 
+  /* deactivationServiceCallback() //{ */
+  bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res)
+  {
+    // service for deactivation of planning
+    ROS_INFO("[RBLController]: Deactivation service called.");
+    res.success = true;
+
+    if (!control_allowed_)
+    {
+      res.message = "Control was already disables.";
+      ROS_WARN("[RBLController]: %s", res.message.c_str());
+    }
+    else if (!all_robots_positions_valid_)
+    {
+      res.message = "Robots are not ready, control cannot be deactivated.";
+      ROS_WARN("[RBLController]: %s", res.message.c_str());
+      res.success = false;
+    }
+    else
+    {
+      control_allowed_ = false;
+      res.message = "Control disabled.";
+      ROS_INFO("[RBLController]: %s", res.message.c_str());
+    }
+
+    return true;
+  }
+
   //}
 
   /* flyToStartServiceCallback() //{ */
@@ -1844,12 +1875,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     ROS_INFO("[RBLController]: Fly to start service called.");
     res.success = true;
 
-    if (fly_to_start_called_)
-    {
-      res.message = "Fly to start was already allowed.";
-      ROS_WARN("[RBLController]: %s", res.message.c_str());
-    }
-    else if (!all_robots_positions_valid_)
+    if (!all_robots_positions_valid_)
     {
       res.message = "Robots are not ready,  fly to start cannot be called.";
       ROS_WARN("[RBLController]: %s", res.message.c_str());

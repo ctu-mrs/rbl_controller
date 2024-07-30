@@ -1,4 +1,4 @@
-uav_names: ["uav1", "uav2", "uav3", "uav4", "uav5"] #, "uav6", "uav7", "uav8"]
+uav_names: ["uav1", "uav2", "uav3", "uav4"] #, "uav6", "uav7", "uav8"]
 
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"

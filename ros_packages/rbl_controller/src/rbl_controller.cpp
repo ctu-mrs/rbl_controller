@@ -820,9 +820,9 @@ void RBLController::publishCentroid()
             double bearing_angle = std::atan2(dy,dx);
             if (distance_1 > maximum_distance_conn) {
                 // Project the neighbor position in the same direction but at maximum_distance_conn
-                mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle);
-                mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle);
-               std::cout<< "distance!!!!! :  "<<distance_1 <<std::endl;
+                mean_x = robot_pos.first; //+ (maximum_distance_conn-threshold)*std::cos(bearing_angle);
+                mean_y = robot_pos.second; //+ (maximum_distance_conn-threshold)*std::sin(bearing_angle);
+                std::cout<< "distance!!!!! :  "<<distance_1<< "meanX: " << mean_x << " mean_y: "<< mean_y <<std::endl;
 
             }
 
@@ -1237,7 +1237,7 @@ void RBLController::publishCentroid()
         }
         centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
         distance = euclideanDistance(p, centroid);
-        std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
+        //std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
 
         //std::cout << "size cell " << voronoi_circle_intersection_connectivity.size() << std::endl;
         //std::cout << "size cell " << voronoi_circle_intersection.size() << std::endl;
@@ -1333,9 +1333,9 @@ void RBLController::publishCentroid()
     if (th == M_PI / 2 && sqrt(pow((current_j_x - c1_no_rotation[0]), 2) + pow((current_j_y - c1_no_rotation[1]), 2)) > sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)))
     {
       th = 0;
-      //sWARNINGcout << "reset" << std::endl;
+      //std::cout << "reset" << std::endl;
     }
-    //std::cout << "theta : " << th << ", beta: " << beta << std::endl;
+    //std::cout << "theta : " << th << ", beta: " << beta << "distc1c2: " <<dist_c1_c2 << "cuurentj-c1: "<< sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
     // Compute the angle and new position
     double angle = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
     double new_angle = angle - th;

@@ -419,7 +419,7 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            neighbors_and_obstacles_noisy: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -427,7 +427,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            neighbors_and_obstacles_noisy: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -435,7 +435,7 @@ Visualization Manager:
           Marker Topic: /uav1/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            neighbors_and_obstacles_noisy: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -443,7 +443,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/obstacles_vis
           Name: Neighbors
           Namespaces:
-            obstacles: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -451,10 +451,10 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/neighbors_vis
           Name: Neighbors
           Namespaces:
-            neighbors_and_obstacles_noisy: true
+            {}
           Queue Size: 100
           Value: true
-      Enabled: true
+      Enabled: false
       Name: NeighborsFiltered
     - Class: rviz/Group
       Displays:
@@ -463,7 +463,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            hull_voro: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -471,7 +471,7 @@ Visualization Manager:
           Marker Topic: /uav1/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            hull_voro: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -479,7 +479,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            hull_voro: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -487,7 +487,7 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            hull_voro: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -495,7 +495,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
-            hull_voro: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -615,7 +615,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: -0.004999672062695026
+      Angle: -0.014999671839177608
       Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
@@ -625,10 +625,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 37.39986801147461
+      Scale: 11.542863845825195
       Target Frame: common_origin
-      X: 2.408085584640503
-      Y: -32.398963928222656
+      X: 4.033905029296875
+      Y: -21.031925201416016
     Saved: ~
 Window Geometry:
   Displays:
@@ -647,4 +647,4 @@ Window Geometry:
     collapsed: true
   Width: 1850
   X: 70
-  Y: 1227
+  Y: 27

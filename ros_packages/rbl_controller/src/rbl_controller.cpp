@@ -1510,7 +1510,10 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     // Step 5: Print the matrix and the largest eigenvalue
     //std::cout << "Matrix:\n" << CovarianceMatrix<< std::endl;
     //std::cout << "Eigenvalues:\n" << eigenvalues << std::endl;
-    //std::cout << "Largest eigenvalue: " << uav_id << " eig: "<< largest_eigenvalue_ << std::endl;
+     double valeig = std::abs(std::abs(std::sqrt(pow((new_point.point.x-position_command_.x),2) + pow((new_point.point.y-position_command_.y),2)))/2); 
+     double valeig1 = 2.6 *   std::sqrt(largest_eigenvalue)+ encumbrance;
+
+    std::cout << "Largest eigenvalue: " << uav_id << " eig: " <<  valeig << "<" << valeig1 << std::endl;
 
     //auto res = transformer_->transformSingle(new_point, "world_origin");
     //if (res)

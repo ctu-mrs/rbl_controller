@@ -11,16 +11,16 @@ encumbrance: 0.2
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
-threshold: 1.00 
+threshold: 1.0 
 window_length: 1 #10
 bias_error: 0.0 #0.5
 
 
-#Adj_matrix_uav1: [0,1,0,0,0]
-#Adj_matrix_uav2: [1,0,1,0,0]
-#Adj_matrix_uav3: [0,1,0,1,0]
-#Adj_matrix_uav4: [0,0,1,0,1]
-#Adj_matrix_uav5: [0,0,0,1,0]
+#Adj_matrix_uav1: [0,1,1,0,0]
+#Adj_matrix_uav2: [1,0,1,1,1]
+#Adj_matrix_uav3: [1,1,0,1,0]
+#Adj_matrix_uav4: [0,1,1,0,1]
+#Adj_matrix_uav5: [0,1,0,1,0]
 
 Adj_matrix_uav1: [0,1,0,0,0]
 Adj_matrix_uav2: [1,0,1,0,0]

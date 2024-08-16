@@ -35,29 +35,40 @@ pre_input=""
 # * "new line" after the command    => the command will be called after start
 # * NO "new line" after the command => the command will wait for user's <enter>
 input=(
-  'Rosbag' 'waitForOffboard; ./record.sh'
+  'Rosbag' 'waitForOffboard; ./record.sh
+  '
 
-  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch'
+  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch
+  '
   
-  'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml'
+  'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml
+  '
  
-  'HwApi' 'waitForTime; roslaunch mrs_uav_px4_api api.launch'
+  'HwApi' 'waitForTime; roslaunch mrs_uav_px4_api api.launch
+  '
   
-  'Status' 'waitForHw; roslaunch mrs_uav_status status.launch'
+  'Status' 'waitForHw; roslaunch mrs_uav_status status.launch
+  '
   
-  'Core' 'waitForTime; roslaunch mrs_uav_core core.launch platform_config:=`rospack find mrs_uav_deployment`/config/mrs_uav_system/$UAV_TYPE.yaml world_config:=`rospack find mrs_uav_deployment`/config/worlds/world_$WORLD_NAME.yaml custom_config:=./config/custom_config.yaml network_config:=./config/network_config.yaml'
+  'Core' 'waitForTime; roslaunch mrs_uav_core core.launch platform_config:=`rospack find mrs_uav_deployment`/config/mrs_uav_system/$UAV_TYPE.yaml world_config:=`rospack find mrs_uav_deployment`/config/worlds/world_$WORLD_NAME.yaml custom_config:=./config/custom_config.yaml network_config:=./config/network_config.yaml
+  '
   
-  'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch'
+  'AutoStart' 'waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
+  '
   
-  'rbl_control' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml'
+  'rbl_control' 'waitForHw; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+  '
   
   'Activation' 'rosservice call /'"$UAV_NAME"'/rbl_controller/activation'
   
-  'tf_connector' 'waitForTime; roslaunch area_monitoring_controller tf_publisher.launch'
+  'tf_connector' 'waitForTime; roslaunch rbl_controller tf_publisher.launch
+  '
   
-  'uvdar' 'waitForHw; roslaunch uvdar_multirobot_simulator example.launch'
+  'uvdar' 'waitForHw; roslaunch uvdar_core rw_three_sided.launch
+  '
   
-  'lidar' 'waitForHw; roslaunch lidar_simulator example.launch'
+  'lidar' 'waitForHw; roslaunch lidar_simulator example.launch
+  '
 
 # do NOT modify the command list below
   'EstimDiag' 'waitForHw; rostopic echo /'"$UAV_NAME"'/estimation_manager/diagnostics

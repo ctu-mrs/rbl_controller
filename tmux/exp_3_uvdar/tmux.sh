@@ -38,7 +38,7 @@ input=(
   'Rosbag' 'waitForOffboard; ./record.sh
   '
 
-  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch
+  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch rplidar_frame:='"$UAV_NAME"'/world_origin
   '
   
   'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml

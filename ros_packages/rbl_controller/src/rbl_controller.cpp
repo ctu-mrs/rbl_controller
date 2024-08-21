@@ -45,7 +45,7 @@
 #include <algorithm>
 #include <random>
 #include <deque>
-
+#include <utility>
 #include <chrono>
 namespace formation_control
 {
@@ -53,6 +53,94 @@ namespace formation_control
 class RBLController : public nodelet::Nodelet {
 public:
   virtual void onInit();
+
+std::vector<std::pair<double, double>> filterObstacles(
+    const std::vector<std::pair<double, double>>& obstacles_,
+    double tolerance ,       // Tolerance for matching positions
+    double default_decay_rate, // Default decay rate
+    double remove_threshold      // Threshold to remove obstacle
+) {
+    struct TrackedObstacle {
+        std::pair<double, double> position;
+        double probability;
+        int missing_count;
+        std::pair<double, double> previous_position;
+        int static_count;
+
+        TrackedObstacle(double x, double y, double init_prob = 1.0)
+            : position(x, y), probability(init_prob), missing_count(0),
+              previous_position(x, y), static_count(0) {}
+    };
+
+    static std::vector<TrackedObstacle> tracked_obstacles_;
+
+    auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) {
+        return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
+    };
+
+    std::vector<bool> matched(tracked_obstacles_.size(), false);
+
+    for (const auto& new_obstacle : obstacles_) {
+        bool found_match = false;
+
+        for (size_t i = 0; i < tracked_obstacles_.size(); ++i) {
+            if (distance(new_obstacle, tracked_obstacles_[i].position) < tolerance) {
+                // Check if the obstacle's position has remained static
+                if (distance(new_obstacle, tracked_obstacles_[i].previous_position) < tolerance) {
+                    tracked_obstacles_[i].static_count++;
+                } else {
+                    tracked_obstacles_[i].static_count = 0;
+                }
+
+                // Update position and previous position
+                tracked_obstacles_[i].previous_position = tracked_obstacles_[i].position;
+                tracked_obstacles_[i].position.first = (tracked_obstacles_[i].position.first + new_obstacle.first) / 2.0;
+                tracked_obstacles_[i].position.second = (tracked_obstacles_[i].position.second + new_obstacle.second) / 2.0;
+
+                // Increase probability and reset missing count
+                tracked_obstacles_[i].probability = std::min(1.0, tracked_obstacles_[i].probability + 0.1);
+                tracked_obstacles_[i].missing_count = 0;
+
+                matched[i] = true;
+                found_match = true;
+                break;
+            }
+        }
+
+        if (!found_match) {
+            tracked_obstacles_.emplace_back(new_obstacle.first, new_obstacle.second);
+        }
+    }
+
+    for (size_t i = 0; i < tracked_obstacles_.size(); ++i) {
+        if (!matched[i]) {
+            double decay_rate = default_decay_rate;
+
+            // If the obstacle has been static for several updates, stop decaying its probability
+            if (tracked_obstacles_[i].static_count >= 10) {  // "10" can be adjusted as needed
+                decay_rate = 0;
+            }
+
+            tracked_obstacles_[i].probability -= decay_rate;
+            tracked_obstacles_[i].missing_count++;
+
+            // Remove obstacle if probability drops below the threshold
+            if (tracked_obstacles_[i].probability < remove_threshold) {
+                tracked_obstacles_.erase(tracked_obstacles_.begin() + i);
+                matched.erase(matched.begin() + i);
+                --i;
+            }
+        }
+    }
+
+    // Collect the filtered obstacles to return
+    std::vector<std::pair<double, double>> fobstacles_;
+    for (const auto& tracked : tracked_obstacles_) {
+        fobstacles_.push_back(tracked.position);
+    }
+
+    return fobstacles_;
+}
 
   // Function to compute the distance between two points
   double distance(const std::pair<double, double> &p1, const std::pair<double, double> &p2) {
@@ -266,6 +354,9 @@ private:
   double                          noisy_angle;
   double                          threshold;
   double                          bias_error;
+  double tolerance;
+  double deafult_decay_rate;
+  double remove_threshold;
   int                             window_length;
   // callbacks definitions
   std::mutex                   mutex_uav_odoms_;
@@ -381,6 +472,10 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
+  param_loader.loadParam("tolerance" , tolerance);
+  param_loader.loadParam("deafult_decay_rate", deafult_decay_rate);
+  param_loader.loadParam("remove_threshold", remove_threshold);
+
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
     ROS_ERROR("[RblController]: Could not load all parameters!");
@@ -1330,7 +1425,10 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
           return;
         }
         // Store centroid in obstacles vector
+
         obstacles_.emplace_back(new_point.point.x, new_point.point.y);
+      
+        std::vector<std::pair<double, double>> obstacles_ = filterObstacles(obstacles_, tolerance, deafult_decay_rate, remove_threshold);
       }
     }
   }

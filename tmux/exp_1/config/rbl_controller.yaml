@@ -14,8 +14,9 @@ noisy_angle: 0.0 #0.3
 threshold: 1.0 
 window_length: 1 #10
 bias_error: 0.0 #0.5
-
-
+tolerance: 0.5
+deafult_decay_rate: 0.05
+remove_threshold: 0.2
 #Adj_matrix_uav1: [0,1,1,0,0]
 #Adj_matrix_uav2: [1,0,1,1,1]
 #Adj_matrix_uav3: [1,1,0,1,0]

@@ -57,7 +57,7 @@ final_positions: # defined with respect to monitored_area_origin
   uav40:
     x: -6.0
     y: 45.0
-    z: 3.0
+    z: 1.1
 
   
 
@@ -65,7 +65,7 @@ final_positions: # defined with respect to monitored_area_origin
 initial_positions: # defined with respect to monitored_area_origin
 
   uav40:
-    x: -6.0 #10
-    y: -42.0 #0
-    z: 2.0
+    x: -68.0 #10
+    y: -6.0 #0
+    z: 1.1
 

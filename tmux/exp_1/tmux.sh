@@ -37,10 +37,8 @@ pre_input=""
 input=(
   'Rosbag' 'waitForOffboard; ./record.sh
   '
-
-  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch rplidar_frame:='"$UAV_NAME"'/world_origin
+  'Sensors' 'waitForTime; roslaunch mrs_uav_deployment sensors.launch
   '
-  
   'Nimbro' 'waitForTime; rosrun mrs_uav_deployment run_nimbro.py ./config/network_config.yaml ./config/communication_config.yaml
   '
  
@@ -60,7 +58,9 @@ input=(
   '
   
   'Activation' 'rosservice call /'"$UAV_NAME"'/rbl_controller/activation'
-  
+
+  'FlyToStart' 'rosservice call /'"$UAV_NAME"'/rbl_controller/fly_to_start'
+
   'tf_connector' 'waitForTime; roslaunch rbl_controller tf_publisher.launch
   '
   

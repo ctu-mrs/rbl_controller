@@ -155,6 +155,7 @@ private:
   // parameters from config file definitions
   int                      n_drones_;  // Number of drones
   std::vector<std::string> _uav_names_;
+  std::map<int, int>       _uav_uvdar_ids_;
   std::string              _uav_name_;
   std::string              _target_uav_name_;
   std::string              _control_frame_;
@@ -239,10 +240,10 @@ private:
   std::vector<std::pair<double, double>> obstacles_;
   std::vector<std::pair<double, double>> obstacles_nofiltered;
 
-     std::vector<std::pair<double, double>> tracked_obs; //std::make_pair(1,(0.0, 0.0});
-     std::vector<double> probabilities_= {0};
-     std::vector<int> missing_counts_ = {0};
-     std::vector<bool> matched_ = {false};
+  //     std::vector<std::pair<double, double>> tracked_obs; //std::make_pair(1,(0.0, 0.0});
+  //     std::vector<double> probabilities_= {0};
+  //     std::vector<int> missing_counts_ = {0};
+  //     std::vector<bool> matched_ = {false};
   std::vector<double> goal           = {0, 0};
   bool                has_this_pose_ = false;
   // TODO move this staff in yaml.
@@ -270,9 +271,9 @@ private:
   double                          noisy_angle;
   double                          threshold;
   double                          bias_error;
-  double tolerance;
-  double deafult_decay_rate;
-  double remove_threshold;
+  double                          tolerance;
+  double                          deafult_decay_rate;
+  double                          remove_threshold;
   int                             window_length;
   // callbacks definitions
   std::mutex                   mutex_uav_odoms_;
@@ -296,7 +297,9 @@ private:
 
   std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
-  std::vector<std::pair<double, double>> filterObstacles(std::vector<std::pair<double, double>> &obstacles_, double tolerance, double default_decay_rate, double remove_threshold, std::vector<std::pair<double, double>> &tracked_obs, std::vector<double> &probabilities_, std::vector<int> &missing_counts_, std::vector<bool> &matched_);
+  //  std::vector<std::pair<double, double>> filterObstacles(std::vector<std::pair<double, double>> &obstacles_, double tolerance, double default_decay_rate,
+  //  double remove_threshold, std::vector<std::pair<double, double>> &tracked_obs, std::vector<double> &probabilities_, std::vector<int> &missing_counts_,
+  //  std::vector<bool> &matched_);
 
   std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix,
                                                          size_t my_index);
@@ -353,8 +356,10 @@ void RBLController::onInit() {
   ros::Time::waitForValid();
   // load parameters
   std::string          _leader_name;
+  std::vector<int>     _uvdar_ids_;
   mrs_lib::ParamLoader param_loader(nh, "RBLController");
   param_loader.loadParam("uav_names", _uav_names_);
+  param_loader.loadParam("uav_uvdar_ids", _uvdar_ids_);
   param_loader.loadParam("uav_name", _uav_name_);
   param_loader.loadParam("odometry_topic", _odometry_topic_name_);
   param_loader.loadParam("set_reference_timer/rate", _rate_timer_set_reference_);
@@ -390,7 +395,7 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
-  param_loader.loadParam("tolerance" , tolerance);
+  param_loader.loadParam("tolerance", tolerance);
   param_loader.loadParam("deafult_decay_rate", deafult_decay_rate);
   param_loader.loadParam("remove_threshold", remove_threshold);
 
@@ -425,6 +430,7 @@ void RBLController::onInit() {
   if (it != _uav_names_.end()) {
     this_uav_idx_ = it - _uav_names_.begin();
     _uav_names_.erase(it);
+    _uvdar_ids_.erase(_uvdar_ids_.begin() + this_uav_idx_);
   } else {
     ROS_ERROR("[RBLController]: This UAV is not part of the formation! Check the config file. Shutting down node.");
     ros::shutdown();
@@ -432,7 +438,7 @@ void RBLController::onInit() {
   beta      = betaD;
   n_drones_ = _uav_names_.size();
 
-  uav_neighbors_.assign(n_drones_ + 1, Eigen::Vector3d(10000, 0, 0));
+  uav_neighbors_.resize(n_drones_);  // FIXME: wait only for the neighbors
   // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
   uav_positions_.resize(n_drones_);
 
@@ -449,6 +455,7 @@ void RBLController::onInit() {
   for (int i = 0; i < _uav_names_.size(); i++) {
     std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_;
     other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
+    _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
     ROS_INFO("Subscribing to %s", topic_name.c_str());
   }
 
@@ -510,8 +517,8 @@ void RBLController::publishObstacles() {
 
   visualization_msgs::MarkerArray obstacle_markers;
   {
-    std::scoped_lock                lock(mutex_obstacles_);
-    size_t                          current_obstacle_count = obstacles_.size();
+    std::scoped_lock lock(mutex_obstacles_);
+    size_t           current_obstacle_count = obstacles_.size();
 
     // Add or update markers for existing obstacles
     for (size_t i = 0; i < current_obstacle_count; ++i) {
@@ -556,6 +563,7 @@ void RBLController::publishObstacles() {
   }
 
   // Publish the marker array
+
   pub_obstacles_.publish(obstacle_markers);
 }
 
@@ -688,87 +696,86 @@ void RBLController::publishDestination() {
   pub_destination_.publish(marker);
 }
 
-std::vector<std::pair<double, double>> RBLController::filterObstacles(
-    std::vector<std::pair<double, double>>& obstacles_,
-    double tolerance,       // Tolerance for matching positions
-    double default_decay_rate, // Default decay rate
-    double remove_threshold,      // Threshold to remove obstacle
-     std::vector<std::pair<double, double>> &tracked_obs,
-     std::vector<double> &probabilities_,
-    std::vector<int> &missing_counts_,
-     std::vector<bool> &matched_
-) {
-  //static std::vector<std::pair<double, double>> tracked_obs(1,std::make_pair(0,0)); 
-  //static std::vector<double> probabilities_(tracked_obs.size(),0);
-  //static std::vector<int> missing_counts_(tracked_obs.size(),0);
-  //static std::vector<bool> matched_(tracked_obs.size(),false);
-  //std::cout<< obstacles_.size()<<std::endl;
-  double decay_rate = deafult_decay_rate;
+/* std::vector<std::pair<double, double>> RBLController::filterObstacles( */
+/*     std::vector<std::pair<double, double>>& obstacles_, */
+/*     double tolerance,       // Tolerance for matching positions */
+/*     double default_decay_rate, // Default decay rate */
+/*     double remove_threshold,      // Threshold to remove obstacle */
+/*      std::vector<std::pair<double, double>> &tracked_obs, */
+/*      std::vector<double> &probabilities_, */
+/*     std::vector<int> &missing_counts_, */
+/*      std::vector<bool> &matched_ */
+/* ) { */
+/*   //static std::vector<std::pair<double, double>> tracked_obs(1,std::make_pair(0,0)); */
+/*   //static std::vector<double> probabilities_(tracked_obs.size(),0); */
+/*   //static std::vector<int> missing_counts_(tracked_obs.size(),0); */
+/*   //static std::vector<bool> matched_(tracked_obs.size(),false); */
+/*   //std::cout<< obstacles_.size()<<std::endl; */
+/*   double decay_rate = deafult_decay_rate; */
 
 
-  auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) {
-        return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
-    };
+/*   auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) { */
+/*         return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2)); */
+/*     }; */
 
-    for (const auto& new_obstacle : obstacles_) {
-        bool found_match = false;
+/*     for (const auto& new_obstacle : obstacles_) { */
+/*         bool found_match = false; */
 
-        for (size_t i = 0; i < tracked_obs.size(); ++i) {
-          
-            if (distance(new_obstacle, tracked_obs[i]) < tolerance) {
-                // Update position and previous position
-                
+/*         for (size_t i = 0; i < tracked_obs.size(); ++i) { */
 
-                // Increase probability and reset missing count
-                probabilities_[i] = std::min(1.0, probabilities_[i] + 0.1);
-                missing_counts_[i] = 0;
+/*             if (distance(new_obstacle, tracked_obs[i]) < tolerance) { */
+/*                 // Update position and previous position */
 
-                matched_[i] = true; 
-                found_match = true;
-                break;
-            }
-        }
 
-        if (!found_match) {
-            tracked_obs.push_back(new_obstacle);
-            probabilities_.push_back(1.0);
-            missing_counts_.push_back(0);
-            //previous_positions_.push_back(new_obstacle);
-            //static_counts_.push_back(0);
-        }
-    }
+/*                 // Increase probability and reset missing count */
+/*                 probabilities_[i] = std::min(1.0, probabilities_[i] + 0.1); */
+/*                 missing_counts_[i] = 0; */
 
-    for (int i = 0; i < tracked_obs.size(); ++i) {
-          if (matched_[i]!=true) {
-//
-          double decay_rate = deafult_decay_rate;
-           probabilities_[i] -= decay_rate;
-           missing_counts_[i]++;
-            // If the obstacle has been static for several updates, stop decaying its probability
-          
-            
+/*                 matched_[i] = true; */
+/*                 found_match = true; */
+/*                 break; */
+/*             } */
+/*         } */
 
-            // Remove obstacle if probability drops below the threshold
-            if (probabilities_[i] < remove_threshold) {
-               // obstacles_.erase(obstacles_.begin()+i);
-               tracked_obs.erase(tracked_obs.begin() +i);
-                 probabilities_.erase(probabilities_.begin() + i);
-                missing_counts_.erase(missing_counts_.begin() +i);
-                matched_.erase(matched_.begin()+i);
-                --i;
-            }
-        }
-    }
-    // Collect the filtered obstacles to return
-    std::vector<std::pair<double, double>> fobstacles_;
-    
-    for (int i = 0; i < tracked_obs.size(); ++i) {
-      if (probabilities_[i] >= remove_threshold){
-        fobstacles_.push_back(tracked_obs[i]);
-    }
-    }
-    return fobstacles_;
-}
+/*         if (!found_match) { */
+/*             tracked_obs.push_back(new_obstacle); */
+/*             probabilities_.push_back(1.0); */
+/*             missing_counts_.push_back(0); */
+/*             //previous_positions_.push_back(new_obstacle); */
+/*             //static_counts_.push_back(0); */
+/*         } */
+/*     } */
+
+/*     for (int i = 0; i < tracked_obs.size(); ++i) { */
+/*           if (matched_[i]!=true) { */
+/* // */
+/*           double decay_rate = deafult_decay_rate; */
+/*            probabilities_[i] -= decay_rate; */
+/*            missing_counts_[i]++; */
+/*             // If the obstacle has been static for several updates, stop decaying its probability */
+
+
+/*             // Remove obstacle if probability drops below the threshold */
+/*             if (probabilities_[i] < remove_threshold) { */
+/*                // obstacles_.erase(obstacles_.begin()+i); */
+/*                tracked_obs.erase(tracked_obs.begin() +i); */
+/*                  probabilities_.erase(probabilities_.begin() + i); */
+/*                 missing_counts_.erase(missing_counts_.begin() +i); */
+/*                 matched_.erase(matched_.begin()+i); */
+/*                 --i; */
+/*             } */
+/*         } */
+/*     } */
+/*     // Collect the filtered obstacles to return */
+/*     std::vector<std::pair<double, double>> fobstacles_; */
+
+/*     for (int i = 0; i < tracked_obs.size(); ++i) { */
+/*       if (probabilities_[i] >= remove_threshold){ */
+/*         fobstacles_.push_back(tracked_obs[i]); */
+/*     } */
+/*     } */
+/*     return fobstacles_; */
+/* } */
 
 std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size) {
   double x_center = robot_pos.first;
@@ -1351,6 +1358,7 @@ void RBLController::getPositionCmd() {
 
 /* odomCallback() //{ */
 void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx) {
+  return;  // FIXME
   if (!is_initialized_) {
     return;
   }
@@ -1393,7 +1401,7 @@ void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx)
 
 void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
   // Clear the previous list of obstacles
-  
+
   std::scoped_lock lock(mutex_obstacles_);
   obstacles_.clear();
   // obstacles_.shrink_to_fit();
@@ -1426,15 +1434,14 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
         }
         // Store centroid in obstacles vector
 
-        obstacles_nofiltered.emplace_back(new_point.point.x, new_point.point.y);
-        //std::cout << "ciao "<< tolerance <<", "<<obstacles_nofiltered.size()<<","<<deafult_decay_rate<<","<<remove_threshold << std::endl;
-              }
-
+        obstacles_.emplace_back(new_point.point.x, new_point.point.y);
+        // std::cout << "ciao "<< tolerance <<", "<<obstacles_nofiltered.size()<<","<<deafult_decay_rate<<","<<remove_threshold << std::endl;
+      }
     }
   }
-  std::cout<< "obstacles_nofiltered:"<< obstacles_nofiltered.size() << std::endl;
 
-  std::vector<std::pair<double, double>> obstacles_ = filterObstacles(obstacles_nofiltered, tolerance, deafult_decay_rate, remove_threshold, tracked_obs,probabilities_, missing_counts_,matched_);
+  //  std::vector<std::pair<double, double>> obstacles_ = filterObstacles(obstacles_nofiltered, tolerance, deafult_decay_rate, remove_threshold,
+  //  tracked_obs,probabilities_, missing_counts_,matched_);
 
 
   // Optionally, print out the computed centroids
@@ -1457,7 +1464,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
   //:w
   // ROS_INFO("Received pose from uvdar");
 
-  uav_neighbors_.assign(n_drones_ + 1, Eigen::Vector3d(1000, 0, 0));
+  /* uav_neighbors_.assign(n_drones_ + 1, Eigen::Vector3d(1000, 0, 0)); */
   largest_eigenvalue_.assign(n_drones_ + 1, 0);
   Eigen::Matrix2d CovarianceMatrix;
   for (int i = 0; i < array_poses->poses.size(); i++) {
@@ -1503,9 +1510,11 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     }
     // std::cout<<"idx= "<< uav_id<< ", "<< transformed_position[1]   << "," << transformed_position[1]<< std::endl;
 
+    last_odom_msg_time_[_uav_uvdar_ids_[uav_id]] = ros::Time::now();
+
     has_this_pose_ = true;
-    mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[uav_id - 1]);
-    mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[uav_id - 1]);
+    mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[_uav_uvdar_ids_[uav_id]]);
+    mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[_uav_uvdar_ids_[uav_id]]);
   }
 }
 // | --------------------------- timer callbacks ----------------------------- |
@@ -1597,7 +1606,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     }
 
 
-
     {
       std::scoped_lock lock(mutex_obstacles_);
       for (int j = 0; j < obstacles_.size(); ++j) {
@@ -1660,9 +1668,9 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.0;
-    p_ref.heading = std::atan2(c1[1] - robot_pos.second,c1[0] - robot_pos.first) + 3.1415/4;
-    auto end      = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration<double, std::milli>(end - start);
+    p_ref.heading    = std::atan2(c1[1] - robot_pos.second, c1[0] - robot_pos.first) + 3.1415 / 4;
+    auto end         = std::chrono::steady_clock::now();
+    auto duration    = std::chrono::duration<double, std::milli>(end - start);
 
     // Output the duration
     /* std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl; */
@@ -1746,7 +1754,9 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
     ROS_ERROR("exception caught during publishing topic '%s'", pub_hull_.getTopic().c_str());
   }
 
-  ROS_WARN_COND(timeout_exceeded, "[RBLController]: %s", msg.str().c_str());
+  if (timeout_exceeded) {
+    ROS_WARN_THROTTLE(2.0, "[RBLController]: %s", msg.str().c_str());
+  }
   all_robots_positions_valid_ = !timeout_exceeded;
 }
 //}

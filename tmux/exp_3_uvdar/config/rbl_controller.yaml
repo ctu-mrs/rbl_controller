@@ -1,4 +1,5 @@
-uav_names: ["uav36","uav37","uav39"] #,"uav40","uav41"] #, \"uav11\"]\n
+uav_names: ["uav36","uav41","uav39"] #,"uav40","uav41"] #, \"uav11\"]\n
+uav_uvdar_ids: [0,4,2] #,"uav40","uav41"] #, \"uav11\"]\n
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"
 
@@ -14,7 +15,9 @@ noisy_angle: 0.0 #0.3
 threshold: 1.0 
 window_length: 1 #10
 bias_error: 0.0 #0.5
-
+tolerance: 0.3
+deafult_decay_rate: 0.05
+remove_threshold: 0.2
 
 #Adj_matrix_uav1: [0,1,1,0,0]
 #Adj_matrix_uav2: [1,0,1,1,1]
@@ -23,7 +26,7 @@ bias_error: 0.0 #0.5
 #Adj_matrix_uav5: [0,1,0,1,0]
 
 Adj_matrix_uav36: [0,1,1]
-Adj_matrix_uav37: [1,0,1]
+Adj_matrix_uav41: [1,0,1]
 Adj_matrix_uav39: [1,1,0]
 
 #Adj_matrix_uav1: [0,0,0,0,0]
@@ -61,7 +64,7 @@ final_positions: # defined with respect to monitored_area_origin
     y: 45.0
     z: 3.0
 
-  uav37:
+  uav41:
     x: 0
     y: 45.0
     z: 3.0
@@ -76,16 +79,16 @@ final_positions: # defined with respect to monitored_area_origin
 initial_positions: # defined with respect to monitored_area_origin
 
   uav36:
-    x: -6.0 #10
-    y: -42.0 #0
+    x: -80.0 #10
+    y: 16.0 #0
     z: 2.0
 
-  uav37:
-    x: -0.0 #6.2348980185873355
-    y: -42.0 #7.818314824680298
+  uav41:
+    x: -74.0 #6.2348980185873355
+    y: 13.0 #7.818314824680298
     z: 2.0
 
   uav39:
-    x: -3.0 #-2.22520933956314
-    y: -39.0 #9.7492791218
+    x: -80.0 #-2.22520933956314
+    y: 10.0 #9.7492791218
     z: 2.0

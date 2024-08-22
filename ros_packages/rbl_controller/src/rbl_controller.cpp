@@ -94,8 +94,8 @@ std::vector<std::pair<double, double>> filterObstacles(
 
                 // Update position and previous position
                 tracked_obstacles_[i].previous_position = tracked_obstacles_[i].position;
-                tracked_obstacles_[i].position.first = (tracked_obstacles_[i].position.first + new_obstacle.first) / 2.0;
-                tracked_obstacles_[i].position.second = (tracked_obstacles_[i].position.second + new_obstacle.second) / 2.0;
+                tracked_obstacles_[i].position.first = new_obstacle.first;
+                tracked_obstacles_[i].position.second = new_obstacle.second;
 
                 // Increase probability and reset missing count
                 tracked_obstacles_[i].probability = std::min(1.0, tracked_obstacles_[i].probability + 0.1);

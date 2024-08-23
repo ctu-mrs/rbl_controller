@@ -191,7 +191,7 @@ private:
   bool               flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   ros::ServiceClient sc_goto_position_;
   Eigen::Vector3d    _required_initial_position_;
-  bool               is_at_initial_position_ = false;
+  bool               is_at_initial_position_ = true;
   double             _dist_to_start_limit_;
   double             getDistToInitialPosition();
 
@@ -1584,8 +1584,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     // TODO: HERE I COMPUTE NEIGHBORS AND OBSTACLES! FOR EXPERIMENT SUBSTITUTE IT WITH UVDAR OUTPUT AND LIDAR OUTPUT
 
     double distance2neigh;
-    for (int j = 0; j < n_drones_ + 1; ++j) {
-      if (this_uav_idx_ != j) {
+    for (int j = 0; j < n_drones_; ++j) {
         neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
         neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
         // std::cout<< largest_eigenvalue_[j]<<"j" << j << std::endl;
@@ -1601,7 +1600,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
         if (Adj_matrix[j] == 1) {
           // std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl;
         }
-      }
     }
 
 
@@ -1667,7 +1665,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.0;
-    //p_ref.heading    = std::atan2(c1[1] - robot_pos.second, c1[0] - robot_pos.first) + 3.1415 / 4;
+    p_ref.heading    = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first) + 3.1415 / 4;
     auto end         = std::chrono::steady_clock::now();
     auto duration    = std::chrono::duration<double, std::milli>(end - start);
 

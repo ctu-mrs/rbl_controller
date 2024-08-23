@@ -6,13 +6,13 @@ odometry_topic: "estimation_manager/odom_main"
 set_reference_timer:
   rate: 10 # [Hz]
   
-size_neighbors1: 0.2
+size_neighbors1: 0.3 
 size_obstacles1: 0.05
-encumbrance: 0.2
+encumbrance: 0.3
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
-threshold: 1.0 
+threshold: 1.5 
 window_length: 1 #10
 bias_error: 0.0 #0.5
 tolerance: 0.3
@@ -25,9 +25,9 @@ remove_threshold: 0.2
 #Adj_matrix_uav4: [0,1,1,0,1]
 #Adj_matrix_uav5: [0,1,0,1,0]
 
-Adj_matrix_uav36: [0,1,1]
+Adj_matrix_uav36: [0,1,0]
 Adj_matrix_uav41: [1,0,1]
-Adj_matrix_uav39: [1,1,0]
+Adj_matrix_uav39: [0,1,0]
 
 #Adj_matrix_uav1: [0,0,0,0,0]
 #Adj_matrix_uav2: [0,0,0,0,0]
@@ -46,7 +46,7 @@ d2: 1.0
 d3: 1.0
 d4: 1.0
 radius: 6.0 
-betaD: 0.5  
+betaD: 2.0  
 beta_min: 0.1
 dt: 0.02
 step_size: 0.075
@@ -80,15 +80,15 @@ initial_positions: # defined with respect to monitored_area_origin
 
   uav36:
     x: -80.0 #10
-    y: 16.0 #0
+    y: 7.0 
     z: 2.0
 
   uav41:
     x: -74.0 #6.2348980185873355
-    y: 13.0 #7.818314824680298
+    y: 10.62 #7.818314824680298
     z: 2.0
 
   uav39:
     x: -80.0 #-2.22520933956314
-    y: 10.0 #9.7492791218
+    y: 10.0
     z: 2.0

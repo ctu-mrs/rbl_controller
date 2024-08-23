@@ -240,10 +240,10 @@ private:
   std::vector<std::pair<double, double>> obstacles_;
   std::vector<std::pair<double, double>> obstacles_nofiltered;
 
-  //     std::vector<std::pair<double, double>> tracked_obs; //std::make_pair(1,(0.0, 0.0});
-  //     std::vector<double> probabilities_= {0};
-  //     std::vector<int> missing_counts_ = {0};
-  //     std::vector<bool> matched_ = {false};
+  std::vector<std::pair<double, double>> tracked_obs; //std::make_pair(1,(0.0, 0.0});
+  std::vector<double> probabilities_= {0};
+  std::vector<int> missing_counts_ = {0};
+  std::vector<bool> matched_ = {false};
   std::vector<double> goal           = {0, 0};
   bool                has_this_pose_ = false;
   // TODO move this staff in yaml.
@@ -297,9 +297,9 @@ private:
 
   std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
-  //  std::vector<std::pair<double, double>> filterObstacles(std::vector<std::pair<double, double>> &obstacles_, double tolerance, double default_decay_rate,
-  //  double remove_threshold, std::vector<std::pair<double, double>> &tracked_obs, std::vector<double> &probabilities_, std::vector<int> &missing_counts_,
-  //  std::vector<bool> &matched_);
+  std::vector<std::pair<double, double>> filterObstacles(std::vector<std::pair<double, double>> &obstacles_, double tolerance, double default_decay_rate,
+  double remove_threshold, std::vector<std::pair<double, double>> &tracked_obs, std::vector<double> &probabilities_, std::vector<int> &missing_counts_,
+  std::vector<bool> &matched_);
 
   std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix,
                                                          size_t my_index);
@@ -696,86 +696,86 @@ void RBLController::publishDestination() {
   pub_destination_.publish(marker);
 }
 
-/* std::vector<std::pair<double, double>> RBLController::filterObstacles( */
-/*     std::vector<std::pair<double, double>>& obstacles_, */
-/*     double tolerance,       // Tolerance for matching positions */
-/*     double default_decay_rate, // Default decay rate */
-/*     double remove_threshold,      // Threshold to remove obstacle */
-/*      std::vector<std::pair<double, double>> &tracked_obs, */
-/*      std::vector<double> &probabilities_, */
-/*     std::vector<int> &missing_counts_, */
-/*      std::vector<bool> &matched_ */
-/* ) { */
-/*   //static std::vector<std::pair<double, double>> tracked_obs(1,std::make_pair(0,0)); */
-/*   //static std::vector<double> probabilities_(tracked_obs.size(),0); */
-/*   //static std::vector<int> missing_counts_(tracked_obs.size(),0); */
-/*   //static std::vector<bool> matched_(tracked_obs.size(),false); */
-/*   //std::cout<< obstacles_.size()<<std::endl; */
-/*   double decay_rate = deafult_decay_rate; */
+std::vector<std::pair<double, double>> RBLController::filterObstacles(
+    std::vector<std::pair<double, double>>& obstacles_,
+    double tolerance,       // Tolerance for matching positions
+    double default_decay_rate, // Default decay rate
+    double remove_threshold,      // Threshold to remove obstacle
+     std::vector<std::pair<double, double>> &tracked_obs,
+     std::vector<double> &probabilities_,
+    std::vector<int> &missing_counts_,
+     std::vector<bool> &matched_
+) {
+  //static std::vector<std::pair<double, double>> tracked_obs(1,std::make_pair(0,0));
+  //static std::vector<double> probabilities_(tracked_obs.size(),0);
+  //static std::vector<int> missing_counts_(tracked_obs.size(),0);
+  //static std::vector<bool> matched_(tracked_obs.size(),false);
+  //std::cout<< obstacles_.size()<<std::endl;
+  double decay_rate = deafult_decay_rate;
 
 
-/*   auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) { */
-/*         return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2)); */
-/*     }; */
+  auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) {
+        return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
+    };
 
-/*     for (const auto& new_obstacle : obstacles_) { */
-/*         bool found_match = false; */
+    for (const auto& new_obstacle : obstacles_) {
+        bool found_match = false;
 
-/*         for (size_t i = 0; i < tracked_obs.size(); ++i) { */
+        for (size_t i = 0; i < tracked_obs.size(); ++i) {
 
-/*             if (distance(new_obstacle, tracked_obs[i]) < tolerance) { */
-/*                 // Update position and previous position */
-
-
-/*                 // Increase probability and reset missing count */
-/*                 probabilities_[i] = std::min(1.0, probabilities_[i] + 0.1); */
-/*                 missing_counts_[i] = 0; */
-
-/*                 matched_[i] = true; */
-/*                 found_match = true; */
-/*                 break; */
-/*             } */
-/*         } */
-
-/*         if (!found_match) { */
-/*             tracked_obs.push_back(new_obstacle); */
-/*             probabilities_.push_back(1.0); */
-/*             missing_counts_.push_back(0); */
-/*             //previous_positions_.push_back(new_obstacle); */
-/*             //static_counts_.push_back(0); */
-/*         } */
-/*     } */
-
-/*     for (int i = 0; i < tracked_obs.size(); ++i) { */
-/*           if (matched_[i]!=true) { */
-/* // */
-/*           double decay_rate = deafult_decay_rate; */
-/*            probabilities_[i] -= decay_rate; */
-/*            missing_counts_[i]++; */
-/*             // If the obstacle has been static for several updates, stop decaying its probability */
+            if (distance(new_obstacle, tracked_obs[i]) < tolerance) {
+                // Update position and previous position
 
 
-/*             // Remove obstacle if probability drops below the threshold */
-/*             if (probabilities_[i] < remove_threshold) { */
-/*                // obstacles_.erase(obstacles_.begin()+i); */
-/*                tracked_obs.erase(tracked_obs.begin() +i); */
-/*                  probabilities_.erase(probabilities_.begin() + i); */
-/*                 missing_counts_.erase(missing_counts_.begin() +i); */
-/*                 matched_.erase(matched_.begin()+i); */
-/*                 --i; */
-/*             } */
-/*         } */
-/*     } */
-/*     // Collect the filtered obstacles to return */
-/*     std::vector<std::pair<double, double>> fobstacles_; */
+                // Increase probability and reset missing count
+                probabilities_[i] = std::min(1.0, probabilities_[i] + 0.1);
+                missing_counts_[i] = 0;
 
-/*     for (int i = 0; i < tracked_obs.size(); ++i) { */
-/*       if (probabilities_[i] >= remove_threshold){ */
-/*         fobstacles_.push_back(tracked_obs[i]); */
-/*     } */
-/*     } */
-/*     return fobstacles_; */
-/* } */
+                matched_[i] = true;
+                found_match = true;
+                break;
+            }
+        }
+
+        if (!found_match) {
+            tracked_obs.push_back(new_obstacle);
+            probabilities_.push_back(1.0);
+            missing_counts_.push_back(0);
+            //previous_positions_.push_back(new_obstacle);
+            //static_counts_.push_back(0);
+        }
+    }
+
+    for (int i = 0; i < tracked_obs.size(); ++i) {
+          if (matched_[i]!=true) {
+//
+          double decay_rate = deafult_decay_rate;
+           probabilities_[i] -= decay_rate;
+           missing_counts_[i]++;
+            // If the obstacle has been static for several updates, stop decaying its probability
+
+
+            // Remove obstacle if probability drops below the threshold
+            if (probabilities_[i] < remove_threshold) {
+               // obstacles_.erase(obstacles_.begin()+i);
+               tracked_obs.erase(tracked_obs.begin() +i);
+                 probabilities_.erase(probabilities_.begin() + i);
+                missing_counts_.erase(missing_counts_.begin() +i);
+                matched_.erase(matched_.begin()+i);
+                --i;
+            }
+        }
+    }
+    // Collect the filtered obstacles to return
+    std::vector<std::pair<double, double>> fobstacles_;
+
+    for (int i = 0; i < tracked_obs.size(); ++i) {
+      if (probabilities_[i] >= remove_threshold){
+        fobstacles_.push_back(tracked_obs[i]);
+    }
+    }
+    return fobstacles_;
+}
 
 std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size) {
   double x_center = robot_pos.first;
@@ -1057,7 +1057,7 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
               std::pair<double, double> avg_position = std::make_pair(avg_X, avg_Y);
               double distance = euclideanDistance(neighbors_and_obstacles[i], avg_position);
 
-              // If the distance is too far, discard the measurement
+              // If jhe distance is too far, discard the measurement
               if (distance > threshold-0.5) {
                   //std::cout << "Discard UVDAR Measurement" << std::endl;
                   continue;
@@ -1503,7 +1503,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     // return;
     // }
 
-    if (_c_dimensions_ == 3) {
+    if (_c_dimensions_ == 3) /
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
     } else {
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
@@ -1668,7 +1668,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.0;
-    p_ref.heading    = std::atan2(c1[1] - robot_pos.second, c1[0] - robot_pos.first) + 3.1415 / 4;
+    //p_ref.heading    = std::atan2(c1[1] - robot_pos.second, c1[0] - robot_pos.first) + 3.1415 / 4;
     auto end         = std::chrono::steady_clock::now();
     auto duration    = std::chrono::duration<double, std::milli>(end - start);
 

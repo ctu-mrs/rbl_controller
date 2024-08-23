@@ -1503,7 +1503,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     // return;
     // }
 
-    if (_c_dimensions_ == 3) /
+    if (_c_dimensions_ == 3){ 
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
     } else {
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);

@@ -1472,12 +1472,22 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     geometry_msgs::PointStamped new_point;
 
     Eigen::Vector3d transformed_position;
+    new_point.header  = array_poses->header;
     new_point.point.x = array_poses->poses[i].pose.position.x;
     new_point.point.y = array_poses->poses[i].pose.position.y;
     new_point.point.z = array_poses->poses[i].pose.position.z;
     int uav_id        = array_poses->poses[i].id;
     CovarianceMatrix << array_poses->poses[i].covariance[0], array_poses->poses[i].covariance[1], array_poses->poses[i].covariance[6],
         array_poses->poses[i].covariance[7];
+
+        auto res = transformer_->transformSingle(new_point, _control_frame_);
+        if (res) {
+          new_point = res.value();
+        } else {
+          ROS_ERROR_THROTTLE(3.0, "[RBLController]: UVDAR: Could not transform positions to control frame.");
+          continue;
+        }
+       
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> solver(CovarianceMatrix);
     Eigen::Vector2d                                eigenvalues = solver.eigenvalues();
@@ -1491,17 +1501,6 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     double valeig1 = 2.6 * std::sqrt(largest_eigenvalue) + encumbrance;
 
     std::cout << "Largest eigenvalue: " << uav_id << " eig: " << valeig << "<" << valeig1 << std::endl;
-
-    // auto res = transformer_->transformSingle(new_point, "world_origin");
-    // if (res)
-    // {
-    //  new_point = res.value();
-    // }
-    // else
-    // {
-    //   ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform uvdar  msg to control frame.");
-    // return;
-    // }
 
     if (_c_dimensions_ == 3){ 
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);

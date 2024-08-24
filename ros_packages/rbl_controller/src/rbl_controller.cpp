@@ -1436,7 +1436,7 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
         // Store centroid in obstacles vector
 
         obstacles_.emplace_back(new_point.point.x, new_point.point.y);
-        // std::cout << "ciao "<< tolerance <<", "<<obstacles_nofiltered.size()<<","<<deafult_decay_rate<<","<<remove_threshold << std::endl;
+        std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl;
       }
     }
   }
@@ -1665,7 +1665,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
-    p_ref.position.z = 1.0;
+    p_ref.position.z = 1.1;
     p_ref.heading    = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first) - 3.1415 / 4;
     auto end         = std::chrono::steady_clock::now();
     auto duration    = std::chrono::duration<double, std::milli>(end - start);

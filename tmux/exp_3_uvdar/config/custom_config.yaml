@@ -15,6 +15,14 @@ mrs_uav_managers:
 
     initial_state_estimator: "gps_garmin" # will be used as the first state estimator
     agl_height_estimator: "garmin_agl" # only slightly filtered height for checking min height (not used in control feedback)
+    gps_garmin:
+      lat_gps:
+
+        max_flight_z: 100.0
+
+        innovation:
+          limit: 0.5
+          action: "mitigate"
 
 mrs_uav_trackers:
 

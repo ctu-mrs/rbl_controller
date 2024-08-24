@@ -1,5 +1,5 @@
-uav_names: ["uav36","uav41","uav39"] #,"uav40","uav41"] #, \"uav11\"]\n
-uav_uvdar_ids: [0,4,2] #,"uav40","uav41"] #, \"uav11\"]\n
+uav_names: ["uav36","uav40","uav39"] #,"uav40","uav41"] #, \"uav11\"]\n
+uav_uvdar_ids: [0,3,2] #,"uav40","uav41"] #, \"uav11\"]\n
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"
 
@@ -9,7 +9,7 @@ set_reference_timer:
 size_neighbors1: 0.3 
 size_obstacles1: 0.05
 encumbrance: 0.3
-maximum_distance_conn: 10.0
+maximum_distance_conn: 12.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
 threshold: 1.5 
@@ -26,7 +26,7 @@ remove_threshold: 0.2
 #Adj_matrix_uav5: [0,1,0,1,0]
 
 Adj_matrix_uav36: [0,1,0]
-Adj_matrix_uav41: [1,0,1]
+Adj_matrix_uav40: [1,0,1]
 Adj_matrix_uav39: [0,1,0]
 
 #Adj_matrix_uav1: [0,0,0,0,0]
@@ -46,10 +46,10 @@ d2: 1.0
 d3: 1.0
 d4: 1.0
 radius: 6.0 
-betaD: 2.0  
+betaD: 1.5  
 beta_min: 0.1
-dt: 0.02
-step_size: 0.075
+dt: 0.03
+step_size: 0.08
 
 
 monitored_area_origin:
@@ -64,7 +64,7 @@ final_positions: # defined with respect to monitored_area_origin
     y: 45.0
     z: 3.0
 
-  uav41:
+  uav40:
     x: 0
     y: 45.0
     z: 3.0
@@ -83,7 +83,7 @@ initial_positions: # defined with respect to monitored_area_origin
     y: 7.0 
     z: 2.0
 
-  uav41:
+  uav40:
     x: -74.0 #6.2348980185873355
     y: 10.62 #7.818314824680298
     z: 2.0

@@ -174,7 +174,7 @@ private:
   // diag timer
   ros::Timer timer_diagnostics_;
   int        _rate_timer_diagnostics_;
-  bool       all_robots_positions_valid_ = false;
+  bool       all_robots_positions_valid_ = true;
   void       callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEvent &te);
   double     _odom_timeout_;
 
@@ -867,13 +867,13 @@ std::vector<std::pair<double, double>> RBLController::communication_constraint(c
     double dy            = mean_y - robot_pos.second;
     double distance_1    = std::sqrt(dx * dx + dy * dy);
     double bearing_angle = std::atan2(dy, dx);
-    if (distance_1 > maximum_distance_conn) {
-      // Project the neighbor position in the same direction but at maximum_distance_conn
-      // FIXME: changed night before experiment to maintain connectivity..more conservative solution
-      mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle);
-      mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle);
-      std::cout << "distance!!!!! :  " << distance_1 << "meanX: " << mean_x << " mean_y: " << mean_y << std::endl;
-    }
+    /* if (distance_1 > maximum_distance_conn) { */
+    /*   // Project the neighbor position in the same direction but at maximum_distance_conn */
+    /*   // FIXME: changed night before experiment to maintain connectivity..more conservative solution */
+    /*   mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle); */
+    /*   mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle); */
+    /*   std::cout << "distance!!!!! :  " << distance_1 << "meanX: " << mean_x << " mean_y: " << mean_y << std::endl; */
+    /* } */
 
     new_neighbors.push_back({mean_x, mean_y});
   }
@@ -1755,7 +1755,7 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
   if (timeout_exceeded) {
     ROS_WARN_THROTTLE(2.0, "[RBLController]: %s", msg.str().c_str());
   }
-  all_robots_positions_valid_ = !timeout_exceeded;
+  /* all_robots_positions_valid_ = !timeout_exceeded; */
 }
 //}
 

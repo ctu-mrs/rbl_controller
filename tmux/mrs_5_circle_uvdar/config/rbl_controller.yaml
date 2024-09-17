@@ -3,6 +3,7 @@ uav_names: ["uav1", "uav2", "uav3", "uav4", "uav5"] #, "uav11"]
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"
 
+uav_uvdar_ids: [1,2,3,4,5] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 set_reference_timer:
   rate: 10 # [Hz]
   
@@ -15,7 +16,9 @@ noisy_angle: 0.0 #0.3
 threshold: 1.0
 window_length: 1 #10
 bias_error: 0.0 #0.5
-
+tolerance: 0.3
+deafult_decay_rate: 0.05
+remove_threshold: 0.2
 
 Adj_matrix_uav1: [0,0,0,0,0]
 Adj_matrix_uav2: [0,0,0,0,0]

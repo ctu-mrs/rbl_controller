@@ -311,7 +311,7 @@ private:
                                                                   const std::vector<std::pair<double, double>> &neighbors);
 
   std::vector<std::pair<double, double>> find_closest_points(const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &points,
-                                                             const std::vector<std::pair<double, double>> &neighbors);
+                                                             const std::vector<std::pair<double, double>> &neighbors,const std::vector<double> &only_robots);
 
   std::vector<double> compute_scalar_value(const std::vector<double> &x_test, const std::vector<double> &y_test, const std::pair<double, double> &destination,
                                            double beta);
@@ -814,7 +814,6 @@ std::vector<std::pair<double, double>> RBLController::insert_pair_at_index(const
     // Insert the value at the specified index
     new_vec.insert(new_vec.begin() + idx, value);
   }
-
   return new_vec;
 }
 
@@ -867,13 +866,13 @@ std::vector<std::pair<double, double>> RBLController::communication_constraint(c
     double dy            = mean_y - robot_pos.second;
     double distance_1    = std::sqrt(dx * dx + dy * dy);
     double bearing_angle = std::atan2(dy, dx);
-    /* if (distance_1 > maximum_distance_conn) { */
-    /*   // Project the neighbor position in the same direction but at maximum_distance_conn */
-    /*   // FIXME: changed night before experiment to maintain connectivity..more conservative solution */
-    /*   mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle); */
-    /*   mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle); */
-    /*   std::cout << "distance!!!!! :  " << distance_1 << "meanX: " << mean_x << " mean_y: " << mean_y << std::endl; */
-    /* } */
+    if (distance_1 > maximum_distance_conn) {
+      // Project the neighbor position in the same direction but at maximum_distance_conn
+      // FIXME: changed night before experiment to maintain connectivity..more conservative solution
+      mean_x = robot_pos.first + (maximum_distance_conn-threshold)*std::cos(bearing_angle);
+      mean_y = robot_pos.second + (maximum_distance_conn-threshold)*std::sin(bearing_angle);
+      std::cout << "distance!!!!! :  " << distance_1 << "meanX: " << mean_x << " mean_y: " << mean_y << std::endl;
+    }
 
     new_neighbors.push_back({mean_x, mean_y});
   }
@@ -902,44 +901,82 @@ std::vector<std::pair<double, double>> RBLController::communication_constraint(c
 
 std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double> &             robot_pos,
                                                                           const std::vector<std::pair<double, double>> &points,
-                                                                          const std::vector<std::pair<double, double>> &neighbors) {
+                                                                          const std::vector<std::pair<double, double>> &neighbors,
+                                                                          const std::vector<double> &only_robots) {
   /* std::cout << neighbors.size() << std::endl; */
-
-  // Print the combined vector
-  /* std::cout << " vector:" << std::endl; */
-  for (const auto &pair : neighbors) {
-    /* std::cout << "{" << pair.first << ", " << pair.second << "}" << std::endl; */
-  }
-  std::vector<double> distances_to_robot;
-  for (const auto &point : points) {
-    double distance = std::sqrt(std::pow((point.first - robot_pos.first), 2) + std::pow((point.second - robot_pos.second), 2));
-    distances_to_robot.push_back(distance);
-  }
-
-  std::vector<std::vector<double>> distances_to_neighbors;
-  for (const auto &point : points) {
-    std::vector<double> distances;
-    for (const auto &neighbor : neighbors) {
-      double distance = std::sqrt(std::pow((point.first - neighbor.first), 2) + std::pow((point.second - neighbor.second), 2));
-      distances.push_back(distance);
-    }
-    distances_to_neighbors.push_back(distances);
-  }
-
+  double cwvd = 0.5;
+  //FIXME: here implement the possibility of having different sensing radii!!!
+    
+  /* double alpha_ij = std::atan2(-delta_y,-delta_x); */
+    
+      std::cout<<"yeah" << obstacles_.size()<<std::endl;
+      std::cout<<"yo" << neighbors.size()<<std::endl;
   std::vector<std::pair<double, double>> closer_points;
+   int idx = only_robots.size();
+  // Print the combined vector
   for (size_t i = 0; i < points.size(); ++i) {
-    bool is_closer = true;
-    for (size_t j = 0; j < neighbors.size(); ++j) {
-      if (distances_to_robot[i] >= distances_to_neighbors[i][j]) {
-        is_closer = false;
-        break;
-      }
+   bool is_closer = true; 
+    for (size_t j = 0; j < neighbors.size(); ++j) {  // Start from the neighbor at index idx + 1
+    const auto &neigh = neighbors[j];  // Get the neighbor at the j-th index
+
+    double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
+    if (j >= neighbors.size()-obstacles_.size()){
+      cwvd = 0.99;
+    }else{
+      cwvd =   0.5; 
     }
-    if (is_closer)
+    // Check the condition using alpha_ij and neighbor position
+    if (std::cos(alpha_ij) * (points[i].first - robot_pos.first) + 
+        std::sin(alpha_ij) * (points[i].second - robot_pos.second) > 
+        cwvd * (std::sqrt(std::pow(robot_pos.first - neigh.first, 2) + 
+                         std::pow(robot_pos.second - neigh.second, 2)))) {
+        is_closer = false;
+        break;  // Break if the condition is met
+    }
+    }
+/* bool is_closer = true; */
+/*     for (const auto &neigh : neighbors) { */
+/*        double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first); */ 
+/*       if (std::cos(alpha_ij)*(points[i].first-robot_pos.first) + std::sin(alpha_ij)*(points[i].second-robot_pos.second) > 0.9*(std::sqrt(std::pow(robot_pos.first - neigh.first,2) + std::pow(robot_pos.second - neigh.second,2)))){ */
+/*         is_closer = false; */
+/*         break; */ 
+/*       } */
+/*     } */
+   if (is_closer)
       closer_points.push_back(points[i]);
   }
-
   return closer_points;
+  
+  /*     std::vector<double> distances_to_robot; */
+  /* for (const auto &point : points) { */
+  /*   double distance = std::sqrt(std::pow((point.first - robot_pos.first), 2) + std::pow((point.second - robot_pos.second), 2)); */
+  /*   distances_to_robot.push_back(distance); */
+  /* } */ 
+
+  /* std::vector<std::vector<double>> distances_to_neighbors; */
+  /* for (const auto &point : points) { */
+  /*   std::vector<double> distances; */
+  /*   for (const auto &neighbor : neighbors) { */
+  /*     double distance = std::sqrt(std::pow((point.first - neighbor.first), 2) + std::pow((point.second - neighbor.second), 2)); */
+  /*     distances.push_back(distance); */
+  /*   } */
+  /*   distances_to_neighbors.push_back(distances); */
+  /* } */
+
+  /* std::vector<std::pair<double, double>> closer_points; */
+  /* for (size_t i = 0; i < points.size(); ++i) { */
+  /*   bool is_closer = true; */
+  /*   for (size_t j = 0; j < neighbors.size(); ++j) { */
+  /*     if (distances_to_robot[i] >= distances_to_neighbors[i][j]) { */
+  /*       is_closer = false; */
+  /*       break; */ 
+  /*     } */
+  /*   } */
+  /*   if (is_closer) */
+  /*     closer_points.push_back(points[i]); */
+  /* } */
+
+  /* return closer_points; */
 }
 
 std::vector<double> RBLController::compute_scalar_value(const std::vector<double> &x_test, const std::vector<double> &y_test,
@@ -977,7 +1014,6 @@ std::vector<std::pair<double, double>> RBLController::account_encumbrance(const 
     if (std::abs(m) < 0.001) {
       m = 0.001;
     }
-
     double xm = 0.5 * (robot_x + neighbors[j].first);
     double ym = 0.5 * (robot_y + neighbors[j].second);
     double dm = std::sqrt(std::pow(xm - robot_x, 2) + std::pow(ym - robot_y, 2));
@@ -1040,95 +1076,6 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
     std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy) {
 
   neighbors_and_obstacles_noisy.clear();
-  /*
-      for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i) {
-          // Get the rolling window for this point
-          auto &x_window = x_windows[i];
-          auto &y_window = y_windows[i];
-
-          // Ensure the rolling window is full before processing
-          if ( !windowContainsZeros(x_window) &&  !windowContainsZeros(y_window)) {
-
-              // Calculate the average of the last three distances
-              double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
-              double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
-
-              //std::cout << x_window.size() << ", " << avg_X << std::endl;
-              // Calculate the distance between the new position and the average position
-              std::pair<double, double> avg_position = std::make_pair(avg_X, avg_Y);
-              double distance = euclideanDistance(neighbors_and_obstacles[i], avg_position);
-
-              // If jhe distance is too far, discard the measurement
-              if (distance > threshold-0.5) {
-                  //std::cout << "Discard UVDAR Measurement" << std::endl;
-                  continue;
-              }
-          }
-          //std::cout <<"onf"<<std::endl;
-          // Add the current distance to the window and remove the oldest one if necessary
-          if (x_window.size() == window_length) x_window.pop_front();
-          x_window.push_back(neighbors_and_obstacles[i].first);
-
-          if (y_window.size() == window_length) y_window.pop_front();
-          y_window.push_back(neighbors_and_obstacles[i].second);
-
-          // Calculate the average of the current window
-          double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
-          double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
-
-          // Update point with perturbed distance
-          neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
-      }
-  */
-
-  /*
-  // Vector to hold distances between robot_pos and neighbors_and_obstacles
-  //std::vector<double> distances;
-  // Vector to hold angles between robot_pos and neighbors_and_obstacles
-  //std::vector<double> angles;
-  // Vector to hold updated positions of neighbors_and_obstacles
-  neighbors_and_obstacles_noisy.clear();
-
-  for (size_t i = 0; i < neighbors_and_obstacles.size(); ++i)
-  {
-   // std::cout<<"ciaoooo" <<neighbors.size()<<std::endl;
-    // Calculate distance
-    std::pair<double, double> avg_position = std::make_pair(avg_X, avg_Y);
-    double dist = distance(robot_pos, neighbors_and_obstacles[i]);
-    // Add Gaussian noise of 10% to the distance
-
-
-    //dist = addRandomNoise(dist+bias_error, noisy_measurements);
-
-    // Get the rolling window for this point
-    auto &x_window = x_windows[i];
-
-    // Add the current distance to the window and remove the oldest one if necessary
-    x_window.pop_front();
-    x_window.push_back(neighbors_and_obstacles[i].first);
-
-    // Calculate the average of the last three distances
-    double avg_X = std::accumulate(x_window.begin(), x_window.end(), 0.0) / x_window.size();
-
-    //distances.push_back(avg_X);
-
-    // Calculate angle
-    //double ang = angle(robot_pos, neighbors_and_obstacles[i]);
-    //ang = addRandomNoise1(ang, noisy_angle);
-    auto &y_window = y_windows[i];
-    y_window.pop_front();
-    y_window.push_back(neighbors_and_obstacles[i].second);
-
-    double avg_Y = std::accumulate(y_window.begin(), y_window.end(), 0.0) / y_window.size();
-
-    // Update point with perturbed distance
-    //double new_x = robot_pos.first + avg_dist * std::cos(avg_ang);
-    //double new_y = robot_pos.second + avg_dist * std::sin(avg_ang);
-    neighbors_and_obstacles_noisy.push_back(std::make_pair(avg_X, avg_Y));
-    }
-*/
-
-
   neighbors_and_obstacles_noisy = neighbors_and_obstacles;
   // Get points inside the circle
   std::vector<std::pair<double, double>> circle_points = points_inside_circle(robot_pos, radius, step_size);
@@ -1138,7 +1085,7 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
 
   if (!neighbors_and_obstacles_noisy.empty()) {
     // Compute the Voronoi cell
-    voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors_and_obstacles_noisy);
+    voronoi_circle_intersection = find_closest_points(robot_pos, circle_points, neighbors_and_obstacles_noisy, size_neighbors);
 
     // Account encumbrance
     voronoi_circle_intersection =
@@ -1617,8 +1564,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
     x_windows.resize(neighbors_and_obstacles.size());
-
-
     y_windows.resize(neighbors_and_obstacles.size());
 
     // Resize each deque in dist_windows to have a size of 100
@@ -1666,7 +1611,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.1;
-    p_ref.heading    = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first) - 3.1415 / 4;
+    //FIXME: pref is not correct. it rotates.
+    p_ref.heading    = std::atan2(destination.second - robot_pos.second, destination.first -  robot_pos.first) - 3.1415 / 4;
     auto end         = std::chrono::steady_clock::now();
     auto duration    = std::chrono::duration<double, std::milli>(end - start);
 

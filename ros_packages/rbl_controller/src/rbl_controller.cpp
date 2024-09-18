@@ -47,6 +47,7 @@
 #include <deque>
 #include <utility>
 #include <chrono>
+
 namespace formation_control
 {
 // | -------------------- class definition --------------------- |
@@ -271,9 +272,6 @@ private:
   double                          noisy_angle;
   double                          threshold;
   double                          bias_error;
-  double                          tolerance;
-  double                          deafult_decay_rate;
-  double                          remove_threshold;
   int                             window_length;
   // callbacks definitions
   std::mutex                   mutex_uav_odoms_;
@@ -297,9 +295,6 @@ private:
 
   std::vector<std::pair<double, double>> points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size);
 
-  std::vector<std::pair<double, double>> filterObstacles(std::vector<std::pair<double, double>> &obstacles_, double tolerance, double default_decay_rate,
-  double remove_threshold, std::vector<std::pair<double, double>> &tracked_obs, std::vector<double> &probabilities_, std::vector<int> &missing_counts_,
-  std::vector<bool> &matched_);
 
   std::vector<std::pair<double, double>> fixed_neighbors(const std::vector<std::pair<double, double>> &positions, const std::vector<int> &adjacency_matrix,
                                                          size_t my_index);
@@ -350,10 +345,9 @@ private:
 void RBLController::onInit() {
   // initialize nodelet
   ros::NodeHandle &nh = getPrivateNodeHandle();
-
-
   NODELET_DEBUG("Initializing nodelet...");
   ros::Time::waitForValid();
+
   // load parameters
   std::string          _leader_name;
   std::vector<int>     _uvdar_ids_;
@@ -395,9 +389,6 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
-  param_loader.loadParam("tolerance", tolerance);
-  param_loader.loadParam("deafult_decay_rate", deafult_decay_rate);
-  param_loader.loadParam("remove_threshold", remove_threshold);
 
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
@@ -696,87 +687,6 @@ void RBLController::publishDestination() {
   pub_destination_.publish(marker);
 }
 
-std::vector<std::pair<double, double>> RBLController::filterObstacles(
-    std::vector<std::pair<double, double>>& obstacles_,
-    double tolerance,       // Tolerance for matching positions
-    double default_decay_rate, // Default decay rate
-    double remove_threshold,      // Threshold to remove obstacle
-     std::vector<std::pair<double, double>> &tracked_obs,
-     std::vector<double> &probabilities_,
-    std::vector<int> &missing_counts_,
-     std::vector<bool> &matched_
-) {
-  //static std::vector<std::pair<double, double>> tracked_obs(1,std::make_pair(0,0));
-  //static std::vector<double> probabilities_(tracked_obs.size(),0);
-  //static std::vector<int> missing_counts_(tracked_obs.size(),0);
-  //static std::vector<bool> matched_(tracked_obs.size(),false);
-  //std::cout<< obstacles_.size()<<std::endl;
-  double decay_rate = deafult_decay_rate;
-
-
-  auto distance = [](const std::pair<double, double>& p1, const std::pair<double, double>& p2) {
-        return std::sqrt(std::pow(p1.first - p2.first, 2) + std::pow(p1.second - p2.second, 2));
-    };
-
-    for (const auto& new_obstacle : obstacles_) {
-        bool found_match = false;
-
-        for (size_t i = 0; i < tracked_obs.size(); ++i) {
-
-            if (distance(new_obstacle, tracked_obs[i]) < tolerance) {
-                // Update position and previous position
-
-
-                // Increase probability and reset missing count
-                probabilities_[i] = std::min(1.0, probabilities_[i] + 0.1);
-                missing_counts_[i] = 0;
-
-                matched_[i] = true;
-                found_match = true;
-                break;
-            }
-        }
-
-        if (!found_match) {
-            tracked_obs.push_back(new_obstacle);
-            probabilities_.push_back(1.0);
-            missing_counts_.push_back(0);
-            //previous_positions_.push_back(new_obstacle);
-            //static_counts_.push_back(0);
-        }
-    }
-
-    for (int i = 0; i < tracked_obs.size(); ++i) {
-          if (matched_[i]!=true) {
-//
-          double decay_rate = deafult_decay_rate;
-           probabilities_[i] -= decay_rate;
-           missing_counts_[i]++;
-            // If the obstacle has been static for several updates, stop decaying its probability
-
-
-            // Remove obstacle if probability drops below the threshold
-            if (probabilities_[i] < remove_threshold) {
-               // obstacles_.erase(obstacles_.begin()+i);
-               tracked_obs.erase(tracked_obs.begin() +i);
-                 probabilities_.erase(probabilities_.begin() + i);
-                missing_counts_.erase(missing_counts_.begin() +i);
-                matched_.erase(matched_.begin()+i);
-                --i;
-            }
-        }
-    }
-    // Collect the filtered obstacles to return
-    std::vector<std::pair<double, double>> fobstacles_;
-
-    for (int i = 0; i < tracked_obs.size(); ++i) {
-      if (probabilities_[i] >= remove_threshold){
-        fobstacles_.push_back(tracked_obs[i]);
-    }
-    }
-    return fobstacles_;
-}
-
 std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size) {
   double x_center = robot_pos.first;
   double y_center = robot_pos.second;
@@ -921,7 +831,7 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
 
     double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
     if (j >= neighbors.size()-obstacles_.size()){
-      cwvd = 0.99;
+      cwvd = 0.9;
     }else{
       cwvd =   0.5; 
     }
@@ -1388,16 +1298,6 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
     }
   }
 
-  //  std::vector<std::pair<double, double>> obstacles_ = filterObstacles(obstacles_nofiltered, tolerance, deafult_decay_rate, remove_threshold,
-  //  tracked_obs,probabilities_, missing_counts_,matched_);
-
-
-  // Optionally, print out the computed centroids
-  // ROS_INFO("Computed Obsacle position:");
-  // for (const auto &obstacle : obstacles_)
-  // {
-  //  ROS_INFO("OBSTACLE: x = %.2f, y = %.2f", obstacle.first, obstacle.second);
-  // }
 }
 
 

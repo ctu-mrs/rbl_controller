@@ -9,7 +9,7 @@ mrs_uav_managers:
     ]
 
     initial_state_estimator: "gps_baro" # will be used as the first state estimator
-    agl_height_estimator: "" # only slightly filtered height for checking min height (not used in control feedback)
+    agl_height_estimator: ""# only slightly filtered height for checking min height (not used in control feedback)
 
   uav_manager:
 
@@ -22,7 +22,7 @@ mrs_uav_managers:
   constraint_manager:
 
     default_constraints:
-      gps_baro: "slow"
+      gps_baro: "medium"
 
   control_manager:
 

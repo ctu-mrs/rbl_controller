@@ -2,7 +2,6 @@
 
 namespace formation_control
 {
-// | -------------------- class definition --------------------- |
 
 void RBLController::onInit() {
   // initialize nodelet
@@ -64,19 +63,6 @@ void RBLController::onInit() {
   destination.second += _monitored_area_origin_[1];
   size_neighbors.assign(_uav_names_.size() - 1, size_neighbors1);
 
-  // dist_windows.resize(size_neighbors_and_obstacles.size());
-  // angle_windows.resize(size_neighbors_and_obstacles.size());
-
-  // Resize each deque in dist_windows to have a size of 100
-  // for (auto &dist_window : dist_windows)
-  //{
-  //  dist_window.resize(window_length, 0.0);
-  //}
-
-  // for (auto &angle_window : angle_windows)
-  //{
-  //  angle_window.resize(window_length, 0.0);
-  //}
   // erase this uav from the list of uavs
   auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _uav_name_);
 
@@ -92,7 +78,6 @@ void RBLController::onInit() {
   n_drones_ = _uav_names_.size();
 
   uav_neighbors_.resize(n_drones_);  // FIXME: wait only for the neighbors
-  // size_neighbors[n_drones_, encumbrance]; //, encumbrance, encumbrance, encumbrance};
   uav_positions_.resize(n_drones_);
 
   neighbors_and_obstacles_noisy.resize(n_drones_);
@@ -126,11 +111,6 @@ void RBLController::onInit() {
 
   sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
 
-  /* if (is_leader_) { */
-  /*   ph_reference_velocity_ = mrs_lib::PublisherHandler<mrs_msgs::ReferenceStamped>(nh, "vel_leader_out", 1); */
-  /* } else { */
-  /*   sh_reference_velocity_ = mrs_lib::SubscribeHandler<mrs_msgs::ReferenceStamped>(shopts, "vel_leader_in"); */
-  /* } */
 
   marker_array_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/clusters_" + _uav_name_, 1, &RBLController::markerArrayCallback, this));
 
@@ -370,11 +350,7 @@ std::vector<Point> RBLController::convexHull(std::vector<Point> points) {
   hull.resize(k - 1);  // Remove the last point because it is repeated at the beginning of the upper hull
   return hull;
 }
-/* double euclideanDistance(const Point &a, const Point &b) { */
-/*   double dx = a.first - b.first; */
-/*   double dy = a.second - b.second; */
-/*   return sqrt(dx * dx + dy * dy); */
-/* } */
+
 std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size) {
   double x_center = robot_pos.first;
   double y_center = robot_pos.second;
@@ -464,7 +440,6 @@ std::vector<std::pair<double, double>> RBLController::communication_constraint(c
     double bearing_angle = std::atan2(dy, dx);
     if (distance_1 > maximum_distance_conn) {
       // Project the neighbor position in the same direction but at maximum_distance_conn
-      // FIXME: changed night before experiment to maintain connectivity..more conservative solution
       mean_x = robot_pos.first + (maximum_distance_conn - threshold) * std::cos(bearing_angle);
       mean_y = robot_pos.second + (maximum_distance_conn - threshold) * std::sin(bearing_angle);
       std::cout << "distance!!!!! :  " << distance_1 << "meanX: " << mean_x << " mean_y: " << mean_y << std::endl;
@@ -637,11 +612,7 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
                                                                           const std::vector<std::pair<double, double>> &points,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
                                                                           const std::vector<double> &                   only_robots) {
-  /* std::cout << neighbors.size() << std::endl; */
   double cwvd = 0.5;
-  // FIXME: here implement the possibility of having different sensing radii!!!
-
-  /* double alpha_ij = std::atan2(-delta_y,-delta_x); */
 
   std::vector<std::pair<double, double>> closer_points;
   int                                    idx = only_robots.size();
@@ -798,15 +769,6 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
     voronoi_circle_intersection_connectivity = circle_points;
   }
 
-  /*if (isInsideConvexPolygon(voronoi_circle_intersection_connectivity, robot_pos))
-  {
-  }
-  else
-  {
-    std::cout << "WARNING !!!" << std::endl;
-  }
-  */
-
   std::vector<double> x_in, y_in;
   for (const auto &point : voronoi_circle_intersection_connectivity) {
     x_in.push_back(point.first);
@@ -952,8 +914,6 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
     // std::cout << "reset" << std::endl;
   }
   // std::cout << "theta : " << th << ", beta: " << beta << "distc1c2: " <<dist_c1_c2 << "cuurentj-c1: "<< sqrt(pow((current_j_x - c1[0]), 2) +
-  // pow((current_j_y
-  // - c1[1]), 2)) << std::endl;
   // Compute the angle and new position
   double angle        = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
   double new_angle    = angle - th;

@@ -58,45 +58,6 @@ class RBLController : public nodelet::Nodelet {
 public:
   virtual void onInit();
 
-  /* typedef std::pair<double, double> Point; */
-  /* double cross(const Point &O, const Point &A, const Point &B) { */
-  /*   return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first); */
-  /* } */
-
-  // Function to find the convex hull using Andrew's monotone chain algorithm
-  /* std::vector<Point> convexHull(std::vector<Point> points) { */
-  /*   int n = points.size(), k = 0; */
-  /*   if (n <= 3) */
-  /*     return points;  // A set of 3 or fewer points is already a convex set */
-
-  /*   std::vector<Point> hull(2 * n); */
-
-  /*   // Sort points lexicographically (first by x coordinate, then by y coordinate) */
-  /*   sort(points.begin(), points.end()); */
-
-  /*   // Build the lower hull */
-  /*   for (int i = 0; i < n; ++i) { */
-  /*     while (k >= 2 && cross(hull[k - 2], hull[k - 1], points[i]) <= 0) */
-  /*       k--; */
-  /*     hull[k++] = points[i]; */
-  /*   } */
-
-  /*   // Build the upper hull */
-  /*   for (int i = n - 1, t = k + 1; i > 0; --i) { */
-  /*     while (k >= t && cross(hull[k - 2], hull[k - 1], points[i - 1]) <= 0) */
-  /*       k--; */
-  /*     hull[k++] = points[i - 1]; */
-  /*   } */
-
-  /*   hull.resize(k - 1);  // Remove the last point because it is repeated at the beginning of the upper hull */
-  /*   return hull; */
-  /* } */
-  /* double euclideanDistance(const Point &a, const Point &b) { */
-  /*   double dx = a.first - b.first; */
-  /*   double dy = a.second - b.second; */
-  /*   return sqrt(dx * dx + dy * dy); */
-  /* } */
-
 private:
   // general variables
   bool is_initialized_ = false;
@@ -198,7 +159,6 @@ private:
   std::vector<double>                    goal            = {0, 0};
   std::vector<double>                    goal_original   = {0, 0};
   bool                                   has_this_pose_  = false;
-  // TODO move this staff in yaml.
   std::vector<double>             size_neighbors_and_obstacles;
   std::vector<double>             size_neighbors;
   std::vector<double>             size_obstacles;
@@ -224,20 +184,19 @@ private:
   double                          threshold;
   double                          bias_error;
   int                             window_length;
-  // callbacks definitions
+  
   std::mutex                   mutex_uav_odoms_;
   std::mutex                   mutex_uav_uvdar_;
   std::mutex                   mutex_obstacles_;
   std::string                  _odometry_topic_name_;
   std::vector<ros::Subscriber> other_uav_odom_subscribers_;
   void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx);
-  // void neighCallback(const mrs_msgs::PoseWithCovarianceArraySamped::ConstPtr& msg);
   std::vector<Eigen::Vector3d> uav_positions_;
   std::vector<Eigen::Vector3d> uav_neighbors_;
   std::vector<double>          largest_eigenvalue_;
   std::vector<ros::Time>       last_odom_msg_time_;
   double                       _odom_msg_max_latency_;
-  // std::vector<double> c1;
+  
   void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
   void publishCentroid(ros::Publisher &pub, const std::vector<double> &c1);
   void publishNeighbors(ros::Publisher &pub, const std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
@@ -286,7 +245,7 @@ private:
                    double beta_min, const double &betaD, std::vector<double> &goal, double d1, double &th, double d2, double d3, double d4,
                    std::pair<double, double> &destinations, std::vector<double> &c1_no_rotation);
 
-  // subscribe position of controlled UAV
+ 
   std::mutex                                          mutex_position_command_;
   mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand> sh_position_command_;
   void                                                getPositionCmd();

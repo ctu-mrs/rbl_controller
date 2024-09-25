@@ -113,7 +113,7 @@ void RBLController::onInit() {
   sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
 
 
-  marker_array_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/clusters_" + _uav_name_, 1, &RBLController::markerArrayCallback, this));
+  clusters_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_" , 1, &RBLController::clustersCallback, this));
 
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
@@ -1015,8 +1015,8 @@ void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx)
 }
 //}
 
-/* MarkerArrayCallback() //{ */
-void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
+/* clustersCallback() //{ */
+void RBLController::clustersCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
   // Clear the previous list of obstacles
 
   std::scoped_lock lock(mutex_obstacles_);

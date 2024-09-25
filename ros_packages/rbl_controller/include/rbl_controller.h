@@ -122,8 +122,8 @@ private:
   void           publishHull();
   void           publishCentroid();
 
-  std::vector<ros::Subscriber> marker_array_sub_;
-  void                         markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
+  std::vector<ros::Subscriber> clusters_sub_;
+  void                         clustersCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;

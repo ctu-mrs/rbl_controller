@@ -3,6 +3,7 @@
 namespace formation_control
 {
 
+/*RBLController::onInit () //{ */
 void RBLController::onInit() {
   // initialize nodelet
   ros::NodeHandle &nh = getPrivateNodeHandle();
@@ -144,8 +145,10 @@ void RBLController::onInit() {
   is_initialized_ = true;
   ROS_INFO("[RBLController]: Initialization completed.");
 }
+//}
 
 
+/*RBLController::publishObstacles () //{ */
 void RBLController::publishObstacles() {
 
   visualization_msgs::MarkerArray obstacle_markers;
@@ -183,7 +186,9 @@ void RBLController::publishObstacles() {
 
   pub_obstacles_.publish(obstacle_markers);
 }
+//}
 
+/*RBLController::publishNeighbors () //{ */
 void RBLController::publishNeighbors() {
   visualization_msgs::MarkerArray neighbors_markers;
 
@@ -213,7 +218,9 @@ void RBLController::publishNeighbors() {
   pub_neighbors_.publish(neighbors_markers);
 }
 
+//}
 
+/*RBLController::publishHull() //{ */
 void RBLController::publishHull() {
   visualization_msgs::MarkerArray hull_voro_markers;
 
@@ -242,8 +249,9 @@ void RBLController::publishHull() {
 
   pub_hull_.publish(hull_voro_markers);
 }
+//}
 
-
+/*RBLController::publishPosition() //{ */
 void RBLController::publishPosition() {
   visualization_msgs::Marker marker;
   marker.header.frame_id    = _control_frame_;
@@ -266,7 +274,9 @@ void RBLController::publishPosition() {
 
   pub_position_.publish(marker);
 }
+//}
 
+/*RBLController::publishCentroid() //{ */
 void RBLController::publishCentroid() {
   visualization_msgs::Marker marker;
   marker.header.frame_id    = _control_frame_;
@@ -289,7 +299,9 @@ void RBLController::publishCentroid() {
 
   pub_centroid_.publish(marker);
 }
+//}
 
+/*RBLController::publishDestination() //{ */
 void RBLController::publishDestination() {
   visualization_msgs::Marker marker;
   marker.header.frame_id    = _control_frame_;
@@ -312,7 +324,10 @@ void RBLController::publishDestination() {
 
   pub_destination_.publish(marker);
 }
+//}
 
+
+/*RBLController::functions() //{ */
 double RBLController::cross(const Point &O, const Point &A, const Point &B) {
   return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
 }
@@ -847,7 +862,6 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
       }
     }
   }
-  //}
   // Compute the centroid without neighbors
   double sum_x_in_no_neigh_times_scalar_values = 0.0;
   double sum_y_in_no_neigh_times_scalar_values = 0.0;
@@ -922,7 +936,10 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   destinations.second = current_j_y + distance * sin(new_angle);
   // to add rule: change goal?
 }
+//}
 
+
+/* getPositionCmd() //{ */
 void RBLController::getPositionCmd() {
 
   if (!is_initialized_) {
@@ -996,8 +1013,9 @@ void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx)
 
   last_odom_msg_time_[idx] = ros::Time::now();
 }
+//}
 
-
+/* MarkerArrayCallback() //{ */
 void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
   // Clear the previous list of obstacles
 
@@ -1039,8 +1057,9 @@ void RBLController::markerArrayCallback(const visualization_msgs::MarkerArray::C
     }
   }
 }
+//}
 
-
+/*RBLController::callbackNeighborsUsingUVDAR() //{ */
 void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
 
 
@@ -1104,7 +1123,8 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[_uav_uvdar_ids_[uav_id]]);
   }
 }
-// | --------------------------- timer callbacks ----------------------------- |
+//}
+
 
 /* callbackTimerPubNeighbors() //{ */
 
@@ -1117,7 +1137,7 @@ void RBLController::callbackTimerPubNeighbors([[maybe_unused]] const ros::TimerE
 
 //}
 
-/* callbackTimerSetVelocity() //{ */
+/* callbackTimerSetReference() //{ */
 void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te) {
 
   if (!is_initialized_) {

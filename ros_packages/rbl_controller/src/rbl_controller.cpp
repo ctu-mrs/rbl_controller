@@ -1211,8 +1211,9 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     for (auto &y_window : y_windows) {
       y_window.resize(window_length, 0.0);
     }
-
+    RBLController RBLobj;
     // Call get_centroid function
+
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                                  encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
 

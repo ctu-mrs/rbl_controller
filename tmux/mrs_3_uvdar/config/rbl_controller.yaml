@@ -7,9 +7,9 @@ uav_uvdar_ids: [1,2,3] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 set_reference_timer:
   rate: 10 # [Hz]
   
-size_neighbors1: 1.0 
+size_neighbors1: 0.5 
 size_obstacles1: 0.05 
-encumbrance: 1.0 
+encumbrance: 0.5 
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3

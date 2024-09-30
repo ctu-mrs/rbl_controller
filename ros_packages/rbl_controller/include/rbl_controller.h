@@ -57,8 +57,6 @@ class RBLController : public nodelet::Nodelet {
 
 public:
   virtual void onInit();
-
-private:
   // general variables
   bool is_initialized_ = false;
 

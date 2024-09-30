@@ -46,9 +46,9 @@ windows:
   - lidar:
       layout: tiled
       panes:
-        - export UAV_NAME=uav1; waitForControl; roslaunch lidar_simulator example.launch
-        - export UAV_NAME=uav2; waitForControl; roslaunch lidar_simulator example.launch
-        - export UAV_NAME=uav3; waitForControl; roslaunch lidar_simulator example.launch
+        - export UAV_NAME=uav1; waitForControl; roslaunch laserscan_clusters example.launch
+        - export UAV_NAME=uav2; waitForControl; roslaunch laserscan_clusters example.launch
+        - export UAV_NAME=uav3; waitForControl; roslaunch laserscan_clusters example.launch
         
   - activation:
       layout: tiled

@@ -116,7 +116,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/destination_vis
           Name: UAV2
           Namespaces:
-            destination: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -160,7 +160,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/position_vis
           Name: UAV2
           Namespaces:
-            position: true
+            {}
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -365,7 +365,7 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/mpc_reference_debugging
           Unreliable: false
           Value: true
-      Enabled: false
+      Enabled: true
       Name: Reference trajectories
     - Alpha: 1
       Axes Length: 1
@@ -484,7 +484,7 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: false
-      Enabled: false
+      Enabled: true
       Name: VoroCells
     - Class: rviz/Group
       Displays:
@@ -545,7 +545,7 @@ Visualization Manager:
           Marker Topic: /uav2/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
-            obstacles: true
+            {}
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
@@ -578,7 +578,7 @@ Visualization Manager:
   Global Options:
     Background Color: 255; 255; 255
     Default Light: true
-    Fixed Frame: uav3/world_origin
+    Fixed Frame: simulator_origin
     Frame Rate: 60
   Name: root
   Tools:
@@ -601,26 +601,20 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/ThirdPersonFollower
-      Distance: 59.39101028442383
+      Angle: 0
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
-      Focal Point:
-        X: 5.096280097961426
-        Y: -36.2425422668457
-        Z: 1.411454377375776e-06
-      Focal Shape Fixed Size: true
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.12460162490606308
+      Scale: 16.344755172729492
       Target Frame: common_origin
-      Yaw: 4.9585862159729
+      X: -1.5134882926940918
+      Y: -19.019296646118164
     Saved: ~
 Window Geometry:
   Displays:

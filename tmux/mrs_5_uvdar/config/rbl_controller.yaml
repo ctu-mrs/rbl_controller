@@ -1,4 +1,4 @@
-uav_names: ["uav1", "uav2", "uav3","uav4", "uav5",] #, "uav11"]
+uav_names: ["uav1", "uav2", "uav3","uav4", "uav5"] #, "uav11"]
 
 # odometry_topic: "estimation_manager/ground_truth/odom"
 odometry_topic: "estimation_manager/odom_main"
@@ -7,10 +7,10 @@ uav_uvdar_ids: [1,2,3,4,5] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 set_reference_timer:
   rate: 10 # [Hz]
   
-size_neighbors1: 0.5 
+size_neighbors1: 0.3 
 size_obstacles1: 0.05 
-encumbrance: 0.5 
-maximum_distance_conn: 14.0
+encumbrance: 0.3 
+maximum_distance_conn: 12.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
 threshold: 1.5 

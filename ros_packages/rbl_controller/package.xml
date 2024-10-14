@@ -19,7 +19,9 @@
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>pcl_ros</depend>
-  
+  <depend>mrs_hector_estimator_plugin</depend>
+  <depend>hector_mapping</depend>
+ 
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

@@ -17,15 +17,7 @@ connections:
 
   - root_frame_id: "uav5/fcu"
     equal_frame_id: "uav5/world_origin"
-      
-  #- root_frame_id: "uav6/fcu"
-  #  equal_frame_id: "uav6/world_origin"
 
-  #- root_frame_id: "uav7/fcu"
-  #  equal_frame_id: "uav7/world_origin"
-    
-  #- root_frame_id: "uav8/fcu"
-  #  equal_frame_id: "uav8/world_origin"
 
 
   - root_frame_id: "simulator_origin"

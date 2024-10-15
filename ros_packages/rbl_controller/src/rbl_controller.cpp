@@ -142,7 +142,6 @@ void RBLController::onInit() {
   /* transformer_->setDefaultPrefix(_uav_name_); */
   transformer_->retryLookupNewest(true);
 
-
   is_initialized_ = true;
   ROS_INFO("[RBLController]: Initialization completed.");
 }
@@ -1131,26 +1130,26 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     return;
   }
 
-  if (!all_robots_positions_valid_ && !got_position_command_) {
+  if (!got_position_command_) {
     ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for valid robots' positions.");
     getPositionCmd();
     return;
   }
 
-  if (!is_at_initial_position_) {
+  /* if (!is_at_initial_position_) { */
 
-    double dist_to_start = getDistToInitialPosition();
+  /*   double dist_to_start = getDistToInitialPosition(); */
 
-    if (dist_to_start > _dist_to_start_limit_) {
+  /*   if (dist_to_start > _dist_to_start_limit_) { */
 
-      ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for UAV to arrive at initial position. Current distance: %.2f m.", dist_to_start);
-      return;
-    } else {
+  /*     ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for UAV to arrive at initial position. Current distance: %.2f m.", dist_to_start); */
+  /*     return; */
+  /*   } else { */
 
-      ROS_INFO("[RBLController]: UAV arrived to its initial position.");
-      is_at_initial_position_ = true;
-    }
-  }
+  /*     ROS_INFO("[RBLController]: UAV arrived to its initial position."); */
+  /*     is_at_initial_position_ = true; */
+  /*   } */
+  /* } */
 
   if (!control_allowed_) {
     ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for activation.");
@@ -1330,7 +1329,6 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
   if (timeout_exceeded) {
     ROS_WARN_THROTTLE(2.0, "[RBLController]: %s", msg.str().c_str());
   }
-  /* all_robots_positions_valid_ = !timeout_exceeded; */
 }
 //}
 
@@ -1344,10 +1342,6 @@ bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, s
   if (control_allowed_) {
     res.message = "Control was already allowed.";
     ROS_WARN("[RBLController]: %s", res.message.c_str());
-  } else if (!all_robots_positions_valid_) {
-    res.message = "Robots are not ready, control cannot be activated.";
-    ROS_WARN("[RBLController]: %s", res.message.c_str());
-    res.success = false;
   } else {
     control_allowed_ = true;
     res.message      = "Control allowed.";
@@ -1367,11 +1361,7 @@ bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req,
   if (!control_allowed_) {
     res.message = "Control was already disables.";
     ROS_WARN("[RBLController]: %s", res.message.c_str());
-  } else if (!all_robots_positions_valid_) {
-    res.message = "Robots are not ready, control cannot be deactivated.";
-    ROS_WARN("[RBLController]: %s", res.message.c_str());
-    res.success = false;
-  } else {
+  }  else {
     control_allowed_ = false;
     res.message      = "Control disabled.";
     ROS_INFO("[RBLController]: %s", res.message.c_str());
@@ -1388,11 +1378,6 @@ bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, s
   ROS_INFO("[RBLController]: Fly to start service called.");
   res.success = true;
 
-  if (!all_robots_positions_valid_) {
-    res.message = "Robots are not ready,  fly to start cannot be called.";
-    ROS_WARN("[RBLController]: %s", res.message.c_str());
-    res.success = false;
-  } else {
     mrs_msgs::Vec4 srv;
     srv.request.goal = {_required_initial_position_[0], _required_initial_position_[1], _required_initial_position_[2], 0.0};
     ;
@@ -1410,7 +1395,7 @@ bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, s
     }
 
     ROS_INFO("[RBLController]: %s", res.message.c_str());
-  }
+  
 
   return true;
 }

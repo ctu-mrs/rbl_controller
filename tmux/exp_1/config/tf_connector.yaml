@@ -3,8 +3,13 @@ connecting_frame_id: "common_origin"
 
 # these are the tf subtrees to be connected through the respective root frames so that the equal frames are equal
 connections:
+<<<<<<< HEAD
   - root_frame_id: "uav41/fcu"
     equal_frame_id: "uav41/gps_origin"
+=======
+  - root_frame_id: "uav40/fcu"
+    equal_frame_id: "uav40/gps_origin"
+>>>>>>> 8333ca24f1e06d373bed1e3aa112da7eed50f758
 
 
 # if true, older messages than the last update of the respective frame connection will be ignored

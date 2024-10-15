@@ -62,17 +62,17 @@ monitored_area_origin:
 
 final_positions: # defined with respect to monitored_area_origin
 
-  uav36:
+  uav33:
     x: -6.0
     y: 45.0
     z: 3.0
 
-  uav37:
+  uav36:
     x: 0
     y: 45.0
     z: 3.0
 
-  uav39:
+  uav37:
     x: -3.0
     y: 48.0
     z: 3.0
@@ -90,17 +90,17 @@ final_positions: # defined with respect to monitored_area_origin
 
 initial_positions: # defined with respect to monitored_area_origin
 
-  uav36:
+  uav33:
     x: -6.0 #10
     y: -42.0 #0
     z: 2.0
 
-  uav37:
+  uav36:
     x: -0.0 #6.2348980185873355
     y: -42.0 #7.818314824680298
     z: 2.0
 
-  uav39:
+  uav37:
     x: -3.0 #-2.22520933956314
     y: -39.0 #9.7492791218
     z: 2.0

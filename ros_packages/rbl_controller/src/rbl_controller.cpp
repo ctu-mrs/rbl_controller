@@ -98,7 +98,7 @@ void RBLController::onInit() {
   /*   _uav_uvdar_ids_[_uvdar_ids_[i]] = i; */
   /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
   /* } */
-  uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
+  /* uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this); */
 
 
   sub_uvdar_filtered_poses_.push_back(nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>(
@@ -113,8 +113,6 @@ void RBLController::onInit() {
   shopts.transport_hints    = ros::TransportHints().tcpNoDelay();
 
   sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
-
-
   clusters_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_", 1, &RBLController::clustersCallback, this));
 
   // initialize timers
@@ -978,16 +976,6 @@ void RBLController::getPositionCmd() {
 /* odomCallback() //{ */
 
 void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
-  return;  // FIXME
-  if (!is_initialized_) {
-    return;
-  }
-  std::cout << "ciaicai"<< std::endl;
-  /*   if ((ros::Time::now() - msg->header.stamp).toSec() > _odom_msg_max_latency_) { */
-  /*     ROS_WARN("[RBLController]: The latency of odom message for %s exceeds the threshold (latency = %.2f s).", _uav_names_[idx].c_str(), */
-  /*              (ros::Time::now() - msg->header.stamp).toSec()); */
-  /*   } */
-
   uav_position_[0] = msg->pose.pose.position.x;
   uav_position_[1] = msg->pose.pose.position.y;
   uav_position_[2] = msg->pose.pose.position.z;
@@ -1141,33 +1129,27 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   mrs_msgs::Reference p_ref;
 
   {
-
-    std::cout << "position: " << uav_position_[0] << ", " << uav_position_[1] << std::endl;
     /* std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_); */
     std::scoped_lock lock(mutex_position_command_, mutex_uav_uvdar_);
-
     auto start = std::chrono::steady_clock::now();
-
     std::vector<std::pair<double, double>> neighbors;
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
-
     robot_pos = {
-        uav_position_[0], uav_position_[1],
-        /* position_command_.x, */
-        /* position_command_.y, */
+        /* uav_position_[0], uav_position_[1], */
+        position_command_.x,
+        position_command_.y,
     };
-
     double distance2neigh;
     for (int j = 0; j < n_drones_; ++j) {
       neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
       neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
       /* distance2neigh = std::sqrt(std::pow((uav_neighbors_[j][0] - robot_pos.x), 2) + std::pow((uav_neighbors_[j][1] - robot_pos.y), 2)); */
-      if (largest_eigenvalue_[j] / 2.0 + encumbrance > distance2neigh / 2.0 && distance2neigh < 5.0) {
-        // std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl;
-      }
-      if (Adj_matrix[j] == 1) {
-        // std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl;
-      }
+      /* if (largest_eigenvalue_[j] / 2.0 + encumbrance > distance2neigh / 2.0 && distance2neigh < 5.0) { */
+      /*   // std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl; */
+      /* } */
+      /* if (Adj_matrix[j] == 1) { */
+      /*   // std::cout<<"eigenvalues_neigh" << largest_eigenvalue_[j]/2 << std::endl; */
+      /* } */
     }
 
     {

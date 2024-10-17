@@ -98,7 +98,7 @@ void RBLController::onInit() {
   /*   _uav_uvdar_ids_[_uvdar_ids_[i]] = i; */
   /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
   /* } */
-  /* uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this); */
+  uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
 
 
   sub_uvdar_filtered_poses_.push_back(nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>(
@@ -988,13 +988,13 @@ void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   new_point.point.y = msg->pose.pose.position.y;
   new_point.point.z = msg->pose.pose.position.z;
 
-  auto res = transformer_->transformSingle(new_point, _control_frame_);
-  if (res) {
-    new_point = res.value();
-  } else {
-    ROS_ERROR_THROTTLE(3.0, "[FormationControllerSusd]: Could not transform odometry msg to control frame.");
-    return;
-  }
+  /* auto res = transformer_->transformSingle(new_point, _control_frame_); */
+  /* if (res) { */
+  /*   new_point = res.value(); */
+  /* } else { */
+  /*   ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform odometry msg to control frame."); */
+  /*   return; */
+  /* } */
 
   Eigen::Vector3d transformed_position;
   if (_c_dimensions_ == 3) {

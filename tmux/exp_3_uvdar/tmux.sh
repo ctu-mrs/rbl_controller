@@ -70,7 +70,10 @@ input=(
   'uvdar' 'waitForHw; roslaunch uvdar_core rw_three_sided.launch
   '
   
-  'lidar' 'waitForHw; roslaunch lidar_simulator example.launch
+  'lidar' 'waitForHw; roslaunch laserscan_clusters example.launch
+  '
+  
+  'Hector' 'waitForHw; roslaunch mrs_hector_core hector_slam.launch
   '
 
 # do NOT modify the command list below

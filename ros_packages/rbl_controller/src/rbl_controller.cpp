@@ -81,7 +81,6 @@ void RBLController::onInit() {
 
   uav_neighbors_.resize(n_drones_);  // FIXME: wait only for the neighbors
   uav_positions_.resize(n_drones_);
-
   neighbors_and_obstacles_noisy.resize(n_drones_);
 
   goal[0]          = destination.first;
@@ -90,15 +89,17 @@ void RBLController::onInit() {
   goal_original[1] = destination.second;
   // std::vector<Eigen::Vector3d> uav_positionsN_(uav_positions_);
 
-  last_odom_msg_time_.resize(n_drones_);
   /* create multiple subscribers to read uav odometries */
   // iterate through drones except this drone and target
-  for (int i = 0; i < _uav_names_.size(); i++) {
-    std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_;
-    // other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
-    _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
-    ROS_INFO("Subscribing to %s", topic_name.c_str());
-  }
+  /* for (int i = 0; i < _uav_names_.size(); i++) { */
+  /*   std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_; */
+  /*   other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
+   */
+  /*   _uav_uvdar_ids_[_uvdar_ids_[i]] = i; */
+  /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
+  /* } */
+  uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
+
 
   sub_uvdar_filtered_poses_.push_back(nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>(
       "/" + _uav_name_ + "/uvdar/measuredPoses", 1, boost::bind(&RBLController::callbackNeighborsUsingUVDAR, this, _1)));
@@ -336,12 +337,12 @@ double RBLController::cross(const Point &O, const Point &A, const Point &B) {
   return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
 }
 
-double RBLController::getDistToInitialPosition() {
-  getPositionCmd();
-  double dist = sqrt(pow(position_command_.x - _required_initial_position_[0], 2) + pow(position_command_.y - _required_initial_position_[1], 2) +
-                     pow(position_command_.z - _required_initial_position_[2], 2));
-  return dist;
-}
+/* double RBLController::getDistToInitialPosition() { */
+/*   getPositionCmd(); */
+/*   double dist = sqrt(pow(position_command_.x - _required_initial_position_[0], 2) + pow(position_command_.y - _required_initial_position_[1], 2) + */
+/*                      pow(position_command_.z - _required_initial_position_[2], 2)); */
+/*   return dist; */
+/* } */
 
 double RBLController::euclideanDistance(const Point &a, const Point &b) {
   double dx = a.first - b.first;
@@ -831,7 +832,7 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
   std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
   double             distance;
   hull_voro.clear();
-
+  std::cout << hull_voro.size() << std::endl;
   for (const Point &p : hull) {
     hull_voro.push_back(std::make_pair(p.first, p.second));
 
@@ -974,45 +975,24 @@ void RBLController::getPositionCmd() {
 
 //}
 
-/* odomCallback() Callback to get other robot positions. Not used if UVDAR is running //{ */
-/*
-void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx) {
+/* odomCallback() //{ */
+
+void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   return;  // FIXME
   if (!is_initialized_) {
     return;
   }
+  std::cout << "ciaicai"<< std::endl;
+  /*   if ((ros::Time::now() - msg->header.stamp).toSec() > _odom_msg_max_latency_) { */
+  /*     ROS_WARN("[RBLController]: The latency of odom message for %s exceeds the threshold (latency = %.2f s).", _uav_names_[idx].c_str(), */
+  /*              (ros::Time::now() - msg->header.stamp).toSec()); */
+  /*   } */
 
-  if ((ros::Time::now() - msg->header.stamp).toSec() > _odom_msg_max_latency_) {
-    ROS_WARN("[RBLController]: The latency of odom message for %s exceeds the threshold (latency = %.2f s).", _uav_names_[idx].c_str(),
-             (ros::Time::now() - msg->header.stamp).toSec());
-  }
-
-  geometry_msgs::PointStamped new_point;
-  new_point.header  = msg->header;
-  new_point.point.x = msg->pose.pose.position.x;
-  new_point.point.y = msg->pose.pose.position.y;
-  new_point.point.z = msg->pose.pose.position.z;
-
-  auto res = transformer_->transformSingle(new_point, _control_frame_);
-  if (res) {
-    new_point = res.value();
-  } else {
-    ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform odometry msg to control frame.");
-    return;
-  }
-
-  Eigen::Vector3d transformed_position;
-  if (_c_dimensions_ == 3) {
-    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
-  } else {
-    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
-  }
-
-  has_this_pose_ = true;
-  mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_positions_[idx]);
-  last_odom_msg_time_[idx] = ros::Time::now();
+  uav_position_[0] = msg->pose.pose.position.x;
+  uav_position_[1] = msg->pose.pose.position.y;
+  uav_position_[2] = msg->pose.pose.position.z;
 }
-*/
+
 //}
 
 /* clustersCallback() //{ */
@@ -1104,8 +1084,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     } else {
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
     }
-    last_odom_msg_time_[_uav_uvdar_ids_[uav_id]] = ros::Time::now();
-    has_this_pose_                               = true;
+    has_this_pose_ = true;
     mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[_uav_uvdar_ids_[uav_id]]);
     mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[_uav_uvdar_ids_[uav_id]]);
   }
@@ -1125,7 +1104,6 @@ void RBLController::callbackTimerPubNeighbors([[maybe_unused]] const ros::TimerE
 
 /* callbackTimerSetReference() Callback where we set the p_ref //{ */
 void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te) {
-
   if (!is_initialized_) {
     return;
   }
@@ -1133,7 +1111,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   if (!got_position_command_) {
     ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for valid robots' positions.");
     getPositionCmd();
-    return;
+    /* return; */
   }
 
   /* if (!is_at_initial_position_) { */
@@ -1163,7 +1141,10 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   mrs_msgs::Reference p_ref;
 
   {
-    std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
+
+    std::cout << "position: " << uav_position_[0] << ", " << uav_position_[1] << std::endl;
+    /* std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_); */
+    std::scoped_lock lock(mutex_position_command_, mutex_uav_uvdar_);
 
     auto start = std::chrono::steady_clock::now();
 
@@ -1171,15 +1152,16 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
 
     robot_pos = {
-        position_command_.x,
-        position_command_.y,
+        uav_position_[0], uav_position_[1],
+        /* position_command_.x, */
+        /* position_command_.y, */
     };
 
     double distance2neigh;
     for (int j = 0; j < n_drones_; ++j) {
       neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
       neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-      distance2neigh = std::sqrt(std::pow((uav_neighbors_[j][0] - position_command_.x), 2) + std::pow((uav_neighbors_[j][1] - position_command_.y), 2));
+      /* distance2neigh = std::sqrt(std::pow((uav_neighbors_[j][0] - robot_pos.x), 2) + std::pow((uav_neighbors_[j][1] - robot_pos.y), 2)); */
       if (largest_eigenvalue_[j] / 2.0 + encumbrance > distance2neigh / 2.0 && distance2neigh < 5.0) {
         // std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl;
       }
@@ -1239,7 +1221,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.1;
-    
+
     p_ref.heading = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first) - 3.1415 / 4;
     auto end      = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration<double, std::milli>(end - start);
@@ -1272,18 +1254,8 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
     return;
   }
 
-  bool              timeout_exceeded = false;
-  std::stringstream msg;
-  msg.precision(2);
-  msg << "Last odometry message received: ";
-  for (int r = 0; r < last_odom_msg_time_.size(); r++) {
-    double time_since_last_message = (ros::Time::now() - last_odom_msg_time_[r]).toSec();
-    msg << _uav_names_[r] << " (" << time_since_last_message << " s), ";
-    if (time_since_last_message > _odom_timeout_) {
-      /* ROS_WARN("[RBLController]: Did not receive any message from %s for %.2f s.", _uav_names_[r].c_str(), time_since_last_message); */
-      timeout_exceeded = true;
-    }
-  }
+  bool timeout_exceeded = false;
+
 
   try {
     publishDestination();
@@ -1325,10 +1297,6 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
   catch (...) {
     ROS_ERROR("exception caught during publishing topic '%s'", pub_hull_.getTopic().c_str());
   }
-
-  if (timeout_exceeded) {
-    ROS_WARN_THROTTLE(2.0, "[RBLController]: %s", msg.str().c_str());
-  }
 }
 //}
 
@@ -1361,7 +1329,7 @@ bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req,
   if (!control_allowed_) {
     res.message = "Control was already disables.";
     ROS_WARN("[RBLController]: %s", res.message.c_str());
-  }  else {
+  } else {
     control_allowed_ = false;
     res.message      = "Control disabled.";
     ROS_INFO("[RBLController]: %s", res.message.c_str());
@@ -1378,24 +1346,24 @@ bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, s
   ROS_INFO("[RBLController]: Fly to start service called.");
   res.success = true;
 
-    mrs_msgs::Vec4 srv;
-    srv.request.goal = {_required_initial_position_[0], _required_initial_position_[1], _required_initial_position_[2], 0.0};
-    ;
-    if (sc_goto_position_.call(srv)) {
-      if (srv.response.success) {
-        res.message          = "Fly to start called.";
-        fly_to_start_called_ = true;
-      } else {
-        res.success = false;
-        res.message = "GoTo service returned success false.";
-      }
+  mrs_msgs::Vec4 srv;
+  srv.request.goal = {_required_initial_position_[0], _required_initial_position_[1], _required_initial_position_[2], 0.0};
+  ;
+  if (sc_goto_position_.call(srv)) {
+    if (srv.response.success) {
+      res.message          = "Fly to start called.";
+      fly_to_start_called_ = true;
     } else {
       res.success = false;
-      res.message = "Call to GoTo service failed.";
+      res.message = "GoTo service returned success false.";
     }
+  } else {
+    res.success = false;
+    res.message = "Call to GoTo service failed.";
+  }
 
-    ROS_INFO("[RBLController]: %s", res.message.c_str());
-  
+  ROS_INFO("[RBLController]: %s", res.message.c_str());
+
 
   return true;
 }

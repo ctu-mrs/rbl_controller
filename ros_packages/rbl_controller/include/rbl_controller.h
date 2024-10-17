@@ -187,9 +187,11 @@ public:
   std::mutex                   mutex_uav_uvdar_;
   std::mutex                   mutex_obstacles_;
   std::string                  _odometry_topic_name_;
-  std::vector<ros::Subscriber> other_uav_odom_subscribers_;
-  void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx);
+  ros::Subscriber uav_odom_subscriber_;
+  /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */
+  void                         odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
   std::vector<Eigen::Vector3d> uav_positions_;
+  Eigen::Vector3d uav_position_;
   std::vector<Eigen::Vector3d> uav_neighbors_;
   std::vector<double>          largest_eigenvalue_;
   std::vector<ros::Time>       last_odom_msg_time_;

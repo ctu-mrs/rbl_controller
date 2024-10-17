@@ -976,9 +976,38 @@ void RBLController::getPositionCmd() {
 /* odomCallback() //{ */
 
 void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
-  uav_position_[0] = msg->pose.pose.position.x;
-  uav_position_[1] = msg->pose.pose.position.y;
-  uav_position_[2] = msg->pose.pose.position.z;
+
+  if (!is_initialized_) {
+    return;
+  }
+
+  geometry_msgs::PointStamped new_point;
+
+  new_point.header  = msg->header;
+  new_point.point.x = msg->pose.pose.position.x;
+  new_point.point.y = msg->pose.pose.position.y;
+  new_point.point.z = msg->pose.pose.position.z;
+
+  auto res = transformer_->transformSingle(new_point, _control_frame_);
+  if (res) {
+    new_point = res.value();
+  } else {
+    ROS_ERROR_THROTTLE(3.0, "[FormationControllerSusd]: Could not transform odometry msg to control frame.");
+    return;
+  }
+
+  Eigen::Vector3d transformed_position;
+  if (_c_dimensions_ == 3) {
+    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
+  } else {
+    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
+  }
+  mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_position_);
+ 
+
+/*   uav_position_[0] = msg->pose.pose.position.x; */
+/*   uav_position_[1] = msg->pose.pose.position.y; */
+/*   uav_position_[2] = msg->pose.pose.position.z; */
 }
 
 //}
@@ -1129,15 +1158,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   mrs_msgs::Reference p_ref;
 
   {
-    /* std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_); */
-    std::scoped_lock lock(mutex_position_command_, mutex_uav_uvdar_);
+    std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
     auto start = std::chrono::steady_clock::now();
     std::vector<std::pair<double, double>> neighbors;
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
     robot_pos = {
-        /* uav_position_[0], uav_position_[1], */
-        position_command_.x,
-        position_command_.y,
+        uav_position_[0], uav_position_[1],
+        /* position_command_.x, */
+        /* position_command_.y, */
     };
     double distance2neigh;
     for (int j = 0; j < n_drones_; ++j) {

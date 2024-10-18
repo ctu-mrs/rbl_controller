@@ -79,7 +79,7 @@ void RBLController::onInit() {
   beta      = betaD;
   n_drones_ = _uav_names_.size();
 
-  uav_neighbors_.resize(n_drones_);  // FIXME: wait only for the neighbors
+  uav_neighbors_.resize(n_drones_); 
   uav_positions_.resize(n_drones_);
   neighbors_and_obstacles_noisy.resize(n_drones_);
 
@@ -87,6 +87,7 @@ void RBLController::onInit() {
   goal[1]          = destination.second;
   goal_original[0] = destination.first;
   goal_original[1] = destination.second;
+
   // std::vector<Eigen::Vector3d> uav_positionsN_(uav_positions_);
 
   /* create multiple subscribers to read uav odometries */
@@ -98,9 +99,8 @@ void RBLController::onInit() {
   /*   _uav_uvdar_ids_[_uvdar_ids_[i]] = i; */
   /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
   /* } */
+
   uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
-
-
   sub_uvdar_filtered_poses_.push_back(nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>(
       "/" + _uav_name_ + "/uvdar/measuredPoses", 1, boost::bind(&RBLController::callbackNeighborsUsingUVDAR, this, _1)));
   mrs_lib::SubscribeHandlerOptions shopts;

@@ -157,46 +157,47 @@ public:
   std::vector<double>                    goal            = {0, 0};
   std::vector<double>                    goal_original   = {0, 0};
   bool                                   has_this_pose_  = false;
-  std::vector<double>             size_neighbors_and_obstacles;
-  std::vector<double>             size_neighbors;
-  std::vector<double>             size_obstacles;
-  std::vector<std::deque<double>> x_windows;
-  std::vector<std::deque<double>> y_windows;
-  double                          size_neighbors1;
-  double                          size_obstacles1;
-  double                          encumbrance;
-  double                          dt;
-  double                          beta_min;
-  double                          betaD;
-  double                          beta;
-  int                             init_flag;
-  std::vector<int>                Adj_matrix;
-  double                          d1;
-  double                          d2;
-  double                          d3;
-  double                          d4;
-  double                          th = 0;
-  double                          maximum_distance_conn;
-  double                          noisy_measurements;
-  double                          noisy_angle;
-  double                          threshold;
-  double                          bias_error;
-  int                             window_length;
-  
-  std::mutex                   mutex_uav_odoms_;
-  std::mutex                   mutex_uav_uvdar_;
-  std::mutex                   mutex_obstacles_;
-  std::string                  _odometry_topic_name_;
-  ros::Subscriber uav_odom_subscriber_;
+  std::vector<double>                    size_neighbors_and_obstacles;
+  std::vector<double>                    size_neighbors;
+  std::vector<double>                    size_obstacles;
+  std::vector<std::deque<double>>        x_windows;
+  std::vector<std::deque<double>>        y_windows;
+  double                                 size_neighbors1;
+  double                                 size_obstacles1;
+  double                                 encumbrance;
+  double                                 dt;
+  double                                 beta_min;
+  double                                 betaD;
+  double                                 beta;
+  int                                    init_flag;
+  std::vector<int>                       Adj_matrix;
+  double                                 d1;
+  double                                 d2;
+  double                                 d3;
+  double                                 d4;
+  double                                 th = 0;
+  double                                 maximum_distance_conn;
+  double                                 noisy_measurements;
+  double                                 noisy_angle;
+  double                                 threshold;
+  double                                 bias_error;
+  int                                    window_length;
+  double                                 cwvd;
+  std::mutex                             mutex_uav_odoms_;
+  std::mutex                             mutex_uav_uvdar_;
+  std::mutex                             mutex_obstacles_;
+  std::string                            _odometry_topic_name_;
+  ros::Subscriber                        uav_odom_subscriber_;
   /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */
   void                         odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
   std::vector<Eigen::Vector3d> uav_positions_;
-  Eigen::Vector3d uav_position_;
+  Eigen::Vector3d              uav_position_;
   std::vector<Eigen::Vector3d> uav_neighbors_;
   std::vector<double>          largest_eigenvalue_;
   std::vector<ros::Time>       last_odom_msg_time_;
   double                       _odom_msg_max_latency_;
-  
+
+
   void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);
   void publishCentroid(ros::Publisher &pub, const std::vector<double> &c1);
   void publishNeighbors(ros::Publisher &pub, const std::vector<std::pair<double, double>> &neighbors_and_obstacles_noisy);
@@ -245,7 +246,7 @@ public:
                    double beta_min, const double &betaD, std::vector<double> &goal, double d1, double &th, double d2, double d3, double d4,
                    std::pair<double, double> &destinations, std::vector<double> &c1_no_rotation);
 
- 
+
   std::mutex                                          mutex_position_command_;
   mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand> sh_position_command_;
   void                                                getPositionCmd();

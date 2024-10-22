@@ -150,6 +150,7 @@ public:
   std::pair<double, double>              destination;
   std::vector<std::pair<double, double>> obstacles;
   std::vector<std::pair<double, double>> obstacles_;
+  std::vector<std::pair<double, double>> obstacles1_;
   std::vector<std::pair<double, double>> obstacles_nofiltered;
 
   std::vector<std::pair<double, double>> tracked_obs;  // std::make_pair(1,(0.0, 0.0});

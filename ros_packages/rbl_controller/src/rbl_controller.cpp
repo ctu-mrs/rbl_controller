@@ -831,7 +831,6 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
   std::vector<Point> hull = convexHull(voronoi_circle_intersection_connectivity);
   double             distance;
   hull_voro.clear();
-  std::cout << hull_voro.size() << std::endl;
   for (const Point &p : hull) {
     hull_voro.push_back(std::make_pair(p.first, p.second));
 
@@ -856,7 +855,6 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
       centroid = std::make_pair(sum_x_in_times_scalar_values1 / sum_scalar_values1, sum_y_in_times_scalar_values1 / sum_scalar_values1);
       distance = euclideanDistance(p, centroid);
       // std::cout << "Distance is less than the threshold, dist: " << distance << " beta: " << beta << std::endl;
-
       // std::cout << "size cell " << voronoi_circle_intersection_connectivity.size() << std::endl;
       // std::cout << "size cell " << voronoi_circle_intersection.size() << std::endl;
 
@@ -1060,9 +1058,9 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
 /* clustersCallback1() //{ */
 void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
   // Clear the previous list of obstacles
-  obstacles_.clear();
 
   std::scoped_lock lock(mutex_obstacles_);
+  obstacles_.clear();
   // obstacles_.shrink_to_fit();
   // Iterate through markers to compute centroids
   for (const auto &marker : marker_array_msg->markers) {

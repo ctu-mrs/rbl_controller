@@ -48,7 +48,7 @@ input=(
   'Status' 'waitForHw; roslaunch mrs_uav_status status.launch
   '
   
-  'Core' 'waitForTime; roslaunch mrs_uav_core core.launch platform_config:=`rospack find mrs_uav_deployment`/config/mrs_uav_system/$UAV_TYPE.yaml world_config:=`rospack find mrs_uav_deployment`/config/worlds/world_$WORLD_NAME.yaml custom_config:=./config/custom_config.yaml network_config:=./config/network_config.yaml
+  'Core' 'waitForTime; roslaunch mrs_uav_core core.launch platform_config:=`rospack find mrs_uav_deployment`/config/mrs_uav_system/$UAV_TYPE.yaml world_config:=./config/world_temesvar_forest.yaml custom_config:=./config/custom_config.yaml network_config:=./config/network_config.yaml
   '
   'Hector' 'waitForHw; roslaunch mrs_hector_core hector_slam.launch
   '

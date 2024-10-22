@@ -3,8 +3,8 @@ connecting_frame_id: "common_origin"
 
 # these are the tf subtrees to be connected through the respective root frames so that the equal frames are equal
 connections:
-  - root_frame_id: "uav37/fcu"
-    equal_frame_id: "uav37/gps_origin"
+  - root_frame_id: "uav33/fcu"
+    equal_frame_id: "uav33/gps_origin"
 
   - root_frame_id: "uav41/fcu"
     equal_frame_id: "uav41/gps_origin"

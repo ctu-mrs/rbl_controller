@@ -1,5 +1,17 @@
 mrs_uav_managers:
 
+  takeoff:
+    during_takeoff: 
+      controller: "MpcController"
+      tracker: "LandoffTracker"
+
+    after_takeoff: 
+      controller: "MpcController"
+      tracker: "MpcTracker"
+
+    takeoff_height: 1.2
+    
+
   estimation_manager:
 
     # loaded state estimator plugins
@@ -8,7 +20,6 @@ mrs_uav_managers:
     # "gps_baro",
     # "gps_garmin",
     "hector_garmin",
-
     # "rtk",
     # "aloam",
     # "ground_truth",

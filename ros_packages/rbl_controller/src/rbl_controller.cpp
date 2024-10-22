@@ -52,7 +52,7 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
-  param_loader.loadParam("cwvd", cwvd);
+  /* param_loader.loadParam("cwvd", cwvd); */
 
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
@@ -116,6 +116,7 @@ void RBLController::onInit() {
   sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
   clusters_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_", 1, &RBLController::clustersCallback, this));
 
+  clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
@@ -224,7 +225,6 @@ void RBLController::publishNeighbors() {
 /*RBLController::publishHull() //{ */
 void RBLController::publishHull() {
   visualization_msgs::MarkerArray hull_voro_markers;
-
 
   for (size_t i = 0; i < hull_voro.size(); ++i) {
     visualization_msgs::Marker marker;
@@ -636,7 +636,7 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
                                                                           const std::vector<std::pair<double, double>> &points,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
                                                                           const std::vector<double> &                   only_robots) {
-  /* double cwvd = 0.5; */
+  double cwvd = 0.5;
 
   std::vector<std::pair<double, double>> closer_points;
   int                                    idx = only_robots.size();
@@ -647,11 +647,11 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
       const auto &neigh = neighbors[j];              // Get the neighbor at the j-th index
 
       double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
-      /* if (j >= neighbors.size() - obstacles_.size()) { */
-      /*   cwvd = 0.9; */
-      /* } else { */
-      /*   cwvd = 0.9; */
-      /* } */
+      if (j >= neighbors.size() - obstacles_.size()) {
+        cwvd = 0.9;
+      } else {
+        cwvd = 0.9;
+      }
       // Check the condition using alpha_ij and neighbor position
       if (std::cos(alpha_ij) * (points[i].first - robot_pos.first) + std::sin(alpha_ij) * (points[i].second - robot_pos.second) >
           cwvd * (std::sqrt(std::pow(robot_pos.first - neigh.first, 2) + std::pow(robot_pos.second - neigh.second, 2)))) {
@@ -1019,6 +1019,50 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
 
   std::scoped_lock lock(mutex_obstacles_);
   obstacles_.clear();
+  // obstacles_.shrink_to_fit();
+  // Iterate through markers to compute centroids
+  for (const auto &marker : marker_array_msg->markers) {
+    if (marker.type == visualization_msgs::Marker::POINTS) {
+      // Compute the centroid of the points in this marker
+      double x_sum      = 0.0;
+      double y_sum      = 0.0;
+      int    num_points = marker.points.size();
+
+      for (const auto &point : marker.points) {
+        x_sum += point.x;
+        y_sum += point.y;
+      }
+
+      if (num_points > 0) {
+        geometry_msgs::PointStamped new_point;
+        new_point.header  = marker.header;
+        new_point.point.x = x_sum / num_points;
+        new_point.point.y = y_sum / num_points;
+        new_point.point.z = 0;
+
+        auto res = transformer_->transformSingle(new_point, _control_frame_);
+        if (res) {
+          new_point = res.value();
+        } else {
+          ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform obstacle centroids to control frame.");
+          return;
+        }
+        // Store centroid in obstacles vector
+
+        obstacles_.emplace_back(new_point.point.x, new_point.point.y);
+        /* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; */
+      }
+    }
+  }
+}
+//}
+
+/* clustersCallback1() //{ */
+void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
+  // Clear the previous list of obstacles
+  obstacles_.clear();
+
+  std::scoped_lock lock(mutex_obstacles_);
   // obstacles_.shrink_to_fit();
   // Iterate through markers to compute centroids
   for (const auto &marker : marker_array_msg->markers) {

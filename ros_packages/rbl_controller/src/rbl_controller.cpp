@@ -52,7 +52,7 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
-  /* param_loader.loadParam("cwvd", cwvd); */
+  param_loader.loadParam("cwvd", cwvd);
 
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
@@ -636,7 +636,7 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
                                                                           const std::vector<std::pair<double, double>> &points,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
                                                                           const std::vector<double> &                   only_robots) {
-  double cwvd = 0.5;
+  /* double cwvd = 0.5; */
 
   std::vector<std::pair<double, double>> closer_points;
   int                                    idx = only_robots.size();
@@ -647,11 +647,11 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
       const auto &neigh = neighbors[j];              // Get the neighbor at the j-th index
 
       double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
-      if (j >= neighbors.size() - obstacles_.size()) {
-        cwvd = 0.9;
-      } else {
-        cwvd = 0.9;
-      }
+      /* if (j >= neighbors.size() - obstacles_.size()) { */
+      /*   cwvd = 0.9; */
+      /* } else { */
+      /*   cwvd = 0.9; */
+      /* } */
       // Check the condition using alpha_ij and neighbor position
       if (std::cos(alpha_ij) * (points[i].first - robot_pos.first) + std::sin(alpha_ij) * (points[i].second - robot_pos.second) >
           cwvd * (std::sqrt(std::pow(robot_pos.first - neigh.first, 2) + std::pow(robot_pos.second - neigh.second, 2)))) {
@@ -1018,7 +1018,7 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
   // Clear the previous list of obstacles
 
   std::scoped_lock lock(mutex_obstacles_);
-  obstacles_.clear();
+  /* obstacles_.clear(); */
   // obstacles_.shrink_to_fit();
   // Iterate through markers to compute centroids
   for (const auto &marker : marker_array_msg->markers) {
@@ -1094,6 +1094,7 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
         // Store centroid in obstacles vector
 
         obstacles_.emplace_back(new_point.point.x, new_point.point.y);
+        /* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); */ 
         /* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; */
       }
     }
@@ -1277,7 +1278,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     p_ref.position.y = c1[1];
     p_ref.position.z = 1.1;
 
-    p_ref.heading = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first) - 3.1415 / 4;
+    p_ref.heading = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first); //- 3.1415 / 4;
     auto end      = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration<double, std::milli>(end - start);
 

@@ -21,6 +21,7 @@ bias_error: 0.0 #0.5
 
 cwvd: 0.95
 refZ: 1.1
+max_obstacle_integration_dist: 8.0
 #Adj_matrix_uav1: [0,1,1,0,0]
 #Adj_matrix_uav2: [1,0,1,1,1]
 #Adj_matrix_uav3: [1,1,0,1,0]

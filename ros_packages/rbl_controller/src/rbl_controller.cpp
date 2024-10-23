@@ -55,6 +55,10 @@ void RBLController::onInit() {
   param_loader.loadParam("cwvd", cwvd);
   param_loader.loadParam("refZ", refZ_);
 
+  double tmp;
+  param_loader.loadParam("max_obstacle_integration_dist", tmp);
+  max_obstacle_integration_dist_sqr_ = pow(tmp, 2);
+
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
     ROS_ERROR("[RblController]: Could not load all parameters!");
@@ -196,7 +200,7 @@ void RBLController::publishNeighbors() {
   visualization_msgs::MarkerArray neighbors_markers;
 
 
-  for (size_t i = 0; i < neighbors_and_obstacles_noisy.size(); ++i) {
+  for (size_t i = 1; i < neighbors_and_obstacles_noisy.size(); ++i) {
     visualization_msgs::Marker marker;
     marker.header.frame_id    = _control_frame_;
     marker.header.stamp       = ros::Time::now();
@@ -920,7 +924,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;
   if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3) {
-    th = std::min(th + 0.3*dt, M_PI / 2);
+    th = std::min(th + 0.2*dt, M_PI / 2);
     std::cout << "RHSrule" << std::endl;
   } else {
     th = std::max(0.0, th - dt);
@@ -1228,7 +1232,9 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     {
       std::scoped_lock lock(mutex_obstacles_);
       for (int j = 0; j < obstacles_.size(); ++j) {
-        neighbors_and_obstacles.push_back({obstacles_[j].first, obstacles_[j].second});
+        if (pow(uav_position_[0] - obstacles_[j].first, 2) + pow(uav_position_[1] - obstacles_[j].second, 2) < max_obstacle_integration_dist_sqr_) { 
+          neighbors_and_obstacles.push_back({obstacles_[j].first, obstacles_[j].second});
+        }
       }
 
       size_neighbors_and_obstacles.clear();

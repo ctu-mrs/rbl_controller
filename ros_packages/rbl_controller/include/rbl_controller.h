@@ -200,6 +200,7 @@ public:
   std::vector<double>          largest_eigenvalue_;
   std::vector<ros::Time>       last_odom_msg_time_;
   double                       _odom_msg_max_latency_;
+  double                       max_obstacle_integration_dist_sqr_;
 
 
   void publishObstacles(ros::Publisher &pub, const std::vector<std::pair<double, double>> &obstacles);

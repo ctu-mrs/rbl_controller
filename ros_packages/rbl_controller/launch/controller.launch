@@ -34,7 +34,7 @@
             <param name="simulation" value="$(eval arg('RUN_TYPE') == 'simulation')" />
             <param name="uav_name" value="$(arg UAV_NAME)" />
             <!-- <param name="control_frame" value="$(arg UAV_NAME)/world_origin" /> -->
-            <param name="control_frame" value="$(arg UAV_NAME)/local_origin" />
+            <param name="control_frame" value="$(arg UAV_NAME)/hector_origin" />
 
             <!-- ROS parameters config file -->
             <rosparam file="$(find rbl_controller)/config/default.yaml" />

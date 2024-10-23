@@ -53,6 +53,7 @@ void RBLController::onInit() {
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
   param_loader.loadParam("cwvd", cwvd);
+  param_loader.loadParam("refZ", refZ_);
 
   // param_loader.loadParam("initial_positions/" + _uav_name_ + "/z", destination[2]);
   if (!param_loader.loadedSuccessfully()) {
@@ -919,7 +920,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;
   if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3) {
-    th = std::min(th + dt, M_PI / 2);
+    th = std::min(th + 0.3*dt, M_PI / 2);
     std::cout << "RHSrule" << std::endl;
   } else {
     th = std::max(0.0, th - dt);
@@ -1090,7 +1091,7 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
           return;
         }
         // Store centroid in obstacles vector
-
+        
         obstacles_.emplace_back(new_point.point.x, new_point.point.y);
         /* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); */ 
         /* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; */
@@ -1274,9 +1275,10 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     p_ref.position.x = c1[0];  // next_values[0];
     p_ref.position.y = c1[1];
-    p_ref.position.z = 1.1;
+    p_ref.position.z = refZ_;
 
-    p_ref.heading = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first); //- 3.1415 / 4;
+    /* p_ref.heading = std::atan2(destination.second - robot_pos.second, destination.first - robot_pos.first); //- 3.1415 / 4; */
+    p_ref.heading = 0.0;
     auto end      = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration<double, std::milli>(end - start);
 

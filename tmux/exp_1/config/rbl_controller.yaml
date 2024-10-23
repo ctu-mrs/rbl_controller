@@ -7,18 +7,19 @@ set_reference_timer:
   rate: 10 # [Hz]
   
 size_neighbors1: 0.3 
-size_obstacles1: 0.05
+size_obstacles1: 0.1
 encumbrance: 0.3 
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
-threshold: 0.75 
+threshold: 0.8 
 window_length: 1 #10
 bias_error: 0.0 #0.5
 tolerance: 0.5
 deafult_decay_rate: 0.05
 remove_threshold: 0.2
-cwvd: 0.99
+cwvd: 0.95
+refZ: 1.1
 #Adj_matrix_uav1: [0,1,1,0,0]
 #Adj_matrix_uav2: [1,0,1,1,1]
 #Adj_matrix_uav3: [1,1,0,1,0]
@@ -42,9 +43,9 @@ d1: 0.5
 d2: 1.0
 d3: 0.5
 d4: 1.0
-radius: 4.5 
-betaD: 0.5  
-beta_min: 0.1
+radius: 6.0 
+betaD: 2.0 
+beta_min: 1.0
 dt: 0.01
 step_size: 0.075
 

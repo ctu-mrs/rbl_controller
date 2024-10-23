@@ -186,6 +186,7 @@ public:
   double                                 bias_error;
   int                                    window_length;
   double                                 cwvd;
+  double                                 refZ_;
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;

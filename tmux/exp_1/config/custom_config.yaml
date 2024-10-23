@@ -9,7 +9,7 @@ mrs_uav_managers:
       controller: "MpcController"
       tracker: "MpcTracker"
 
-    takeoff_height: 1.2
+    takeoff_height: 1.1
     
 
   estimation_manager:

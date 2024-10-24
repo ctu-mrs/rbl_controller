@@ -33,6 +33,7 @@
             <!-- Parameters loaded from launch file -->
             <param name="simulation" value="$(eval arg('RUN_TYPE') == 'simulation')" />
             <param name="uav_name" value="$(arg UAV_NAME)" />
+            <!-- TODO: move this to config .yaml so you can change if simulation or experiment -->
             <!-- <param name="control_frame" value="$(arg UAV_NAME)/world_origin" /> -->
             <param name="control_frame" value="$(arg UAV_NAME)/hector_origin" />
 

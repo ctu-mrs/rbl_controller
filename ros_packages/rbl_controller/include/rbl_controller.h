@@ -185,6 +185,8 @@ public:
   double                                 threshold;
   double                                 bias_error;
   int                                    window_length;
+  double                                 cwvd_rob;
+  double                                 cwvd_obs;
   double                                 cwvd;
   double                                 refZ_;
   std::mutex                             mutex_uav_odoms_;

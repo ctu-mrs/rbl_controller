@@ -16,6 +16,11 @@ noisy_angle: 0.0 #0.3
 threshold: 1.5 
 window_length: 1 #10
 bias_error: 0.0 #0.5
+cwvd_obs: 0.95
+cwvd_rob: 0.5
+
+refZ: 1.0
+max_obstacle_integration_dist: 8.0
 
 Adj_matrix_uav1: [0,1,1]
 Adj_matrix_uav2: [1,0,1]

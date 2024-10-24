@@ -52,7 +52,8 @@ void RBLController::onInit() {
   param_loader.loadParam("threshold", threshold);
   param_loader.loadParam("window_length", window_length);
   param_loader.loadParam("bias_error", bias_error);
-  param_loader.loadParam("cwvd", cwvd);
+  param_loader.loadParam("cwvd_rob", cwvd_rob);
+  param_loader.loadParam("cwvd_obs", cwvd_obs);
   param_loader.loadParam("refZ", refZ_);
 
   double tmp;
@@ -641,7 +642,6 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
                                                                           const std::vector<std::pair<double, double>> &points,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
                                                                           const std::vector<double> &                   only_robots) {
-  /* double cwvd = 0.5; */
 
   std::vector<std::pair<double, double>> closer_points;
   int                                    idx = only_robots.size();
@@ -650,13 +650,13 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
     bool is_closer = true;
     for (size_t j = 0; j < neighbors.size(); ++j) {  // Start from the neighbor at index idx + 1
       const auto &neigh = neighbors[j];              // Get the neighbor at the j-th index
-
-      double alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
-      /* if (j >= neighbors.size() - obstacles_.size()) { */
-      /*   cwvd = 0.95; */
-      /* } else { */
-      /*   cwvd = 0.5; */
-      /* } */
+      double cwvd              = 0.5;
+      double alpha_ij   = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
+      if (j >= neighbors.size() - obstacles_.size()) {
+        cwvd = cwvd_obs;
+      } else {
+        cwvd = cwvd_rob;
+      }
       // Check the condition using alpha_ij and neighbor position
       if (std::cos(alpha_ij) * (points[i].first - robot_pos.first) + std::sin(alpha_ij) * (points[i].second - robot_pos.second) >
           cwvd * (std::sqrt(std::pow(robot_pos.first - neigh.first, 2) + std::pow(robot_pos.second - neigh.second, 2)))) {

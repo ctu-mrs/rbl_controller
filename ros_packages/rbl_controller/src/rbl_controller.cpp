@@ -85,7 +85,7 @@ void RBLController::onInit() {
   beta      = betaD;
   n_drones_ = _uav_names_.size();
 
-  uav_neighbors_.resize(n_drones_); 
+  uav_neighbors_.resize(n_drones_);
   uav_positions_.resize(n_drones_);
   neighbors_and_obstacles_noisy.resize(n_drones_);
 
@@ -99,14 +99,14 @@ void RBLController::onInit() {
   /* create multiple subscribers to read uav odometries */
   // iterate through drones except this drone and target
   for (int i = 0; i < _uav_names_.size(); i++) {
-  /*   std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_; */
-  /*   other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
-   */
+    /*   std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_; */
+    /*   other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
+     */
     _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
-  /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
+    /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
   }
 
-  uav_odom_subscriber_   = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
+  uav_odom_subscriber_ = nh.subscribe("/" + _uav_name_ + "/estimation_manager/odom_main", 1, &RBLController::odomCallback, this);
   sub_uvdar_filtered_poses_.push_back(nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>(
       "/" + _uav_name_ + "/uvdar/measuredPoses", 1, boost::bind(&RBLController::callbackNeighborsUsingUVDAR, this, _1)));
   mrs_lib::SubscribeHandlerOptions shopts;
@@ -924,7 +924,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;
   if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3) {
-    th = std::min(th + 0.5*dt, M_PI / 2);
+    th = std::min(th + 0.0 * dt, M_PI / 2);
     std::cout << "RHSrule" << std::endl;
   } else {
     th = std::max(0.0, th - dt);
@@ -1007,11 +1007,11 @@ void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
     transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
   }
   mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_position_);
- 
 
-/*   uav_position_[0] = msg->pose.pose.position.x; */
-/*   uav_position_[1] = msg->pose.pose.position.y; */
-/*   uav_position_[2] = msg->pose.pose.position.z; */
+
+  /*   uav_position_[0] = msg->pose.pose.position.x; */
+  /*   uav_position_[1] = msg->pose.pose.position.y; */
+  /*   uav_position_[2] = msg->pose.pose.position.z; */
 }
 
 //}
@@ -1095,9 +1095,9 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
           return;
         }
         // Store centroid in obstacles vector
-        
+
         obstacles_.emplace_back(new_point.point.x, new_point.point.y);
-        /* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); */ 
+        /* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); */
         /* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; */
       }
     }
@@ -1143,7 +1143,7 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
     double valeig  = std::abs(std::abs(std::sqrt(pow((new_point.point.x - position_command_.x), 2) + pow((new_point.point.y - position_command_.y), 2))) / 2);
     double valeig1 = 2.6 * std::sqrt(largest_eigenvalue) + encumbrance;
 
-    /* std::cout << "Largest eigenvalue: " << uav_id << " eig: " << valeig << "<" << valeig1 << std::endl; */
+    std::cout << "Largest eigenvalue: " << uav_id << " eig: " << largest_eigenvalue << std::endl;
 
     if (_c_dimensions_ == 3) {
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
@@ -1151,8 +1151,10 @@ void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarian
       transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
     }
     has_this_pose_ = true;
-    mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[_uav_uvdar_ids_[uav_id]]);
-    mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[_uav_uvdar_ids_[uav_id]]);
+    if (largest_eigenvalue < 15.0) {
+      mrs_lib::set_mutexed(mutex_uav_uvdar_, transformed_position, uav_neighbors_[_uav_uvdar_ids_[uav_id]]);
+      mrs_lib::set_mutexed(mutex_uav_uvdar_, largest_eigenvalue, largest_eigenvalue_[_uav_uvdar_ids_[uav_id]]);
+    }
   }
 }
 //}
@@ -1207,8 +1209,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   mrs_msgs::Reference p_ref;
 
   {
-    std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
-    auto start = std::chrono::steady_clock::now();
+    std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
+    auto                                   start = std::chrono::steady_clock::now();
     std::vector<std::pair<double, double>> neighbors;
     std::vector<std::pair<double, double>> neighbors_and_obstacles;
     robot_pos = {
@@ -1220,7 +1222,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     for (int j = 0; j < n_drones_; ++j) {
       neighbors.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
       neighbors_and_obstacles.push_back({uav_neighbors_[j][0], uav_neighbors_[j][1]});
-      std::cout<<uav_neighbors_[j][0] << ", "<< uav_neighbors_[j][1]<< std::endl;
+      std::cout << uav_neighbors_[j][0] << ", " << uav_neighbors_[j][1] << std::endl;
       /* distance2neigh = std::sqrt(std::pow((uav_neighbors_[j][0] - robot_pos.x), 2) + std::pow((uav_neighbors_[j][1] - robot_pos.y), 2)); */
       /* if (largest_eigenvalue_[j] / 2.0 + encumbrance > distance2neigh / 2.0 && distance2neigh < 5.0) { */
       /*   // std::cout<<"theoretical du for uvdar" << (largest_eigenvalue_[j]/2.0 + encumbrance - distance2neigh/2.0)+ encumbrance/2 <<std::endl; */
@@ -1233,7 +1235,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     {
       std::scoped_lock lock(mutex_obstacles_);
       for (int j = 0; j < obstacles_.size(); ++j) {
-        if (pow(uav_position_[0] - obstacles_[j].first, 2) + pow(uav_position_[1] - obstacles_[j].second, 2) < max_obstacle_integration_dist_sqr_) { 
+        if (pow(uav_position_[0] - obstacles_[j].first, 2) + pow(uav_position_[1] - obstacles_[j].second, 2) < max_obstacle_integration_dist_sqr_) {
           neighbors_and_obstacles.push_back({obstacles_[j].first, obstacles_[j].second});
         }
       }

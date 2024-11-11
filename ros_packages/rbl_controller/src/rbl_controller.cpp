@@ -55,6 +55,7 @@ void RBLController::onInit() {
   param_loader.loadParam("cwvd_rob", cwvd_rob);
   param_loader.loadParam("cwvd_obs", cwvd_obs);
   param_loader.loadParam("refZ", refZ_);
+  param_loader.loadParam("simulation", simulation_);
 
   double tmp;
   param_loader.loadParam("max_obstacle_integration_dist", tmp);
@@ -123,6 +124,7 @@ void RBLController::onInit() {
   clusters_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_", 1, &RBLController::clustersCallback, this));
 
   clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
+
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
@@ -649,9 +651,9 @@ std::vector<std::pair<double, double>> RBLController::find_closest_points(const 
   for (size_t i = 0; i < points.size(); ++i) {
     bool is_closer = true;
     for (size_t j = 0; j < neighbors.size(); ++j) {  // Start from the neighbor at index idx + 1
-      const auto &neigh = neighbors[j];              // Get the neighbor at the j-th index
-      double cwvd              = 0.5;
-      double alpha_ij   = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
+      const auto &neigh    = neighbors[j];           // Get the neighbor at the j-th index
+      double      cwvd     = 0.5;
+      double      alpha_ij = std::atan2(neigh.second - robot_pos.second, neigh.first - robot_pos.first);
       if (j >= neighbors.size() - obstacles_.size()) {
         cwvd = cwvd_obs;
       } else {
@@ -1021,7 +1023,10 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
   // Clear the previous list of obstacles
 
   std::scoped_lock lock(mutex_obstacles_);
-  /* obstacles_.clear(); */
+  // FIXME: only in simulation
+  if (simulation_) {
+    obstacles_.clear();
+  }
   // obstacles_.shrink_to_fit();
   // Iterate through markers to compute centroids
   for (const auto &marker : marker_array_msg->markers) {

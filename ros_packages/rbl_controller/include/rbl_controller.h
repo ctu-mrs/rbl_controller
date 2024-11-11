@@ -189,6 +189,7 @@ public:
   double                                 cwvd_obs;
   double                                 cwvd;
   double                                 refZ_;
+  bool                                   simulation_;
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;

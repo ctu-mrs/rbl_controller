@@ -1,5 +1,10 @@
-
-
+*.pkl
+*.eps
 *.log
 *.bag
 .vscode/
+*.pdf
+*.csv
+*.csv_
+*.json
+*.json_old

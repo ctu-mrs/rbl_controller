@@ -1023,7 +1023,6 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
   // Clear the previous list of obstacles
 
   std::scoped_lock lock(mutex_obstacles_);
-  // FIXME: only in simulation
   if (simulation_) {
     obstacles_.clear();
   }
@@ -1068,46 +1067,106 @@ void RBLController::clustersCallback(const visualization_msgs::MarkerArray::Cons
 /* clustersCallback1() //{ */
 void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
   // Clear the previous list of obstacles
-
   std::scoped_lock lock(mutex_obstacles_);
-  obstacles_.clear();
-  // obstacles_.shrink_to_fit();
-  // Iterate through markers to compute centroids
+  if (simulation_) {
+    obstacles_.clear();
+  }
+
+  // Initialize variables to track the closest point
+  std::optional<std::pair<double, double>> closest_point;
+  double min_distance = std::numeric_limits<double>::max();
+
+  // Iterate through markers
   for (const auto &marker : marker_array_msg->markers) {
     if (marker.type == visualization_msgs::Marker::POINTS) {
-      // Compute the centroid of the points in this marker
-      double x_sum      = 0.0;
-      double y_sum      = 0.0;
-      int    num_points = marker.points.size();
-
+      // Process all points in this marker
       for (const auto &point : marker.points) {
-        x_sum += point.x;
-        y_sum += point.y;
-      }
+        geometry_msgs::PointStamped point_transformed;
+        point_transformed.header = marker.header;
+        point_transformed.point.x = point.x;
+        point_transformed.point.y = point.y;
+        point_transformed.point.z = point.z;
 
-      if (num_points > 0) {
-        geometry_msgs::PointStamped new_point;
-        new_point.header  = marker.header;
-        new_point.point.x = x_sum / num_points;
-        new_point.point.y = y_sum / num_points;
-        new_point.point.z = 0;
-
-        auto res = transformer_->transformSingle(new_point, _control_frame_);
+        // Transform the point to the control frame
+        auto res = transformer_->transformSingle(point_transformed, _control_frame_);
         if (res) {
-          new_point = res.value();
+          point_transformed = res.value();
         } else {
-          ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform obstacle centroids to control frame.");
+          ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform obstacle point to control frame.");
           return;
         }
-        // Store centroid in obstacles vector
 
-        obstacles_.emplace_back(new_point.point.x, new_point.point.y);
-        /* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); */
-        /* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; */
+        // Compute distance to UAV position
+        double dx = point_transformed.point.x - uav_position_[0];
+        double dy = point_transformed.point.y - uav_position_[1];
+        double distance = std::sqrt(dx * dx + dy * dy);
+
+        // Check if this is the closest point so far
+        if (distance < min_distance) {
+          min_distance = distance;
+          closest_point = std::make_pair(point_transformed.point.x, point_transformed.point.y);
+        }
+
+        // Store the point in obstacles vector
+        obstacles_.emplace_back(point_transformed.point.x, point_transformed.point.y);
       }
     }
   }
+
+  // Output the closest point if one was found
+  if (closest_point) {
+    std::cout << "Closest point: (" << closest_point->first << ", "
+              << closest_point->second << ") at distance: "
+              << min_distance << std::endl;
+  } else {
+    std::cout << "No points detected in clusters." << std::endl;
+  }
 }
+/* //} */
+
+/* clustersCallback1() //{ */
+/* void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) { */
+/*   // Clear the previous list of obstacles */
+
+/*   std::scoped_lock lock(mutex_obstacles_); */
+/*   obstacles_.clear(); */
+/*   // obstacles_.shrink_to_fit(); */
+/*   // Iterate through markers to compute centroids */
+/*   for (const auto &marker : marker_array_msg->markers) { */
+/*     if (marker.type == visualization_msgs::Marker::POINTS) { */
+/*       // Compute the centroid of the points in this marker */
+/*       double x_sum      = 0.0; */
+/*       double y_sum      = 0.0; */
+/*       int    num_points = marker.points.size(); */
+
+/*       for (const auto &point : marker.points) { */
+/*         x_sum += point.x; */
+/*         y_sum += point.y; */
+/*       } */
+
+/*       if (num_points > 0) { */
+/*         geometry_msgs::PointStamped new_point; */
+/*         new_point.header  = marker.header; */
+/*         new_point.point.x = x_sum / num_points; */
+/*         new_point.point.y = y_sum / num_points; */
+/*         new_point.point.z = 0; */
+
+/*         auto res = transformer_->transformSingle(new_point, _control_frame_); */
+/*         if (res) { */
+/*           new_point = res.value(); */
+/*         } else { */
+/*           ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform obstacle centroids to control frame."); */
+/*           return; */
+/*         } */
+/*         // Store centroid in obstacles vector */
+
+/*         obstacles_.emplace_back(new_point.point.x, new_point.point.y); */
+/*         /1* obstacles_.insert(obstacles_.end(),obstacles1_.begin(),obstacles1_.end()); *1/ */
+/*         /1* std::cout << "Number of seen obstacles seen: "<< obstacles_.size()  << std::endl; *1/ */
+/*       } */
+/*     } */
+/*   } */
+/* } */
 //}
 
 /*RBLController::callbackNeighborsUsingUVDAR() //{ */

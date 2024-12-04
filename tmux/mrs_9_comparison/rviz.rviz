@@ -11,11 +11,8 @@ Panels:
         - /UAV1_UVDAR1
         - /UAV1_UVDAR1/Covariance1
         - /NeighborsFiltered1/Neighbors1
-        - /VoroCells1
+        - /ObstaclesFiltered1
         - /ObstaclesFiltered1/Obstacles5
-        - /Marker1
-        - /Marker5
-        - /Marker6
       Splitter Ratio: 0.560869574546814
     Tree Height: 931
   - Class: rviz/Selection
@@ -35,7 +32,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -53,7 +50,7 @@ Visualization Manager:
       Show Trail: false
       Value: false
     - Alpha: 0.20000000298023224
-      Cell Size: 1
+      Cell Size: 0.5
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -135,7 +132,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/destination_vis
           Name: UAV4
           Namespaces:
-            {}
+            destination: true
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -143,7 +140,7 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/destination_vis
           Name: UAV5
           Namespaces:
-            {}
+            destination: true
           Queue Size: 10
           Value: true
       Enabled: true
@@ -179,7 +176,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/position_vis
           Name: UAV4
           Namespaces:
-            {}
+            position: true
           Queue Size: 10
           Value: true
         - Class: rviz/Marker
@@ -187,7 +184,39 @@ Visualization Manager:
           Marker Topic: /uav5/rbl_controller/position_vis
           Name: UAV5
           Namespaces:
-            {}
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav6/rbl_controller/position_vis
+          Name: UAV6
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav7/rbl_controller/position_vis
+          Name: UAV7
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav8/rbl_controller/position_vis
+          Name: UAV8
+          Namespaces:
+            position: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav9/rbl_controller/position_vis
+          Name: UAV9
+          Namespaces:
+            position: true
           Queue Size: 10
           Value: true
       Enabled: true
@@ -368,6 +397,74 @@ Visualization Manager:
           Topic: /uav5/control_manager/mpc_tracker/mpc_reference_debugging
           Unreliable: false
           Value: true
+        - Alpha: 1
+          Arrow Length: 2
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz/PoseArray
+          Color: 0; 152; 0
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: UAV6
+          Queue Size: 10
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic: /uav6/control_manager/mpc_tracker/mpc_reference_debugging
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Arrow Length: 2
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz/PoseArray
+          Color: 166; 11; 0
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: UAV7
+          Queue Size: 10
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic: /uav7/control_manager/mpc_tracker/mpc_reference_debugging
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Arrow Length: 2
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz/PoseArray
+          Color: 0; 7; 147
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: UAV8
+          Queue Size: 10
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic: /uav8/control_manager/mpc_tracker/mpc_reference_debugging
+          Unreliable: false
+          Value: true
+        - Alpha: 1
+          Arrow Length: 2
+          Axes Length: 0.30000001192092896
+          Axes Radius: 0.009999999776482582
+          Class: rviz/PoseArray
+          Color: 122; 0; 122
+          Enabled: true
+          Head Length: 0.07000000029802322
+          Head Radius: 0.029999999329447746
+          Name: UAV9
+          Queue Size: 10
+          Shaft Length: 0.23000000417232513
+          Shaft Radius: 0.009999999776482582
+          Shape: Arrow (Flat)
+          Topic: /uav9/control_manager/mpc_tracker/mpc_reference_debugging
+          Unreliable: false
+          Value: true
       Enabled: false
       Name: Reference trajectories
     - Alpha: 1
@@ -448,13 +545,13 @@ Visualization Manager:
     - Class: rviz/Group
       Displays:
         - Class: rviz/MarkerArray
-          Enabled: false
+          Enabled: true
           Marker Topic: /uav2/rbl_controller/hull_vis
           Name: MarkerArray
           Namespaces:
             {}
           Queue Size: 100
-          Value: false
+          Value: true
         - Class: rviz/MarkerArray
           Enabled: false
           Marker Topic: /uav1/rbl_controller/hull_vis
@@ -487,7 +584,7 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: false
-      Enabled: false
+      Enabled: true
       Name: VoroCells
     - Class: rviz/Group
       Displays:
@@ -544,128 +641,52 @@ Visualization Manager:
           Queue Size: 100
           Value: true
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /uav2/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
             {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /uav3/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
             {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /uav4/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
             {}
           Queue Size: 100
-          Value: true
+          Value: false
         - Class: rviz/MarkerArray
-          Enabled: true
+          Enabled: false
           Marker Topic: /uav5/rbl_controller/obstacles_vis
           Name: Obstacles
           Namespaces:
             {}
           Queue Size: 100
-          Value: true
-      Enabled: false
+          Value: false
+      Enabled: true
       Name: ObstaclesFiltered
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/LaserScan
-      Color: 255; 255; 255
-      Color Transformer: Intensity
-      Decay Time: 0
-      Enabled: false
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Min Color: 0; 0; 0
-      Name: LaserScan
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.10000000149011612
-      Style: Flat Squares
-      Topic: /uav3/rplidar/scan
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: false
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav3/swarm_control_manager/pacnav/viz/obst_force
-      Name: Marker
-      Namespaces:
-        Virtual Force Vector: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav3/swarm_control_manager/pacnav/viz/vir_obst
-      Name: Marker
-      Namespaces:
-        Virtual Obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav2/swarm_control_manager/pacnav/viz/vir_obst
-      Name: Marker
-      Namespaces:
-        Virtual Obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav1/swarm_control_manager/pacnav/viz/vir_obst
-      Name: Marker
-      Namespaces:
-        Virtual Obstacles: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav2/swarm_control_manager/pacnav/viz/obst_force
-      Name: Marker
-      Namespaces:
-        Virtual Force Vector: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /uav1/swarm_control_manager/pacnav/viz/obst_force
-      Name: Marker
-      Namespaces:
-        Virtual Force Vector: true
-      Queue Size: 100
-      Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /uav3/rplidar/obstacles_
+      Marker Topic: /uav2/swarm_control_manager/pacnav/viz/vir_obst_force
       Name: MarkerArray
       Namespaces:
-        obstacle_cylinders: true
+        Virtual Obstacle Forces: true
       Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 194; 194; 194
+    Background Color: 255; 255; 255
     Default Light: true
-    Fixed Frame: uav3/local_origin
+    Fixed Frame: uav3/world_origin
     Frame Rate: 60
   Name: root
   Tools:
@@ -698,10 +719,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 15.189132690429688
+      Scale: 21.4761905670166
       Target Frame: common_origin
-      X: -2.3786675930023193
-      Y: -24.885528564453125
+      X: 0.5628541707992554
+      Y: -29.50994300842285
     Saved: ~
 Window Geometry:
   Displays:

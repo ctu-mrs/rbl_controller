@@ -38,6 +38,26 @@ windows:
         - export UAV_NAME=uav2; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
         - export UAV_NAME=uav3; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 
+  - swarm_controller:
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; waitForControl; roslaunch swarm_control_manager swarm_control_manager.launch controller_pkg:=pacnav origin_frame:=local_origin uav_frame:=fcu_untilted
+        - export UAV_NAME=uav2; waitForControl; roslaunch swarm_control_manager swarm_control_manager.launch controller_pkg:=pacnav origin_frame:=local_origin uav_frame:=fcu_untilted
+        - export UAV_NAME=uav3; waitForControl; roslaunch swarm_control_manager swarm_control_manager.launch controller_pkg:=pacnav origin_frame:=local_origin uav_frame:=fcu_untilted
+
+  - run_swarm:
+      layout: tiled
+      synchronize: after   
+      panes:
+        - export UAV_NAME=uav1; history -s rosservice call /'"$UAV_NAME"'/uav_manager/land; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/activate_controller; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/run_controller
+        - export UAV_NAME=uav2; history -s rosservice call /'"$UAV_NAME"'/uav_manager/land; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/activate_controller; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/run_controller
+        - export UAV_NAME=uav3; history -s rosservice call /'"$UAV_NAME"'/uav_manager/land; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/activate_controller; history -s rosservice call /'"$UAV_NAME"'/swarm_control_manager/run_controller
+
+  - goto: 
+      layout: tiled
+      panes:
+        - export UAV_NAME=uav1; history -s rosservice call /'"$UAV_NAME"'/pacnav_controller/goto
+
   - uvdar:
       layout: tiled
       panes:

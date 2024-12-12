@@ -1,6 +1,6 @@
 #!/bin/bash
 
-path="/home/\$(optenv USER mrs)/bag_files/latest/"
+path="."
 
 # By default, we record everything.
 # Except for this list of EXCLUDED topics:

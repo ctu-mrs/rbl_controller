@@ -8,3 +8,4 @@
 *.csv_
 *.json
 *.json_old
+*.bag.active

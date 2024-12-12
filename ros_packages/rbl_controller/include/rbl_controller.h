@@ -49,7 +49,6 @@
 #include <deque>
 #include <utility>
 #include <chrono>
-
 namespace formation_control
 {
 
@@ -72,7 +71,8 @@ public:
   int                      this_uav_idx_;
   double                   _target_gain_;
   int                      _c_dimensions_;  // controlled dimensions
-
+  ros::Time start_time_1;
+  bool flag_stop = false;
   ros::ServiceClient sc_set_velocity_;
   ros::ServiceClient sc_set_position_;
   ros::Timer         timer_set_reference_;

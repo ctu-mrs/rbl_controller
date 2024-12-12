@@ -76,6 +76,7 @@ final_positions: # defined with respect to monitored_area_origin
     x: -3.0
     y: 48.0
     z: 3.0
+
   uav5:
     x: -6.0
     y: 45.0

@@ -1,0 +1,225 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Adj_matrix	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<int>                       Adj_matrix;$/;"	m	class:formation_control::RBLController
+Goto	tmux/OLD/mrs_10_drones_circle/goto.py	/^class Goto:$/;"	c
+Goto	tmux/OLD/mrs_4_uvdar/goto.py	/^class Goto:$/;"	c
+Goto	tmux/OLD/mrs_5_circle_uvdar/goto.py	/^class Goto:$/;"	c
+Goto	tmux/OLD/mrs_5_drones/goto.py	/^class Goto:$/;"	c
+Goto	tmux/OLD/mrs_5_uvdar_circle/goto.py	/^class Goto:$/;"	c
+Goto	tmux/OLD/mrs_7_drones_circle/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_1/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_3_comparison/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_3_uvdar/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_5_uvdar/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_9_comparison/goto.py	/^class Goto:$/;"	c
+Goto	tmux/mrs_9_uvdar/goto.py	/^class Goto:$/;"	c
+MarkerReset	ros_packages/rbl_controller/src/clear.cpp	/^    MarkerReset()$/;"	f	class:MarkerReset
+MarkerReset	ros_packages/rbl_controller/src/clear.cpp	/^class MarkerReset$/;"	c	file:
+Point	ros_packages/rbl_controller/include/rbl_controller.h	/^  typedef std::pair<double, double> Point;$/;"	t	class:formation_control::RBLController
+Point	ros_packages/rbl_controller/src/rbl_controller.cpp	/^typedef std::pair<double, double> Point;$/;"	t	namespace:formation_control	file:
+RBLController	ros_packages/rbl_controller/include/rbl_controller.h	/^class RBLController : public nodelet::Nodelet {$/;"	c	namespace:formation_control
+RBL_CONTROLLER_H	ros_packages/rbl_controller/include/rbl_controller.h	2;"	d
+__init__	tmux/OLD/mrs_10_drones_circle/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/OLD/mrs_4_uvdar/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/OLD/mrs_5_circle_uvdar/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/OLD/mrs_5_drones/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/OLD/mrs_5_uvdar_circle/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/OLD/mrs_7_drones_circle/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_1/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_3_comparison/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_3_uvdar/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_5_uvdar/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_9_comparison/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+__init__	tmux/mrs_9_uvdar/goto.py	/^    def __init__(self):$/;"	m	class:Goto
+_c_dimensions_	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                      _c_dimensions_;  \/\/ controlled dimensions$/;"	m	class:formation_control::RBLController
+_control_frame_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::string              _control_frame_;$/;"	m	class:formation_control::RBLController
+_dist_to_start_limit_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double             _dist_to_start_limit_;$/;"	m	class:formation_control::RBLController
+_monitored_area_origin_	ros_packages/rbl_controller/include/rbl_controller.h	/^  Eigen::Vector3d _monitored_area_origin_;$/;"	m	class:formation_control::RBLController
+_odom_msg_max_latency_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                       _odom_msg_max_latency_;$/;"	m	class:formation_control::RBLController
+_odom_timeout_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double     _odom_timeout_;$/;"	m	class:formation_control::RBLController
+_odometry_topic_name_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::string                            _odometry_topic_name_;$/;"	m	class:formation_control::RBLController
+_rate_timer_diagnostics_	ros_packages/rbl_controller/include/rbl_controller.h	/^  int        _rate_timer_diagnostics_;$/;"	m	class:formation_control::RBLController
+_rate_timer_set_reference_	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                _rate_timer_set_reference_;$/;"	m	class:formation_control::RBLController
+_required_initial_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  Eigen::Vector3d    _required_initial_position_;$/;"	m	class:formation_control::RBLController
+_target_gain_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                   _target_gain_;$/;"	m	class:formation_control::RBLController
+_target_uav_name_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::string              _target_uav_name_;$/;"	m	class:formation_control::RBLController
+_uav_name_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::string              _uav_name_;$/;"	m	class:formation_control::RBLController
+_uav_names_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::string> _uav_names_;$/;"	m	class:formation_control::RBLController
+_uav_uvdar_ids_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::map<int, int>       _uav_uvdar_ids_;$/;"	m	class:formation_control::RBLController
+account_encumbrance	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::account_encumbrance(const std::vector<std::pair<double, double>> &points,$/;"	f	class:formation_control::RBLController
+activationServiceCallback	ros_packages/rbl_controller/src/rbl_controller.cpp	/^bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {$/;"	f	class:formation_control::RBLController
+all_robots_positions_valid_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool       all_robots_positions_valid_ = true;$/;"	m	class:formation_control::RBLController
+all_uavs	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> all_uavs;$/;"	m	class:formation_control::RBLController
+apply_rules	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::apply_rules(double &beta, const std::vector<double> &c1, const std::vector<double> &c2, const std::vector<double> &current_position,$/;"	f	class:formation_control::RBLController
+beta	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 beta;$/;"	m	class:formation_control::RBLController
+betaD	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 betaD;$/;"	m	class:formation_control::RBLController
+beta_min	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 beta_min;$/;"	m	class:formation_control::RBLController
+bias_error	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 bias_error;$/;"	m	class:formation_control::RBLController
+callbackNeighborsUsingUVDAR	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {$/;"	f	class:formation_control::RBLController
+callbackTimerDiagnostics	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEvent &te) {$/;"	f	class:formation_control::RBLController
+callbackTimerPubNeighbors	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::callbackTimerPubNeighbors([[maybe_unused]] const ros::TimerEvent &event) {$/;"	f	class:formation_control::RBLController
+callbackTimerSetReference	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te) {$/;"	f	class:formation_control::RBLController
+clustersCallback	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::clustersCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {$/;"	f	class:formation_control::RBLController
+clustersCallback1	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {$/;"	f	class:formation_control::RBLController
+clusters_sub_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<ros::Subscriber> clusters_sub_;$/;"	m	class:formation_control::RBLController
+clusters_sub_1	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<ros::Subscriber> clusters_sub_1;$/;"	m	class:formation_control::RBLController
+color_data	plot_data_fromjs.py	/^    color_data = json.load(json_file)$/;"	v
+color_data	plot_hector_map.py	/^    color_data = json.load(json_file)$/;"	v
+colors1	plot_data_fromjs.py	/^colors1 = color_data['colors1']$/;"	v
+colors1	plot_hector_map.py	/^colors1 = color_data['colors1']$/;"	v
+colors3	plot_data_fromjs.py	/^colors3 = color_data['colors3']$/;"	v
+colors3	plot_hector_map.py	/^colors3 = color_data['colors3']$/;"	v
+colors4	plot_data_fromjs.py	/^colors4 = color_data['colors4']$/;"	v
+colors4	plot_hector_map.py	/^colors4 = color_data['colors4']$/;"	v
+communication_constraint	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::communication_constraint(const std::vector<std::pair<double, double>> &points,$/;"	f	class:formation_control::RBLController
+compute_scalar_value	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<double> RBLController::compute_scalar_value(const std::vector<double> &x_test, const std::vector<double> &y_test,$/;"	f	class:formation_control::RBLController
+control_allowed_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool               control_allowed_ = false;$/;"	m	class:formation_control::RBLController
+convexHull	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<Point> RBLController::convexHull(std::vector<Point> points) {$/;"	f	class:formation_control::RBLController
+cross	ros_packages/rbl_controller/src/rbl_controller.cpp	/^double RBLController::cross(const Point &O, const Point &A, const Point &B) {$/;"	f	class:formation_control::RBLController
+cwvd	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 cwvd;$/;"	m	class:formation_control::RBLController
+cwvd_obs	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 cwvd_obs;$/;"	m	class:formation_control::RBLController
+cwvd_rob	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 cwvd_rob;$/;"	m	class:formation_control::RBLController
+d1	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 d1;$/;"	m	class:formation_control::RBLController
+d2	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 d2;$/;"	m	class:formation_control::RBLController
+d3	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 d3;$/;"	m	class:formation_control::RBLController
+d4	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 d4;$/;"	m	class:formation_control::RBLController
+data	plot_data_fromjs.py	/^data = np.load('uav_data.npz')$/;"	v
+data	plot_hector_map.py	/^data = np.load('uav_data.npz')$/;"	v
+deactivationServiceCallback	ros_packages/rbl_controller/src/rbl_controller.cpp	/^bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {$/;"	f	class:formation_control::RBLController
+destination	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::pair<double, double>              destination;$/;"	m	class:formation_control::RBLController
+dt	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 dt;$/;"	m	class:formation_control::RBLController
+encumbrance	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 encumbrance;$/;"	m	class:formation_control::RBLController
+euclideanDistance	ros_packages/rbl_controller/src/rbl_controller.cpp	/^double RBLController::euclideanDistance(const Point &a, const Point &b) {$/;"	f	class:formation_control::RBLController
+final_colors	plot_data_fromjs.py	/^final_colors = color_data['final_colors']$/;"	v
+final_colors	plot_hector_map.py	/^final_colors = color_data['final_colors']$/;"	v
+final_x	plot_data_fromjs.py	/^final_x = data['final_x']$/;"	v
+final_x	plot_hector_map.py	/^final_x = data['final_x']$/;"	v
+final_y	plot_data_fromjs.py	/^final_y = data['final_y']$/;"	v
+final_y	plot_hector_map.py	/^final_y = data['final_y']$/;"	v
+find_closest_points	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double> &             robot_pos,$/;"	f	class:formation_control::RBLController
+fixed_neighbors	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::fixed_neighbors(const std::vector<std::pair<double, double>> &positions,$/;"	f	class:formation_control::RBLController
+fixed_neighbors_vec	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> fixed_neighbors_vec;$/;"	m	class:formation_control::RBLController
+flag_stop	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool flag_stop = false;$/;"	m	class:formation_control::RBLController
+flyToStartServiceCallback	ros_packages/rbl_controller/src/rbl_controller.cpp	/^bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {$/;"	f	class:formation_control::RBLController
+fly_to_start_called_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool               fly_to_start_called_ = false;$/;"	m	class:formation_control::RBLController
+fontsize	plot_hector_map.py	/^fontsize = 22$/;"	v
+fontsize	plot_hector_map1.py	/^fontsize = 22$/;"	v
+formation_control	ros_packages/rbl_controller/include/rbl_controller.h	/^namespace formation_control$/;"	n
+formation_control	ros_packages/rbl_controller/src/rbl_controller.cpp	/^namespace formation_control$/;"	n	file:
+getPositionCmd	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::getPositionCmd() {$/;"	f	class:formation_control::RBLController
+get_centroid	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<double, double>> RBLController::get_centroid($/;"	f	class:formation_control::RBLController
+goal	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    goal            = {0, 0};$/;"	m	class:formation_control::RBLController
+goal_original	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    goal_original   = {0, 0};$/;"	m	class:formation_control::RBLController
+got_position_command_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool                                                got_position_command_ = false;$/;"	m	class:formation_control::RBLController
+has_this_pose_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool                                   has_this_pose_  = false;$/;"	m	class:formation_control::RBLController
+hull_voro	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> hull_voro;$/;"	m	class:formation_control::RBLController
+id1_x	plot_data_fromjs.py	/^id1_x = data['id1_x']$/;"	v
+id1_x	plot_hector_map.py	/^id1_x = data['id1_x']$/;"	v
+id1_y	plot_data_fromjs.py	/^id1_y = data['id1_y']$/;"	v
+id1_y	plot_hector_map.py	/^id1_y = data['id1_y']$/;"	v
+id3_x	plot_data_fromjs.py	/^id3_x = data['id3_x']$/;"	v
+id3_x	plot_hector_map.py	/^id3_x = data['id3_x']$/;"	v
+id3_y	plot_data_fromjs.py	/^id3_y = data['id3_y']$/;"	v
+id3_y	plot_hector_map.py	/^id3_y = data['id3_y']$/;"	v
+id4_x	plot_data_fromjs.py	/^id4_x = data['id4_x']$/;"	v
+id4_x	plot_hector_map.py	/^id4_x = data['id4_x']$/;"	v
+id4_y	plot_data_fromjs.py	/^id4_y = data['id4_y']$/;"	v
+id4_y	plot_hector_map.py	/^id4_y = data['id4_y']$/;"	v
+init_flag	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                                    init_flag;$/;"	m	class:formation_control::RBLController
+insert_pair_at_index	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::insert_pair_at_index(const std::vector<std::pair<double, double>> &vec, size_t idx,$/;"	f	class:formation_control::RBLController
+isInsideConvexPolygon	ros_packages/rbl_controller/src/rbl_controller.cpp	/^bool RBLController::isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint) {$/;"	f	class:formation_control::RBLController
+is_at_initial_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool               is_at_initial_position_ = true;$/;"	m	class:formation_control::RBLController
+is_initialized_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool is_initialized_ = false;$/;"	m	class:formation_control::RBLController
+largest_eigenvalue_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>          largest_eigenvalue_;$/;"	m	class:formation_control::RBLController
+last_odom_msg_time_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<ros::Time>       last_odom_msg_time_;$/;"	m	class:formation_control::RBLController
+main	ros_packages/rbl_controller/src/clear.cpp	/^int main(int argc, char** argv)$/;"	f
+markerCallback	ros_packages/rbl_controller/src/clear.cpp	/^    void markerCallback(const visualization_msgs::MarkerArray::ConstPtr& msg)$/;"	f	class:MarkerReset
+marker_ids	ros_packages/rbl_controller/src/clear.cpp	/^    std::unordered_set<int> marker_ids;  \/\/ Set of dynamic marker IDs to reset (delete)$/;"	m	class:MarkerReset	file:
+marker_pub	ros_packages/rbl_controller/src/clear.cpp	/^    ros::Publisher marker_pub;$/;"	m	class:MarkerReset	file:
+marker_sub	ros_packages/rbl_controller/src/clear.cpp	/^    ros::Subscriber marker_sub;$/;"	m	class:MarkerReset	file:
+matched_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<bool>                      matched_        = {false};$/;"	m	class:formation_control::RBLController
+max_obstacle_integration_dist_sqr_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                       max_obstacle_integration_dist_sqr_;$/;"	m	class:formation_control::RBLController
+maximum_distance_conn	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 maximum_distance_conn;$/;"	m	class:formation_control::RBLController
+missing_counts_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<int>                       missing_counts_ = {0};$/;"	m	class:formation_control::RBLController
+mutex_neighbors_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::mutex                                          mutex_neighbors_position_;$/;"	m	class:formation_control::RBLController
+mutex_obstacles_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::mutex                             mutex_obstacles_;$/;"	m	class:formation_control::RBLController
+mutex_position_command_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::mutex                                          mutex_position_command_;$/;"	m	class:formation_control::RBLController
+mutex_uav_odoms_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::mutex                             mutex_uav_odoms_;$/;"	m	class:formation_control::RBLController
+mutex_uav_uvdar_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::mutex                             mutex_uav_uvdar_;$/;"	m	class:formation_control::RBLController
+n_drones_	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                      n_drones_;  \/\/ Number of drones$/;"	m	class:formation_control::RBLController
+neigbor_pub_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher                                      neigbor_pub_;$/;"	m	class:formation_control::RBLController
+neighbors	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> neighbors;$/;"	m	class:formation_control::RBLController
+neighbors_and_obstacles	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> neighbors_and_obstacles;$/;"	m	class:formation_control::RBLController
+neighbors_and_obstacles_noisy	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> neighbors_and_obstacles_noisy;$/;"	m	class:formation_control::RBLController
+neighbors_past_measurements	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::vector<std::pair<double, double>>> neighbors_past_measurements;  \/\/ For storing past measurements$/;"	m	class:formation_control::RBLController
+neighbors_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::map<unsigned int, geometry_msgs::PointStamped> neighbors_position_;$/;"	m	class:formation_control::RBLController
+new_neighbors	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>>              new_neighbors;$/;"	m	class:formation_control::RBLController
+noisy_angle	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 noisy_angle;$/;"	m	class:formation_control::RBLController
+noisy_measurements	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 noisy_measurements;$/;"	m	class:formation_control::RBLController
+obstacles	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> obstacles;$/;"	m	class:formation_control::RBLController
+obstacles1_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> obstacles1_;$/;"	m	class:formation_control::RBLController
+obstacles_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> obstacles_;$/;"	m	class:formation_control::RBLController
+obstacles_nofiltered	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> obstacles_nofiltered;$/;"	m	class:formation_control::RBLController
+odomCallback	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {$/;"	f	class:formation_control::RBLController
+onInit	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::onInit() {$/;"	f	class:formation_control::RBLController
+plot_hector_map	plot_hector_map.py	/^def plot_hector_map(bag_file_path, topic_name="\/uav33\/hector_mapping\/map", target_time=None):$/;"	f
+plot_hector_map	plot_hector_map1.py	/^def plot_hector_map(bag_file_path, topic_name="\/uav33\/hector_mapping\/map", target_time=None):$/;"	f
+plot_uav_data	plot_hector_map1.py	/^def plot_uav_data():$/;"	f
+points_inside_circle	ros_packages/rbl_controller/src/rbl_controller.cpp	/^std::vector<std::pair<double, double>> RBLController::points_inside_circle(std::pair<double, double> robot_pos, double radius, double step_size) {$/;"	f	class:formation_control::RBLController
+position_command_	ros_packages/rbl_controller/include/rbl_controller.h	/^  geometry_msgs::Point                                position_command_;  \/\/ position of controlled UAV$/;"	m	class:formation_control::RBLController
+probabilities_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    probabilities_  = {0};$/;"	m	class:formation_control::RBLController
+pub_centroid_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_centroid_;$/;"	m	class:formation_control::RBLController
+pub_destination_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_destination_;$/;"	m	class:formation_control::RBLController
+pub_hull_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_hull_;$/;"	m	class:formation_control::RBLController
+pub_neighbors_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_neighbors_;$/;"	m	class:formation_control::RBLController
+pub_obstacles_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_obstacles_;$/;"	m	class:formation_control::RBLController
+pub_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Publisher pub_position_;$/;"	m	class:formation_control::RBLController
+publishCentroid	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishCentroid() {$/;"	f	class:formation_control::RBLController
+publishDestination	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishDestination() {$/;"	f	class:formation_control::RBLController
+publishHull	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishHull() {$/;"	f	class:formation_control::RBLController
+publishNeighbors	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishNeighbors() {$/;"	f	class:formation_control::RBLController
+publishObstacles	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishObstacles() {$/;"	f	class:formation_control::RBLController
+publishPosition	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::publishPosition() {$/;"	f	class:formation_control::RBLController
+radius	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 radius;$/;"	m	class:formation_control::RBLController
+refZ_	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 refZ_;$/;"	m	class:formation_control::RBLController
+replanning_basic	ros_packages/rbl_controller/src/rbl_controller.cpp	/^void RBLController::replanning_basic(const std::pair<double, double> &robot_pos, std::vector<double> &centroid,$/;"	f	class:formation_control::RBLController
+resetMarkers	ros_packages/rbl_controller/src/clear.cpp	/^    void resetMarkers(const ros::TimerEvent&)$/;"	f	class:MarkerReset
+robot_pos	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::pair<double, double>              robot_pos;$/;"	m	class:formation_control::RBLController
+sc_goto_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceClient sc_goto_position_;$/;"	m	class:formation_control::RBLController
+sc_set_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceClient sc_set_position_;$/;"	m	class:formation_control::RBLController
+sc_set_velocity_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceClient sc_set_velocity_;$/;"	m	class:formation_control::RBLController
+service_activate_control_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceServer service_activate_control_;$/;"	m	class:formation_control::RBLController
+service_deactivate_control_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceServer service_deactivate_control_;$/;"	m	class:formation_control::RBLController
+service_fly_to_start_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::ServiceServer service_fly_to_start_;$/;"	m	class:formation_control::RBLController
+sh_position_command_	ros_packages/rbl_controller/include/rbl_controller.h	/^  mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand> sh_position_command_;$/;"	m	class:formation_control::RBLController
+simulation_	ros_packages/rbl_controller/include/rbl_controller.h	/^  bool                                   simulation_;$/;"	m	class:formation_control::RBLController
+size_neighbors	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    size_neighbors;$/;"	m	class:formation_control::RBLController
+size_neighbors1	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 size_neighbors1;$/;"	m	class:formation_control::RBLController
+size_neighbors_and_obstacles	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    size_neighbors_and_obstacles;$/;"	m	class:formation_control::RBLController
+size_obstacles	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<double>                    size_obstacles;$/;"	m	class:formation_control::RBLController
+size_obstacles1	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 size_obstacles1;$/;"	m	class:formation_control::RBLController
+start_time_1	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Time start_time_1;$/;"	m	class:formation_control::RBLController
+step_size	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 step_size;$/;"	m	class:formation_control::RBLController
+sub_uvdar_filtered_poses_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;$/;"	m	class:formation_control::RBLController
+th	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 th = 0;$/;"	m	class:formation_control::RBLController
+this_uav_idx_	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                      this_uav_idx_;$/;"	m	class:formation_control::RBLController
+threshold	ros_packages/rbl_controller/include/rbl_controller.h	/^  double                                 threshold;$/;"	m	class:formation_control::RBLController
+timer	ros_packages/rbl_controller/src/clear.cpp	/^    ros::Timer timer;$/;"	m	class:MarkerReset	file:
+timer_diagnostics_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Timer timer_diagnostics_;$/;"	m	class:formation_control::RBLController
+timer_pub_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Timer         timer_pub_;$/;"	m	class:formation_control::RBLController
+timer_pub_neighbors_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Timer                                          timer_pub_neighbors_;$/;"	m	class:formation_control::RBLController
+timer_set_reference_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Timer         timer_set_reference_;$/;"	m	class:formation_control::RBLController
+tracked_obs	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::pair<double, double>> tracked_obs;  \/\/ std::make_pair(1,(0.0, 0.0});$/;"	m	class:formation_control::RBLController
+transformer_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::shared_ptr<mrs_lib::Transformer> transformer_;$/;"	m	class:formation_control::RBLController
+uav_neighbors_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<Eigen::Vector3d> uav_neighbors_;$/;"	m	class:formation_control::RBLController
+uav_odom_subscriber_	ros_packages/rbl_controller/include/rbl_controller.h	/^  ros::Subscriber                        uav_odom_subscriber_;$/;"	m	class:formation_control::RBLController
+uav_position_	ros_packages/rbl_controller/include/rbl_controller.h	/^  Eigen::Vector3d              uav_position_;$/;"	m	class:formation_control::RBLController
+uav_positions_	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<Eigen::Vector3d> uav_positions_;$/;"	m	class:formation_control::RBLController
+val	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::pair<double, double>              val = {1000.0, 1000.0};$/;"	m	class:formation_control::RBLController
+window_length	ros_packages/rbl_controller/include/rbl_controller.h	/^  int                                    window_length;$/;"	m	class:formation_control::RBLController
+x_windows	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::deque<double>>        x_windows;$/;"	m	class:formation_control::RBLController
+y_windows	ros_packages/rbl_controller/include/rbl_controller.h	/^  std::vector<std::deque<double>>        y_windows;$/;"	m	class:formation_control::RBLController

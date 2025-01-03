@@ -9,3 +9,6 @@
 *.json
 *.json_old
 *.bag.active
+*.npz
+*.npz_old
+*.svg

@@ -54,8 +54,8 @@ target_link_libraries(RBLController
 
 # Declare the lidar_clusters executable
 #add_executable(lidar_clusters_node src/lidar_clusters.cpp)
-add_executable(continuous_marker_clear src/clear.cpp)
-target_link_libraries(continuous_marker_clear ${catkin_LIBRARIES})
+# add_executable(continuous_marker_clear src/clear.cpp)
+# target_link_libraries(continuous_marker_clear ${catkin_LIBRARIES})
 # Link libraries for the lidar_clusters executable
 #target_link_libraries(lidar_clusters
 #  ${catkin_LIBRARIES}

@@ -6,7 +6,7 @@ attach: false
 tmux_options: -f /etc/ctu-mrs/tmux.conf
 # you can modify these
 pre_window: export UAV_NAME=uav1; export RUN_TYPE=simulation; export UAV_TYPE=x500; export BOND=false; export CUSTOM_CONFIG=./config/custom_config.yaml; export WORLD_CONFIG=./config/world_config.yaml; export NETWORK_CONFIG=./config/network_config.yaml; export PLATFORM_CONFIG=`rospack find mrs_multirotor_simulator`/config/mrs_uav_system/$UAV_TYPE.yaml
-startup_window: uvdar
+startup_window: rbl_controller
 windows:
   - roscore:
       layout: tiled
@@ -43,18 +43,18 @@ windows:
         - export UAV_NAME=uav9; waitForTime; roslaunch mrs_uav_core core.launch
         
         
-  - monitoring:
+  - rbl_controller:
       layout: tiled
       panes:
-        - export UAV_NAME=uav1; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav2; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav3; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav4; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav5; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav6; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav7; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav8; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-        - export UAV_NAME=uav9; waitForControl; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav1; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav2; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav3; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav4; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav5; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav6; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav7; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav8; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav9; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 
   - uvdar:
       layout: tiled

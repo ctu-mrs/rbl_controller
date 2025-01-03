@@ -926,7 +926,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;
   if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3) {
-    th = std::min(th + 0.0 * dt, M_PI / 2);
+    th = std::min(th + 0.1 * dt, M_PI / 2);
     /* std::cout << "RHSrule" << std::endl; */
   } else {
     th = std::max(0.0, th - dt);

@@ -12,3 +12,6 @@
 *.npz
 *.npz_old
 *.svg
+tags
+plot*.py
+

@@ -227,9 +227,6 @@ public:
   std::vector<std::pair<double, double>> find_closest_points(const std::pair<double, double> &robot_pos, const std::vector<std::pair<double, double>> &points,
                                                              const std::vector<std::pair<double, double>> &neighbors, const std::vector<double> &only_robots);
 
-  void replanning_basic(const std::pair<double, double> &robot_pos, std::vector<double> &centroid, const std::vector<std::pair<double, double>> &neighbors,
-                        std::vector<double> &goal, std::vector<double> &goal_original);
-
   std::vector<double> compute_scalar_value(const std::vector<double> &x_test, const std::vector<double> &y_test, const std::pair<double, double> &destination,
                                            double beta);
 
@@ -247,11 +244,6 @@ public:
 
   typedef std::pair<double, double> Point;
 
-  void buildCostMap(int rows, int cols, const std::vector<std::pair<double, double>> &obstacles, const std::vector<double> &size_obstacles,
-                                   std::vector<std::vector<double>> &cost_map);
-  std::vector<std::pair<int, int>> planPath(int rows, int cols, const std::pair<double, double> &robot_pos,
-                                                           const std::vector<double> &goal_original, const std::vector<std::pair<double, double>> &obstacles,
-                                                           const std::vector<double> &size_obstacles);
   double                           euclideanDistance(const Point &a, const Point &b);
   double                           cross(const Point &O, const Point &A, const Point &B);
   bool                             isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);

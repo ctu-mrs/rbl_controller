@@ -45,11 +45,9 @@ include_directories(
 # Declare C++ library
 add_library(RBLController src/rbl_controller.cpp)
 # add_library(lidar_clusters src/lidar_clusters.cpp)
-add_library(FastMarchingSquare src/fm2.cpp)
 
 # Link libraries for the RBLController library
 target_link_libraries(RBLController
-  FastMarchingSquare
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )

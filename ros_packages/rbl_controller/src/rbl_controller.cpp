@@ -1,5 +1,4 @@
 #include <rbl_controller.h>
-#include <fm2.h>
 
 namespace formation_control
 {
@@ -341,45 +340,6 @@ void RBLController::publishDestination() {
 
 typedef std::pair<double, double> Point;
 
-void RBLController::buildCostMap(int rows, int cols, const std::vector<std::pair<double, double>> &obstacles, const std::vector<double> &size_obstacles,
-                                 std::vector<std::vector<double>> &cost_map) {
-  cost_map.assign(rows, std::vector<double>(cols, 1.0));  // Default cost
-
-  for (size_t i = 0; i < obstacles.size(); ++i) {
-    int    cx     = static_cast<int>(obstacles[i].first);
-    int    cy     = static_cast<int>(obstacles[i].second);
-    double radius = size_obstacles[i];
-
-    for (int x = std::max(0, cx - static_cast<int>(radius)); x < std::min(rows, cx + static_cast<int>(radius)); ++x) {
-      for (int y = std::max(0, cy - static_cast<int>(radius)); y < std::min(cols, cy + static_cast<int>(radius)); ++y) {
-        double distance = std::hypot(x - cx, y - cy);
-        if (distance <= radius) {
-          cost_map[x][y] = std::numeric_limits<double>::infinity();  // High cost for obstacle
-        }
-      }
-    }
-  }
-}
-
-std::vector<std::pair<int, int>> RBLController::planPath(int rows, int cols, const std::pair<double, double> &robot_pos,
-                                                         const std::vector<double> &goal_original, const std::vector<std::pair<double, double>> &obstacles,
-                                                         const std::vector<double> &size_obstacles) {
-  std::vector<std::vector<double>> cost_map;
-  buildCostMap(rows, cols, obstacles, size_obstacles, cost_map);
-
-  FastMarchingSquare fms(rows, cols);
-  fms.initializeCostMap(cost_map);
-
-  std::pair<int, int> start = {static_cast<int>(robot_pos.first), static_cast<int>(robot_pos.second)};
-  std::pair<int, int> goal  = {static_cast<int>(goal_original[0]), static_cast<int>(goal_original[1])};
-
-  return fms.computePath(start, goal);
-}
-
-
-double RBLController::cross(const Point &O, const Point &A, const Point &B) {
-  return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
-}
 
 /* double RBLController::getDistToInitialPosition() { */
 /*   getPositionCmd(); */
@@ -539,142 +499,6 @@ std::vector<std::pair<double, double>> RBLController::communication_constraint(c
   return filtered_points;
 }
 
-// FIXME: to fix the replanning_basic function. not ready. there are some bugs.
-void RBLController::replanning_basic(const std::pair<double, double> &robot_pos, std::vector<double> &centroid,
-                                     const std::vector<std::pair<double, double>> &neighbors, std::vector<double> &goal, std::vector<double> &goal_original) {
-  double R     = 2.0;
-  double D_MAX = 10.0;
-  // Helper function to compute the distance from a point to a line segment
-
-  // Helper function to compute the distance from a point to a line segment
-  auto distancePointToLineSegment = [](const std::pair<double, double> &p, const std::pair<double, double> &a, const std::pair<double, double> &b) -> double {
-    double px = p.first, py = p.second;
-    double ax = a.first, ay = a.second;
-    double bx = b.first, by = b.second;
-
-    double dx = bx - ax;
-    double dy = by - ay;
-
-    double len_sq = dx * dx + dy * dy;
-    if (len_sq == 0.0) {
-      return std::sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay));  // a and b are the same point
-    }
-
-    double t = ((px - ax) * dx + (py - ay) * dy) / len_sq;
-    t        = std::max(0.0, std::min(1.0, t));  // Clamp t between 0 and 1
-
-    double proj_x = ax + t * dx;
-    double proj_y = ay + t * dy;
-
-    double dist_x = px - proj_x;
-    double dist_y = py - proj_y;
-
-    return std::sqrt(dist_x * dist_x + dist_y * dist_y);
-  };
-
-  // Helper function to rotate the goal around the robot's position
-  auto rotateGoal = [](std::vector<double> &goal, const std::pair<double, double> &robot_pos, const std::vector<double> &centroid, double angle) {
-    // Translate goal relative to robot position
-    double dx = goal[0] - robot_pos.first;
-    double dy = goal[1] - robot_pos.second;
-
-    // Perform rotation
-    double rotated_x = dx * std::cos(angle) - dy * std::sin(angle);
-    double rotated_y = dx * std::sin(angle) + dy * std::cos(angle);
-
-    // Translate back
-    goal[0] = robot_pos.first + rotated_x;
-    goal[1] = robot_pos.second + rotated_y;
-  };
-
-  bool obstacle_too_close  = false;
-  bool obstacle_too_close1 = false;
-
-  // Iterate over neighbors
-  for (size_t j = 0; j < neighbors.size(); ++j) {
-    if (j >= neighbors.size() - obstacles_.size()) {
-      // Check if the current neighbor (or obstacle) is too close to the line segment
-      const auto &obstacle = neighbors[j];  // Treat these neighbors as obstacles
-                                            // Calculate the distance from the robot position to the obstacle
-      double distance_to_obstacle = std::sqrt(std::pow(obstacle.first - robot_pos.first, 2) + std::pow(obstacle.second - robot_pos.second, 2));
-      if (distance_to_obstacle > D_MAX) {
-        continue;  // Skip this obstacle if it is beyond D_MAX
-      }
-
-      double dist = distancePointToLineSegment(obstacle, robot_pos, std::make_pair(goal[0], goal[1]));
-      /* std::cout << "dist= " << dist << " , j = " << j << std::endl; */
-      if (dist < R) {
-        obstacle_too_close = true;
-      }
-    }
-
-    // If an obstacle is too close, rotate the goal to avoid it
-    if (obstacle_too_close) {
-      /* std::cout << "Obstacle detected near path. Rotating goal..." << std::endl; */
-
-      double angle_step    = 0.01;      // Small rotation step (in radians)
-      double max_rotation  = 2 * M_PI;  // Full rotation limit
-      double rotated_angle = 0.0;
-
-      while (obstacle_too_close) {
-        rotateGoal(goal, robot_pos, centroid, angle_step);
-        rotated_angle += angle_step;
-
-        // Check if the new goal avoids the obstacle
-        obstacle_too_close = false;
-        for (size_t k = 0; k < neighbors.size(); ++k) {
-          if (j >= neighbors.size() - obstacles_.size()) {
-            const auto &obstacle = neighbors[k];
-
-            // Calculate the distance from the robot position to the obstacle
-            double distance_to_obstacle = std::sqrt(std::pow(obstacle.first - robot_pos.first, 2) + std::pow(obstacle.second - robot_pos.second, 2));
-            if (distance_to_obstacle > D_MAX) {
-              continue;  // Skip this obstacle if it is beyond D_MAX
-            }
-
-            double dist = distancePointToLineSegment(obstacle, robot_pos, std::make_pair(goal[0], goal[1]));
-            if (dist < R) {
-              obstacle_too_close = true;
-            }
-          }
-        }
-        if (!obstacle_too_close) {
-          /* std::cout << "New goal position is obstacle-free." << std::endl; */
-          return;  // Exit once a valid goal is found
-        }
-      }
-
-      for (size_t j = 0; j < neighbors.size(); ++j) {
-        if (j >= neighbors.size() - obstacles_.size()) {
-          // Check if the current neighbor (or obstacle) is too close to the line segment
-          const auto &obstacle = neighbors[j];  // Treat these neighbors as obstacles
-                                                // Calculate the distance from the robot position to the obstacle
-          double distance_to_obstacle = std::sqrt(std::pow(obstacle.first - robot_pos.first, 2) + std::pow(obstacle.second - robot_pos.second, 2));
-          if (distance_to_obstacle > D_MAX) {
-            continue;  // Skip this obstacle if it is beyond D_MAX
-          }
-
-          double dist = distancePointToLineSegment(obstacle, robot_pos, std::make_pair(goal_original[0], goal_original[1]));
-          /* std::cout << "dist= " << dist << " , j = " << j << std::endl; */
-          if (dist < R) {
-            obstacle_too_close1 = true;
-          }
-        }
-      }
-      if (obstacle_too_close1) {
-        goal = goal_original;
-      }
-
-      // If after full rotation no valid position is found, revert to the original goal
-      /* std::cout << "Could not find an obstacle-free goal. Reverting to original goal." << std::endl; */
-      break;  // Exit the loop if goal can't be adjusted
-    }
-  }
-
-  if (!obstacle_too_close) {
-    /* std::cout << "Original goal is safe." << std::endl; */
-  }
-}
 
 
 std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double>              &robot_pos,
@@ -1358,7 +1182,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     for (auto &y_window : y_windows) {
       y_window.resize(window_length, 0.0);
     }
-
     // Call get_centroid function
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                                  encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);

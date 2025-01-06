@@ -1,8 +1,9 @@
 #include <rbl_controller.h>
+#include <fm2.h>
 
 namespace formation_control
 {
-   // Get the start time
+// Get the start time
 /*RBLController::onInit () //{ */
 void RBLController::onInit() {
   // initialize nodelet
@@ -340,6 +341,42 @@ void RBLController::publishDestination() {
 
 typedef std::pair<double, double> Point;
 
+void RBLController::buildCostMap(int rows, int cols, const std::vector<std::pair<double, double>> &obstacles, const std::vector<double> &size_obstacles,
+                                 std::vector<std::vector<double>> &cost_map) {
+  cost_map.assign(rows, std::vector<double>(cols, 1.0));  // Default cost
+
+  for (size_t i = 0; i < obstacles.size(); ++i) {
+    int    cx     = static_cast<int>(obstacles[i].first);
+    int    cy     = static_cast<int>(obstacles[i].second);
+    double radius = size_obstacles[i];
+
+    for (int x = std::max(0, cx - static_cast<int>(radius)); x < std::min(rows, cx + static_cast<int>(radius)); ++x) {
+      for (int y = std::max(0, cy - static_cast<int>(radius)); y < std::min(cols, cy + static_cast<int>(radius)); ++y) {
+        double distance = std::hypot(x - cx, y - cy);
+        if (distance <= radius) {
+          cost_map[x][y] = std::numeric_limits<double>::infinity();  // High cost for obstacle
+        }
+      }
+    }
+  }
+}
+
+std::vector<std::pair<int, int>> RBLController::planPath(int rows, int cols, const std::pair<double, double> &robot_pos,
+                                                         const std::vector<double> &goal_original, const std::vector<std::pair<double, double>> &obstacles,
+                                                         const std::vector<double> &size_obstacles) {
+  std::vector<std::vector<double>> cost_map;
+  buildCostMap(rows, cols, obstacles, size_obstacles, cost_map);
+
+  FastMarchingSquare fms(rows, cols);
+  fms.initializeCostMap(cost_map);
+
+  std::pair<int, int> start = {static_cast<int>(robot_pos.first), static_cast<int>(robot_pos.second)};
+  std::pair<int, int> goal  = {static_cast<int>(goal_original[0]), static_cast<int>(goal_original[1])};
+
+  return fms.computePath(start, goal);
+}
+
+
 double RBLController::cross(const Point &O, const Point &A, const Point &B) {
   return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
 }
@@ -640,10 +677,10 @@ void RBLController::replanning_basic(const std::pair<double, double> &robot_pos,
 }
 
 
-std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double> &             robot_pos,
+std::vector<std::pair<double, double>> RBLController::find_closest_points(const std::pair<double, double>              &robot_pos,
                                                                           const std::vector<std::pair<double, double>> &points,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
-                                                                          const std::vector<double> &                   only_robots) {
+                                                                          const std::vector<double>                    &only_robots) {
 
   std::vector<std::pair<double, double>> closer_points;
   int                                    idx = only_robots.size();
@@ -684,7 +721,7 @@ std::vector<double> RBLController::compute_scalar_value(const std::vector<double
 }
 
 std::vector<std::pair<double, double>> RBLController::account_encumbrance(const std::vector<std::pair<double, double>> &points,
-                                                                          const std::pair<double, double> &             robot_pos,
+                                                                          const std::pair<double, double>              &robot_pos,
                                                                           const std::vector<std::pair<double, double>> &neighbors,
                                                                           const std::vector<double> &size_neighbors, double encumbrance) {
   std::vector<size_t> index;
@@ -1074,7 +1111,7 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
 
   // Initialize variables to track the closest point
   std::optional<std::pair<double, double>> closest_point;
-  double min_distance = std::numeric_limits<double>::max();
+  double                                   min_distance = std::numeric_limits<double>::max();
 
   // Iterate through markers
   for (const auto &marker : marker_array_msg->markers) {
@@ -1082,7 +1119,7 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
       // Process all points in this marker
       for (const auto &point : marker.points) {
         geometry_msgs::PointStamped point_transformed;
-        point_transformed.header = marker.header;
+        point_transformed.header  = marker.header;
         point_transformed.point.x = point.x;
         point_transformed.point.y = point.y;
         point_transformed.point.z = point.z;
@@ -1097,13 +1134,13 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
         }
 
         // Compute distance to UAV position
-        double dx = point_transformed.point.x - uav_position_[0];
-        double dy = point_transformed.point.y - uav_position_[1];
+        double dx       = point_transformed.point.x - uav_position_[0];
+        double dy       = point_transformed.point.y - uav_position_[1];
         double distance = std::sqrt(dx * dx + dy * dy);
 
         // Check if this is the closest point so far
         if (distance < min_distance) {
-          min_distance = distance;
+          min_distance  = distance;
           closest_point = std::make_pair(point_transformed.point.x, point_transformed.point.y);
         }
 
@@ -1321,9 +1358,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     for (auto &y_window : y_windows) {
       y_window.resize(window_length, 0.0);
     }
-    RBLController RBLobj;
-    // Call get_centroid function
 
+    // Call get_centroid function
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                                  encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
 
@@ -1357,7 +1393,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     // Output the duration
     /* std::cout << "Time taken: " << duration.count() << " milliseconds" << std::endl; */
   }
-  /* ROS_INFO_THROTTLE(3.0, "[RBLController]: Setting positional reference [%.2f, %.2f, %.2f] in frame %s, heading = %.2f.", p_ref.position.x, p_ref.position.y, */
+  /* ROS_INFO_THROTTLE(3.0, "[RBLController]: Setting positional reference [%.2f, %.2f, %.2f] in frame %s, heading = %.2f.", p_ref.position.x, p_ref.position.y,
+   */
   /*                   p_ref.position.z, _control_frame_.c_str(), p_ref.heading); */
 
   // set drone velocity
@@ -1366,18 +1403,18 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   srv.request.header.frame_id = _control_frame_;
   srv.request.header.stamp    = ros::Time::now();
 
-   auto end_time = std::chrono::high_resolution_clock::now();
-   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    /* ROS_INFO("Node took %ld milliseconds", duration.count()); */
+  auto end_time = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+  /* ROS_INFO("Node took %ld milliseconds", duration.count()); */
   if (sc_set_position_.call(srv)) {
     /* ROS_INFO_THROTTLE(3.0, "Success: %d", srv.response.success); */
     /* ROS_INFO_THROTTLE(3.0, "Message: %s", srv.response.message.c_str()); */
   } else {
     ROS_ERROR_THROTTLE(3.0, "Failed to call service ref_pos_out");
   }
-  if (!flag_stop && robot_pos.second>0){ 
-    flag_stop = true;
-    ros::Time end_time_1 = ros::Time::now();
+  if (!flag_stop && robot_pos.second > 0) {
+    flag_stop                    = true;
+    ros::Time     end_time_1     = ros::Time::now();
     ros::Duration elapsed_time_1 = end_time_1 - start_time_1;
     ROS_INFO("Elapsed time: %.2f seconds", elapsed_time_1.toSec());
   }
@@ -1453,9 +1490,9 @@ bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, s
     res.message      = "Control allowed.";
     ROS_INFO("[RBLController]: %s", res.message.c_str());
   }
-  
-    start_time_1 = ros::Time::now();
-    ROS_INFO("Start time activation: %.2f seconds", start_time_1.toSec()); 
+
+  start_time_1 = ros::Time::now();
+  ROS_INFO("Start time activation: %.2f seconds", start_time_1.toSec());
   return true;
 }
 //}

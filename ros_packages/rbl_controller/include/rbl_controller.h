@@ -71,14 +71,14 @@ public:
   int                      this_uav_idx_;
   double                   _target_gain_;
   int                      _c_dimensions_;  // controlled dimensions
-  ros::Time start_time_1;
-  bool flag_stop = false;
-  ros::ServiceClient sc_set_velocity_;
-  ros::ServiceClient sc_set_position_;
-  ros::Timer         timer_set_reference_;
-  ros::Timer         timer_pub_;
-  int                _rate_timer_set_reference_;
-  void               callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
+  ros::Time                start_time_1;
+  bool                     flag_stop = false;
+  ros::ServiceClient       sc_set_velocity_;
+  ros::ServiceClient       sc_set_position_;
+  ros::Timer               timer_set_reference_;
+  ros::Timer               timer_pub_;
+  int                      _rate_timer_set_reference_;
+  void                     callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
   // void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
 
   // diag timer
@@ -246,10 +246,16 @@ public:
 
 
   typedef std::pair<double, double> Point;
-  double                            euclideanDistance(const Point &a, const Point &b);
-  double                            cross(const Point &O, const Point &A, const Point &B);
-  bool                              isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
-  std::vector<Point>                convexHull(std::vector<Point> points);
+
+  void buildCostMap(int rows, int cols, const std::vector<std::pair<double, double>> &obstacles, const std::vector<double> &size_obstacles,
+                                   std::vector<std::vector<double>> &cost_map);
+  std::vector<std::pair<int, int>> planPath(int rows, int cols, const std::pair<double, double> &robot_pos,
+                                                           const std::vector<double> &goal_original, const std::vector<std::pair<double, double>> &obstacles,
+                                                           const std::vector<double> &size_obstacles);
+  double                           euclideanDistance(const Point &a, const Point &b);
+  double                           cross(const Point &O, const Point &A, const Point &B);
+  bool                             isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
+  std::vector<Point>               convexHull(std::vector<Point> points);
   void apply_rules(double &beta, const std::vector<double> &c1, const std::vector<double> &c2, const std::vector<double> &current_position, double dt,
                    double beta_min, const double &betaD, std::vector<double> &goal, double d1, double &th, double d2, double d3, double d4,
                    std::pair<double, double> &destinations, std::vector<double> &c1_no_rotation);

@@ -1,1 +1,0 @@
-tmux/mrs_9_uvdar/start.sh

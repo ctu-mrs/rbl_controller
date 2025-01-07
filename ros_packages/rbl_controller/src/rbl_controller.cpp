@@ -141,6 +141,7 @@ void RBLController::onInit() {
 
   // initialize publishers
   pub_obstacles_   = nh.advertise<visualization_msgs::MarkerArray>("obstacle_markers_out", 1, true);
+
   pub_neighbors_   = nh.advertise<visualization_msgs::MarkerArray>("neighbors_markers_out", 1, true);
   pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
   pub_position_    = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
@@ -340,6 +341,10 @@ void RBLController::publishDestination() {
 
 typedef std::pair<double, double> Point;
 
+
+double RBLController::cross(const Point &O, const Point &A, const Point &B) {
+  return (A.first - O.first) * (B.second - O.second) - (A.second - O.second) * (B.first - O.first);
+}
 
 /* double RBLController::getDistToInitialPosition() { */
 /*   getPositionCmd(); */
@@ -1033,10 +1038,6 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
 /*RBLController::callbackNeighborsUsingUVDAR() //{ */
 void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
 
-
-  if (!is_initialized_) {
-    return;
-  }
   // ROS_INFO("Received pose from uvdar");
   /* uav_neighbors_.assign(n_drones_ + 1, Eigen::Vector3d(1000, 0, 0)); */
   largest_eigenvalue_.assign(n_drones_ + 1, 0);

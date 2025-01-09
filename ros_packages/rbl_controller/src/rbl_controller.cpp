@@ -125,6 +125,9 @@ void RBLController::onInit() {
 
   clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
 
+  waypoints_sub_.push_back(
+      nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/replanner/waypoints_", 1, &RBLController::waypointsCallback, this));
+
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
@@ -340,6 +343,36 @@ void RBLController::publishDestination() {
 /*RBLController::functions() //{ */
 
 typedef std::pair<double, double> Point;
+
+// Function to find the closest waypoint at a distance near 4 meters
+std::pair<double, double> RBLController::getClosestWaypoint(const std::pair<double, double> &robot_pos, double target_distance = 4.0) {
+  double                    closest_distance = std::numeric_limits<double>::infinity();  // Set to a large number
+  std::pair<double, double> closest_waypoint;
+
+  for (const auto &waypoint : waypoints_) {
+    double distance = calculateDistance(robot_pos, waypoint);
+
+    // If the distance is closer to the target (4 meters), update closest_distance
+    if (std::abs(distance - target_distance) < std::abs(closest_distance - target_distance)) {
+      closest_distance = distance;
+      closest_waypoint = waypoint;
+    }
+  }
+
+  // If no waypoint is found, return an empty pair (indicating no valid waypoint found)
+  if (closest_distance == std::numeric_limits<double>::infinity()) {
+    ROS_WARN("No waypoints available.");
+    return std::make_pair(0.0, 0.0);
+  }
+
+  ROS_INFO_STREAM("Closest waypoint found: (" << closest_waypoint.first << ", " << closest_waypoint.second << ")");
+  return closest_waypoint;
+}
+
+// Function to calculate the Euclidean distance between two points
+double RBLController::calculateDistance(const std::pair<double, double> &p1, const std::pair<double, double> &p2) {
+  return std::sqrt(std::pow(p2.first - p1.first, 2) + std::pow(p2.second - p1.second, 2));
+}
 
 
 double RBLController::cross(const Point &O, const Point &A, const Point &B) {
@@ -803,7 +836,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
     th = 0;
     // std::cout << "reset" << std::endl;
   }
-  // std::cout << "theta : " << th << ", beta: " << beta << "distc1c2: " <<dist_c1_c2 << "cuurentj-c1: "<< sqrt(pow((current_j_x - c1[0]), 2) +
+   std::cout << "theta : " << th << ", beta: " << beta << std::endl; 
   // Compute the angle and new position
   double angle        = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
   double new_angle    = angle - th;
@@ -1011,7 +1044,7 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
       }
       // Store the point in obstacles vector
       if (min_distance < 15.0) {
-      obstacles_.emplace_back(closest_point.first, closest_point.second);
+        obstacles_.emplace_back(closest_point.first, closest_point.second);
       }
     }
   }
@@ -1061,6 +1094,64 @@ void RBLController::clustersCallback1(const visualization_msgs::MarkerArray::Con
 /*     } */
 /*   } */
 /* } */
+//}
+
+/* /1* waypointsCallback() //{ *1/ */
+/* void RBLController::waypointsCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) { */
+/*   // Clear the previous list of obstacles */
+/*   std::scoped_lock lock(mutex_waypoints_); */
+
+/*   std::cout << "ciao0" << std::endl; */
+/*   // obstacles_.shrink_to_fit(); */
+/*   // Iterate through markers to compute centroids */
+/*   for (const auto &marker : marker_array_msg->markers) { */
+/*     /1* if (marker.type == visualization_msgs::Marker::POINTS) { *1/ */
+/*     std::cout << "ciao1" << std::endl; */
+/*     for (const auto &point : marker.points) { */
+/*       std::cout << "ciao2" << std::endl; */
+/*       geometry_msgs::PointStamped point_transformed; */
+/*       point_transformed.header  = marker.header; */
+/*       point_transformed.point.x = point.x; */
+/*       point_transformed.point.y = point.y; */
+/*       point_transformed.point.z = point.z; */
+
+/*       // Transform the point to the control frame */
+/*       auto res = transformer_->transformSingle(point_transformed, _control_frame_); */
+/*       if (res) { */
+/*         point_transformed = res.value(); */
+/*       } else { */
+/*         ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform obstacle point to control frame."); */
+/*         return; */
+/*       } */
+/*       waypoints_.emplace_back(point_transformed.point.x, point_transformed.point.y); */
+/*       std::cout << "sizeeee: " << waypoints_.size() << std::endl; */
+/*       /1* } *1/ */
+/*     } */
+/*   } */
+/* } */
+
+/* //} */
+
+/* waypointsCallback() //{ */
+void RBLController::waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
+  // Clear the waypoints vector before populating it with new data
+  waypoints_.clear();
+
+  // Loop through the markers in the MarkerArray
+  for (const auto &marker : marker_array_msg->markers) {
+    // Ensure that the marker has a valid position (check if position is available)
+    if (marker.pose.position.x && marker.pose.position.y) {
+      // Extract the x, y coordinates from the marker pose and store them in waypoints_
+      waypoints_.emplace_back(marker.pose.position.x, marker.pose.position.y);
+    }
+  }
+
+  // Debug print to see the waypoints received (optional)
+  /* ROS_INFO_STREAM("Received " << waypoints_.size() << " waypoints:"); */
+  /* for (const auto &waypoint : waypoints_) { */
+  /*   ROS_INFO_STREAM("Waypoint: (" << waypoint.first << ", " << waypoint.second << ")"); */
+}
+
 //}
 
 /*RBLController::callbackNeighborsUsingUVDAR() //{ */
@@ -1211,10 +1302,17 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     for (auto &y_window : y_windows) {
       y_window.resize(window_length, 0.0);
     }
-    // Call get_centroid function
-    auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
-                                                 encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
 
+    // TODO: compute the active waypoint here:
+
+    active_wp = getClosestWaypoint(robot_pos, 4.0);
+    std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl;
+    // Call get_centroid function
+    /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, */
+    /*                                              encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy); */
+
+    auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
+                                                 encumbrance, active_wp, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
     auto centroids_no_rotation =
         RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance,
                                     {goal[0], goal[1]}, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);

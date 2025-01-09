@@ -57,8 +57,8 @@ class RBLController : public nodelet::Nodelet {
 public:
   virtual void onInit();
   // general variables
-  bool is_initialized_ = false;
-
+  bool                                                is_initialized_ = false;
+  bool                                                flag_replanner  = true;
   std::vector<std::pair<double, double>>              new_neighbors;
   std::vector<std::vector<std::pair<double, double>>> neighbors_past_measurements;  // For storing past measurements
   // parameters from config file definitions
@@ -122,8 +122,10 @@ public:
 
   std::vector<ros::Subscriber> clusters_sub_;
   std::vector<ros::Subscriber> clusters_sub_1;
+  std::vector<ros::Subscriber> waypoints_sub_;
   void                         clustersCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   void                         clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
+  void                         waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
@@ -148,8 +150,10 @@ public:
   std::pair<double, double>              val = {1000.0, 1000.0};
   std::vector<std::pair<double, double>> fixed_neighbors_vec;
   std::pair<double, double>              destination;
+  std::pair<double, double>              active_wp;
   std::vector<std::pair<double, double>> obstacles;
   std::vector<std::pair<double, double>> obstacles_;
+  std::vector<std::pair<double, double>> waypoints_;
   std::vector<std::pair<double, double>> obstacles1_;
   std::vector<std::pair<double, double>> obstacles_nofiltered;
 
@@ -193,6 +197,7 @@ public:
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;
+  std::mutex                             mutex_waypoints_;
   std::string                            _odometry_topic_name_;
   ros::Subscriber                        uav_odom_subscriber_;
   /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */
@@ -244,10 +249,12 @@ public:
 
   typedef std::pair<double, double> Point;
 
-  double                           euclideanDistance(const Point &a, const Point &b);
-  double                           cross(const Point &O, const Point &A, const Point &B);
-  bool                             isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
-  std::vector<Point>               convexHull(std::vector<Point> points);
+  double                    euclideanDistance(const Point &a, const Point &b);
+  double                    cross(const Point &O, const Point &A, const Point &B);
+  double                    calculateDistance(const std::pair<double, double> &p1, const std::pair<double, double> &p2);
+  std::pair<double, double> getClosestWaypoint(const std::pair<double, double> &robot_pos, double target_distance);
+  bool                      isInsideConvexPolygon(const std::vector<std::pair<double, double>> &polygon, const std::pair<double, double> &testPoint);
+  std::vector<Point>        convexHull(std::vector<Point> points);
   void apply_rules(double &beta, const std::vector<double> &c1, const std::vector<double> &c2, const std::vector<double> &current_position, double dt,
                    double beta_min, const double &betaD, std::vector<double> &goal, double d1, double &th, double d2, double d3, double d4,
                    std::pair<double, double> &destinations, std::vector<double> &c1_no_rotation);

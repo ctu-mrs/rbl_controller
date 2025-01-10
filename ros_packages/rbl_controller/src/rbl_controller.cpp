@@ -1303,9 +1303,10 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       y_window.resize(window_length, 0.0);
     }
 
-    // TODO: compute the active waypoint here:
+    // TODO: manage end of the path and put the active as the closest to the robot + 5 ...something like that
 
-    active_wp = getClosestWaypoint(robot_pos, 4.0);
+    active_wp = waypoints_[10];
+      /* getClosestWaypoint(robot_pos, 4.0); */
     std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl;
     // Call get_centroid function
     /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, */

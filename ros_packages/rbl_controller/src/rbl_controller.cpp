@@ -836,7 +836,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
     th = 0;
     // std::cout << "reset" << std::endl;
   }
-   std::cout << "theta : " << th << ", beta: " << beta << std::endl; 
+  std::cout << "theta : " << th << ", beta: " << beta << std::endl;
   // Compute the angle and new position
   double angle        = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
   double new_angle    = angle - th;
@@ -1304,16 +1304,18 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     }
 
     // TODO: manage end of the path and put the active as the closest to the robot + 5 ...something like that
+    active_wp = destination;
+        /* active_wp = waypoints_[10]; */
+        /* getClosestWaypoint(robot_pos, 4.0); */
+        /* std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl; */
+        // Call get_centroid function
+        /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles,
+           size_neighbors_and_obstacles, */
+        /*                                              encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy); */
 
-    active_wp = waypoints_[10];
-      /* getClosestWaypoint(robot_pos, 4.0); */
-    std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl;
-    // Call get_centroid function
-    /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, */
-    /*                                              encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy); */
-
-    auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
-                                                 encumbrance, active_wp, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
+        auto centroids =
+            RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
+                                        encumbrance, active_wp, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
     auto centroids_no_rotation =
         RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance,
                                     {goal[0], goal[1]}, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);

@@ -34,7 +34,7 @@
             <param name="simulation" value="$(eval arg('RUN_TYPE') == 'simulation')" />
             <param name="uav_name" value="$(arg UAV_NAME)" />
             <!-- TODO: move this to config .yaml so you can change if simulation or experiment -->
-            <param name="control_frame" value="$(arg UAV_NAME)/world_origin" />
+            <param name="control_frame" value="$(arg UAV_NAME)/ground_truth_origin" />
             <!-- <param name="control_frame" value="$(arg UAV_NAME)/hector_origin" /> -->
 
             <!-- ROS parameters config file -->
@@ -52,6 +52,7 @@
             <remap from="~control_activation_in" to="~activation" />
             <remap from="~control_deactivation_in" to="~deactivation" />
             <remap from="~fly_to_start_in" to="~fly_to_start" />
+            <remap from="~set_goal_in" to="~set_goal" />
 
             <!-- Publishers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~destination_out" to="~destination_vis" />

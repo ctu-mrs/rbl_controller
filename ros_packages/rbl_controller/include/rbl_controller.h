@@ -18,6 +18,7 @@
 #include <mrs_msgs/ReferenceStampedSrv.h>
 #include <mrs_msgs/ReferenceStamped.h>
 #include <mrs_msgs/Reference.h>
+#include <mrs_msgs/ReferenceSrv.h>
 #include <mrs_msgs/TrackerCommand.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseArray.h>
@@ -104,6 +105,11 @@ public:
   bool               is_at_initial_position_ = true;
   double             _dist_to_start_limit_;
   double             getDistToInitialPosition();
+
+  // set goal service
+  ros::ServiceServer service_set_goal_;
+  bool               setGoalServiceCallback(mrs_msgs::ReferenceSrv::Request &req, mrs_msgs::ReferenceSrv::Response &res);
+  std::mutex         mutex_goal_;
 
   Eigen::Vector3d _monitored_area_origin_;
   // visualization publishing
@@ -200,8 +206,11 @@ public:
   std::mutex                             mutex_waypoints_;
   std::string                            _odometry_topic_name_;
   ros::Subscriber                        uav_odom_subscriber_;
-  /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */
-  void                         odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
+  void                                   odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
+
+  std::vector<ros::Subscriber> other_uav_odom_subscribers_;
+  void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx);
+
   std::vector<Eigen::Vector3d> uav_positions_;
   Eigen::Vector3d              uav_position_;
   std::vector<Eigen::Vector3d> uav_neighbors_;

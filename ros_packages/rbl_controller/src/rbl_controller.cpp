@@ -57,6 +57,7 @@ void RBLController::onInit() {
   param_loader.loadParam("cwvd_obs", cwvd_obs);
   param_loader.loadParam("refZ", refZ_);
   param_loader.loadParam("simulation", simulation_);
+  param_loader.loadParam("replanner_flag", replanner_flag);
 
   double tmp;
   param_loader.loadParam("max_obstacle_integration_dist", tmp);
@@ -824,10 +825,10 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;
   if (dist_c1_c2_d4 && sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) < d3) {
-    th = std::min(th + 0.1 * dt, M_PI / 2);
+    th = std::min(th + dt, M_PI / 2);
     /* std::cout << "RHSrule" << std::endl; */
   } else {
-    th = std::max(0.0, th - dt);
+    th = std::max(0.0, th - 2 * dt);
   }
 
   // third condition
@@ -836,7 +837,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
     th = 0;
     // std::cout << "reset" << std::endl;
   }
-  std::cout << "theta : " << th << ", beta: " << beta << std::endl;
+  /* std::cout << "theta : " << th << ", beta: " << beta << std::endl; */
   // Compute the angle and new position
   double angle        = atan2(goal[1] - current_j_y, goal[0] - current_j_x);
   double new_angle    = angle - th;
@@ -1304,18 +1305,41 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     }
 
     // TODO: manage end of the path and put the active as the closest to the robot + 5 ...something like that
-    active_wp = destination;
-        /* active_wp = waypoints_[10]; */
-        /* getClosestWaypoint(robot_pos, 4.0); */
-        /* std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl; */
-        // Call get_centroid function
-        /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles,
-           size_neighbors_and_obstacles, */
-        /*                                              encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy); */
+    if (replanner_flag == true) {
+      double min_distance1    = std::numeric_limits<double>::infinity();
+      int    closest_wp_index = -1;
+      for (int i = 0; i < waypoints_.size(); ++i) {
+        double distance = calculateDistance(robot_pos, waypoints_[i]);
+        if (distance < min_distance1) {
+          min_distance1 = distance;
+          closest_wp_index = i;
+        }
+      }
 
-        auto centroids =
-            RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
-                                        encumbrance, active_wp, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
+      // Choose the point n positions ahead of the closest waypoint
+      int n             = 8;  // Example: Choose the point 2 positions ahead
+      int next_wp_index = closest_wp_index + n;
+
+      // Ensure next_wp_index stays within bounds
+      if (next_wp_index >= waypoints_.size()) {
+        next_wp_index = waypoints_.size() - 1;  // Take the last waypoint if out of bounds
+      }
+
+      // Set the active waypoint
+      active_wp = waypoints_[next_wp_index];
+      /* active_wp = waypoints_[10]; //to fix 10 */
+    } else {
+      active_wp = destination;
+    }
+    /* getClosestWaypoint(robot_pos, 4.0); */
+    /* std::cout << "activewp: " << active_wp.first << ", " << active_wp.second <<std::endl; */
+    // Call get_centroid function
+    /* auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles,
+       size_neighbors_and_obstacles, */
+    /*                                              encumbrance, destination, beta, x_windows, y_windows, neighbors_and_obstacles_noisy); */
+
+    auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
+                                                 encumbrance, active_wp, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
     auto centroids_no_rotation =
         RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance,
                                     {goal[0], goal[1]}, beta, x_windows, y_windows, neighbors_and_obstacles_noisy);
@@ -1351,6 +1375,8 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   /*                   p_ref.position.z, _control_frame_.c_str(), p_ref.heading); */
 
   // set drone velocity
+  // TMP
+
   mrs_msgs::ReferenceStampedSrv srv;
   srv.request.reference       = p_ref;
   srv.request.header.frame_id = _control_frame_;
@@ -1359,13 +1385,15 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   auto end_time = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
   /* ROS_INFO("Node took %ld milliseconds", duration.count()); */
+
   if (sc_set_position_.call(srv)) {
     /* ROS_INFO_THROTTLE(3.0, "Success: %d", srv.response.success); */
     /* ROS_INFO_THROTTLE(3.0, "Message: %s", srv.response.message.c_str()); */
   } else {
     ROS_ERROR_THROTTLE(3.0, "Failed to call service ref_pos_out");
   }
-  if (!flag_stop && robot_pos.second > 0) {
+
+  if (!flag_stop && robot_pos.second > 30.0) {
     flag_stop                    = true;
     ros::Time     end_time_1     = ros::Time::now();
     ros::Duration elapsed_time_1 = end_time_1 - start_time_1;

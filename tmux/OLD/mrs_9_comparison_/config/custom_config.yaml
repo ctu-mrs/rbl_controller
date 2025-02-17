@@ -19,22 +19,10 @@ mrs_uav_managers:
     max_height_checking:
       enabled: false
 
-    takeoff:
-
-      rate: 10 # [Hz]
-
-      during_takeoff:
-        controller: "MpcController"
-        tracker: "LandoffTracker"
-
-      after_takeoff:
-        controller: "Se3Controller"
-        tracker: "MpcTracker"
-
   constraint_manager:
 
     default_constraints:
-      gps_baro: "fast"
+      gps_baro: "medium"
 
   control_manager:
 

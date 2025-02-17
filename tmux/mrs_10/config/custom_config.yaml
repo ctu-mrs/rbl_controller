@@ -1,5 +1,6 @@
 mrs_uav_managers:
 
+
   estimation_manager:
 
     # loaded state estimator plugins
@@ -19,7 +20,28 @@ mrs_uav_managers:
     max_height_checking:
       enabled: false
 
+    takeoff:
+
+      rate: 10 # [Hz]
+
+      during_takeoff:
+        controller: "MpcController"
+        tracker: "LandoffTracker"
+
+      after_takeoff:
+        controller: "Se3Controller"
+        tracker: "MpcTracker"
+
   constraint_manager:
+
+
+    fast:
+
+      horizontal:
+        speed: 10.0       # [m/s]
+        acceleration: 7.0 # [m/s^2]
+        jerk: 100.0       # [m/s^3]
+        snap: 60.0        # [m/s^4]
 
     default_constraints:
       gps_baro: "fast"

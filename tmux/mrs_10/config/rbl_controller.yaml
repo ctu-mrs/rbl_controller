@@ -16,10 +16,10 @@ noisy_angle: 0.0 #0.3
 threshold: 1.2 
 window_length: 1 #10
 bias_error: 0.0 #0.5
-cwvd_obs: 0.9
-cwvd_rob: 0.9
+cwvd_obs: 0.95
+cwvd_rob: 0.95
 simulation: true
-refZ: 1.0
+refZ: 2.0
 max_obstacle_integration_dist: 9.0
 
 Adj_matrix_uav1: [0,0,0,0,0,0,0,0,0,0]
@@ -40,12 +40,12 @@ max_distance_to_initial_position: 2.0
 
 
 
-d1: 1.0 
+d1: 0.5 
 d2: 1.0
-d3: 1.0 
+d3: 0.5 
 d4: 1.0
-radius: 4.5 
-betaD: 2.5 
+radius: 5.0 
+betaD: 2.0 
 beta_min: 0.1
 dt: 0.15
 step_size: 0.33
@@ -86,7 +86,7 @@ final_positions: # defined with respect to monitored_area_origin
 
   uav6:
     x: 10.0 #-2.22520933956314
-    y: -1.22  #9.7492791218
+    y: 0.0  #9.7492791218
     z: 2.0
 
   uav7:
@@ -141,7 +141,7 @@ initial_positions: # defined with respect to monitored_area_origin
 
   uav6:
     x: -10.0 #-2.22520933956314
-    y: 1.22  #9.7492791218
+    y: 0.0  #9.7492791218
     z: 2.0
 
   uav7:

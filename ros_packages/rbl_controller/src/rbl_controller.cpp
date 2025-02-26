@@ -820,7 +820,7 @@ void RBLController::apply_rules(double &beta, const std::vector<double> &c1, con
     beta = beta - dt * (beta - betaD);
   }
 
-  // std::cout << "distc1_c2 = " << dist_c1_c2 << "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
+   std::cout <<  "distp_c1 = " << sqrt(pow((current_j_x - c1[0]), 2) + pow((current_j_y - c1[1]), 2)) << std::endl;
 
   // second condition
   bool dist_c1_c2_d4 = dist_c1_c2 > d4;

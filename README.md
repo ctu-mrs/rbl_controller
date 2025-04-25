@@ -25,3 +25,5 @@
 cd rbl_controller/tmux/mrs_9_uvdar
 ./start.sh
 ```
+to activate the algorithm go to the window activation and run the last command in history in synchronized mode.
+

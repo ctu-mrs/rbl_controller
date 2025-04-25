@@ -19,7 +19,7 @@
   git clone git@github.com:ctu-mrs/rbl_controller.git
   catkin build 
   ```
- ## run simulation 
+ ## ▶️ run simulation 
 
 ```bash  
 cd rbl_controller/tmux/mrs_9_uvdar

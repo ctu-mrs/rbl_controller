@@ -11,11 +11,12 @@
 
 
   ```bash
-  cd mrs_apptainer 
-  ./example_wrapper.sh
-  cd user_ros_workspace/src
+  cd ~/git/mrs_apptainer/user_ros_workspace/src
   git clone git@github.com:manuelboldrer/uvdar_multirobot_simulator.git
   git clone git@github.com:ctu-mrs/rbl_controller.git
+  cd ../../
+  ./example_wrapper
+  cd user_ros_workspace/src
   catkin build 
   ```
  ## ▶️ run simulation 

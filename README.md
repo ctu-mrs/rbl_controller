@@ -11,7 +11,6 @@
 
 
   ```bash
-  git clone git@github.com:ctu-mrs/mrs_apptainer.git
   cd mrs_apptainer 
   ./example_wrapper.sh
   cd user_ros_workspace/src

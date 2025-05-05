@@ -2,7 +2,7 @@
 
   Ensure you have the following installed:
 
-  - **Apptainer (formerly Singularity)**  
+  - ** MRS System **  
     Follow setup instructions here: [MRS Apptainer GitHub](https://github.com/ctu-mrs/mrs_apptainer)
 
   ---
@@ -25,5 +25,9 @@
 cd rbl_controller/tmux/mrs_9_uvdar
 ./start.sh
 ```
-to activate the algorithm go to the window activation and run the last command in history in synchronized mode.
+to activate the algorithm go to the pane "activation" and run the last command in history in synchronized mode.
 
+This code was used for some of the results reported in the following papers: 
+
+- [Rule-Based Lloyd Algorithm for Multi-Robot Motion Planning and Control with Safety and Convergence Guarantees](https://arxiv.org/pdf/2310.19511)
+- [Swarming in the Wild: A Distributed Communication-less Lloyd-based Algorithm dealing with Uncertainties](https://arxiv.org/pdf/2504.18840)

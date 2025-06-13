@@ -137,6 +137,7 @@ void RBLController::onInit() {
   // initialize service servers
   service_activate_control_   = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
   service_deactivate_control_ = nh.advertiseService("control_deactivation_in", &RBLController::deactivationServiceCallback, this);
+  service_activate_params_control_   = nh.advertiseService("control_activation_params_in", &RBLController::activationParamsServiceCallback, this);
   service_fly_to_start_       = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
 
   // initialize service clients
@@ -1478,6 +1479,37 @@ bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, s
 }
 //}
 
+
+bool RBLController::activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req,
+                               rbl_controller::ActivateParams::Response &res)
+{
+
+    // Your logic
+    // ROS_INFO("Received: %f %f %f %f %f", a, b, c, d, e);
+
+    res.success = true;
+    res.message = "Parameters received and processed.";
+    
+    destination.first  = req.x;
+    destination.second = req.y;
+    refZ_ = req.z;
+    betaD = req.betaD;
+    beta_min = req.beta_min;
+    radius = req.radius;
+    encumbrance = req.encumbrance;
+    size_neighbors1 = req.encumbrance;
+
+    control_allowed_ = true;
+   // if (control_allowed_) {
+    //   res.message = "Control was already allowed.";
+    //   ROS_WARN("[RBLController]: %s", res.message.c_str());
+    // } else {
+    //   res.message      = "Control allowed.";
+    //   ROS_INFO("[RBLController]: %s", res.message.c_str());
+    // }
+
+    return true;
+}
 /* deactivationServiceCallback() //{ */
 bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {
   // service for deactivation of planning

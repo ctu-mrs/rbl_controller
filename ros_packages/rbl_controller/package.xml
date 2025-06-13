@@ -21,7 +21,9 @@
   <depend>pcl_ros</depend>
   <depend>mrs_hector_estimator_plugin</depend>
   <depend>hector_mapping</depend>
- 
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

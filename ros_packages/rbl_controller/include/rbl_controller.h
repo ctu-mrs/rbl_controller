@@ -49,6 +49,8 @@
 #include <deque>
 #include <utility>
 #include <chrono>
+#include "rbl_controller/ActivateParams.h"
+
 namespace formation_control
 {
 
@@ -90,9 +92,11 @@ public:
 
   // trigger service
   ros::ServiceServer service_activate_control_;
+  ros::ServiceServer service_activate_params_control_;
   ros::ServiceServer service_deactivate_control_;
   bool               control_allowed_ = false;
   bool               activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
   // trigger goto service

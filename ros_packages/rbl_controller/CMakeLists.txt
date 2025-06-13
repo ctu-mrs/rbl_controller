@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   mrs_lib
   visualization_msgs
   pcl_ros
+  message_generation
 )
 
 # Find Eigen
@@ -28,10 +29,19 @@ find_package(Boost REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN_LIBRARIES})
 
+add_service_files(
+  FILES
+  ActivateParams.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 # Declare catkin package
 catkin_package(
   LIBRARIES RBLController 
-  CATKIN_DEPENDS roscpp mrs_lib mrs_msgs geometry_msgs nav_msgs 
+  CATKIN_DEPENDS roscpp mrs_lib mrs_msgs geometry_msgs nav_msgs message_runtime
   DEPENDS Eigen
 )
 
@@ -51,6 +61,7 @@ target_link_libraries(RBLController
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )
+
 
 # Declare the lidar_clusters executable
 

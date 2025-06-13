@@ -16,7 +16,7 @@
   git clone git@github.com:ctu-mrs/rbl_controller.git
   cd ../../
   ./example_wrapper
-  cd user_ros_workspace/src
+  cd user_ros_workspace
   catkin build 
   ```
  ## ▶️ run simulation 

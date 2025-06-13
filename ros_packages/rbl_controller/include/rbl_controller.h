@@ -129,7 +129,7 @@ public:
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
-
+  std::vector<ros::Subscriber> other_uav_odom_subscribers_;
   // | --------------------------- timer callbacks ----------------------------- |
 
   void                                                callbackTimerPubNeighbors(const ros::TimerEvent &event);
@@ -203,6 +203,7 @@ public:
   ros::Subscriber                        uav_odom_subscriber_;
   /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */
   void                         odomCallback(const nav_msgs::Odometry::ConstPtr &msg);
+  void                         odomCallback(const nav_msgs::Odometry::ConstPtr &msg, int idx);
   std::vector<Eigen::Vector3d> uav_positions_;
   Eigen::Vector3d              uav_position_;
   std::vector<Eigen::Vector3d> uav_neighbors_;

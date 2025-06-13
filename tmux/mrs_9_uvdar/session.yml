@@ -61,18 +61,18 @@ windows:
       panes:
         - waitForControl; roslaunch uvdar_multirobot_simulator example.launch
         
-  - lidar:
-      layout: tiled
-      panes:
-        - export UAV_NAME=uav1; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav2; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav3; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav4; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav5; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav6; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav7; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav8; waitForControl; roslaunch laserscan_clusters example.launch
-        - export UAV_NAME=uav9; waitForControl; roslaunch laserscan_clusters example.launch
+  # - lidar:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav2; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav3; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav4; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav5; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav6; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav7; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav8; waitForControl; roslaunch laserscan_clusters example.launch
+  #       - export UAV_NAME=uav9; waitForControl; roslaunch laserscan_clusters example.launch
         
   - replanner:
       layout: tiled

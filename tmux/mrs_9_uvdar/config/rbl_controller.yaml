@@ -22,16 +22,25 @@ simulation: true
 refZ: 1.0
 max_obstacle_integration_dist: 9.0
 replanner_flag: false
-Adj_matrix_uav1: [0,1,1,0,0,0,0,0,0]
-Adj_matrix_uav2: [1,0,1,0,0,0,0,0,0]
-Adj_matrix_uav3: [0,1,0,1,0,0,0,0,0]
-Adj_matrix_uav4: [0,0,1,0,1,0,0,0,0]
-Adj_matrix_uav5: [0,0,0,1,0,1,0,0,0]
-Adj_matrix_uav6: [0,0,0,0,1,0,1,0,0]
-Adj_matrix_uav7: [0,0,0,0,0,1,0,1,0]
-Adj_matrix_uav8: [0,0,0,0,0,0,1,0,1]
-Adj_matrix_uav9: [1,0,0,0,0,0,0,1,0]
+# Adj_matrix_uav1: [0,1,1,0,0,0,0,0,0]
+# Adj_matrix_uav2: [1,0,1,0,0,0,0,0,0]
+# Adj_matrix_uav3: [0,1,0,1,0,0,0,0,0]
+# Adj_matrix_uav4: [0,0,1,0,1,0,0,0,0]
+# Adj_matrix_uav5: [0,0,0,1,0,1,0,0,0]
+# Adj_matrix_uav6: [0,0,0,0,1,0,1,0,0]
+# Adj_matrix_uav7: [0,0,0,0,0,1,0,1,0]
+# Adj_matrix_uav8: [0,0,0,0,0,0,1,0,1]
+# Adj_matrix_uav9: [1,0,0,0,0,0,0,1,0]
 
+Adj_matrix_uav1: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav2: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav3: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav4: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav5: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav6: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav7: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav8: [0,0,0,0,0,0,0,0,0]
+Adj_matrix_uav9: [0,0,0,0,0,0,0,0,0]
 # control approach params
 controlled_dimensions: 3
 
@@ -43,9 +52,9 @@ d1: 0.5
 d2: 1.0
 d3: 0.5
 d4: 1.0
-radius: 4.5 
-betaD: 1.5 
-beta_min: 0.1
+radius: 10.0
+betaD: 100.0 
+beta_min: 100.0
 dt: 0.15
 step_size: 0.33
 

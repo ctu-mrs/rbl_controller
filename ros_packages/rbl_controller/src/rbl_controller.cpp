@@ -102,10 +102,9 @@ void RBLController::onInit() {
   /* create multiple subscribers to read uav odometries */
   // iterate through drones except this drone and target
   for (int i = 0; i < _uav_names_.size(); i++) {
-    /*   std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_; */
-    /*   other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
-     */
-    _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
+     std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_; 
+     other_uav_odom_subscribers_.push_back(nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(), 1, boost::bind(&RBLController::odomCallback, this, _1, i)));
+     _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
     /*   ROS_INFO("Subscribing to %s", topic_name.c_str()); */
   }
 
@@ -916,6 +915,60 @@ void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
   /*   uav_position_[2] = msg->pose.pose.position.z; */
 }
 
+//}
+
+
+/* odomCallback() //{ */
+void RBLController::odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx) {
+
+  // if (!is_initialized_)
+  // {
+  //   return;
+  // }
+
+  /* nav_msgs::Odometry msg = *sh_ptr.getMsg(); */
+
+  if ((ros::Time::now() - msg->header.stamp).toSec() > _odom_msg_max_latency_)
+  {
+    ROS_WARN("[RBLController]: The latency of odom message for %s exceeds the threshold (latency = %.2f s).", _uav_names_[idx].c_str(),
+             (ros::Time::now() - msg->header.stamp).toSec());
+  }
+
+  geometry_msgs::PointStamped new_point;
+
+  new_point.header = msg->header;
+  new_point.point.x = msg->pose.pose.position.x;
+  new_point.point.y = msg->pose.pose.position.y;
+  new_point.point.z = msg->pose.pose.position.z;
+  // std::cout <<"x: "<< new_point.point.x  <<"y: "<<new_point.point.y<< std::endl;
+  // auto res = transformer_->transformSingle(new_point, _control_frame_);
+  // if (res)
+  // {
+  //   new_point = res.value();
+  // }
+  // else
+  // {
+  //   ROS_ERROR_THROTTLE(3.0, "[RBLController]: Could not transform odometry msg to control frame.");
+  //   return;
+  // }
+
+  // std::cout <<"x: "<< new_point.point.x <<"y:" <<new_point.point.y<< std::endl;
+  Eigen::Vector3d transformed_position;
+  if (_c_dimensions_ == 3)
+  {
+    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, new_point.point.z);
+  }
+  else
+  {
+    transformed_position = Eigen::Vector3d(new_point.point.x, new_point.point.y, 0.0);
+  }
+
+  mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_positions_[idx]);
+  mrs_lib::set_mutexed(mutex_uav_odoms_, transformed_position, uav_neighbors_[idx]);
+
+  /* last_odom_msg_time_[idx] = ros::Time::now(); */
+
+}
 //}
 
 /* clustersCallback() //{ */

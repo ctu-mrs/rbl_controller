@@ -1545,6 +1545,9 @@ bool RBLController::activationParamsServiceCallback(rbl_controller::ActivatePara
     
     destination.first  = req.x;
     destination.second = req.y;
+
+    goal[0]= req.x;
+    goal[1]= req.y;
     refZ_ = req.z;
     betaD = req.betaD;
     beta_min = req.beta_min;

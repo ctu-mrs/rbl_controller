@@ -200,6 +200,7 @@ public:
   double                                 refZ_;
   bool                                   simulation_;
   bool                                   replanner_flag;
+  bool                                   connectivity_flag;
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;

@@ -5,6 +5,8 @@ float64 betaD
 float64 beta_min
 float64 radius
 float64 encumbrance
+bool connectivity 
+float64 cwvd
 ---
 bool success
 string message

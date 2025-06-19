@@ -58,6 +58,7 @@ void RBLController::onInit() {
   param_loader.loadParam("refZ", refZ_);
   param_loader.loadParam("simulation", simulation_);
   param_loader.loadParam("replanner_flag", replanner_flag);
+  param_loader.loadParam("connectivity_flag", connectivity_flag);
 
   double tmp;
   param_loader.loadParam("max_obstacle_integration_dist", tmp);
@@ -685,9 +686,12 @@ std::tuple<std::pair<double, double>, std::pair<double, double>, std::pair<doubl
     all_uavs = insert_pair_at_index(neighbors, this_uav_idx_, val);
 
     fixed_neighbors_vec = fixed_neighbors(all_uavs, Adj_matrix, this_uav_idx_);
-
-    voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
-
+    if (connectivity_flag==true)
+    {
+      voronoi_circle_intersection_connectivity = communication_constraint(voronoi_circle_intersection, fixed_neighbors_vec);
+    }else{
+      voronoi_circle_intersection_connectivity = voronoi_circle_intersection;
+    }
     if (voronoi_circle_intersection_connectivity.empty())
 
     {
@@ -1554,6 +1558,10 @@ bool RBLController::activationParamsServiceCallback(rbl_controller::ActivatePara
     radius = req.radius;
     encumbrance = req.encumbrance;
     size_neighbors1 = req.encumbrance;
+    connectivity_flag = req.connectivity;
+    cwvd_rob = req.cwvd;
+    cwvd_obs = req.cwvd;
+    
 
     control_allowed_ = true;
    // if (control_allowed_) {

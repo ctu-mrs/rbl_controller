@@ -602,16 +602,16 @@ std::vector<Eigen::Vector3d> RBLController::communication_constraint(const std::
   return filtered_points;
 }
 
-Eigen::Vector3d RBLController::closest_point_from_voxel(Eigen::Vector3d p1, Eigen::Vector3d voxel_center, double map_resolution) {
+Eigen::Vector3d RBLController::closest_point_from_voxel(Eigen::Vector3d robot_pos, Eigen::Vector3d voxel_center, double map_resolution) {
   Eigen::Vector3d half_resolution(map_resolution / 2.0, map_resolution / 2.0, map_resolution / 2.0);
 
   Eigen::Vector3d min_corner = voxel_center - half_resolution;
   Eigen::Vector3d max_corner = voxel_center + half_resolution;
 
   Eigen::Vector3d closest_point;
-  closest_point.x() = std::clamp(p1.x(), min_corner.x(), max_corner.x());
-  closest_point.y() = std::clamp(p1.y(), min_corner.y(), max_corner.y());
-  closest_point.z() = std::clamp(p1.z(), min_corner.z(), max_corner.z());
+  closest_point.x() = std::clamp(robot_pos.x(), min_corner.x(), max_corner.x());
+  closest_point.y() = std::clamp(robot_pos.y(), min_corner.y(), max_corner.y());
+  closest_point.z() = std::clamp(robot_pos.z(), min_corner.z(), max_corner.z());
 
   return closest_point;
 }
@@ -662,6 +662,8 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel(cons
 
   std::vector<Eigen::Vector3d> plane_normals;
   std::vector<Eigen::Vector3d> plane_points;
+
+  std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> planes;
 
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
   if (cloud.size() > 0) {
@@ -715,23 +717,40 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel(cons
         voxel_point[0] = voxel.x;
         voxel_point[1] = voxel.y;
         voxel_point[2] = voxel.z;
-        Eigen::Vector3d closest_voxel_point = closest_point_from_voxel(point, voxel_point, map_resolution);
-        double dist_robot_to_voxel = (robot_pos - closest_voxel_point).norm();
+        double Delta_i_j = encumbrance + map_resolution / 2.0;
+        Eigen::Vector3d tilde_p_j = closest_point_from_voxel(robot_pos, voxel_point, map_resolution); //closest point on the voxel
+        Eigen::Vector3d tilde_p_i = Delta_i_j * (voxel_point - robot_pos)/( (voxel_point - robot_pos).norm() ) + robot_pos;
+        Eigen::Vector3d plane_norm = tilde_p_j - tilde_p_i;
+        Eigen::Vector3d plane_point = tilde_p_i + cwvd_rob * plane_norm;
 
-        double alpha = std::atan2(closest_voxel_point[1] - robot_pos[1], closest_voxel_point[0] - robot_pos[0]); //azimuth
-        double beta = std::atan2(closest_voxel_point[2] - robot_pos[2], std::sqrt(std::pow(closest_voxel_point[0] - robot_pos[0], 2) + std::pow(closest_voxel_point[1] - robot_pos[1], 2))); //elevation
-        Eigen::Vector3d d_xyz(std::cos(beta)*std::cos(alpha), std::cos(beta)*std::sin(alpha), std::sin(beta));
-
-        if (d_xyz.dot(point_to_robot) > cwvd_obs * dist_robot_to_voxel) { //todo rename this
-          // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
-          Eigen::Vector3d tilde_p_i = encumbrance * (voxel_point - robot_pos)/( (voxel_point - robot_pos).norm() ) + robot_pos;
-
-          Eigen::Vector3d normal = closest_voxel_point - tilde_p_i;
-          // plane.first = normal; //normal pointing away from uav
-          // plane.second = tilde_p_i + cwvd_obs * normal; //point on the plane
-          plane_normals.push_back(normal);
-          plane_points.push_back(tilde_p_i + cwvd_obs * normal);
+        if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
+          plane_normals.push_back(plane_norm);
+          plane_points.push_back(plane_point);
+        } else {
+          plane_normals.push_back(-plane_norm);
+          plane_points.push_back(plane_point);
         }
+        std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
+        plane.first = plane_norm;
+        plane.second = plane_point; 
+        planes.push_back(plane);
+
+        // double dist_robot_to_voxel = (robot_pos - closest_voxel_point).norm();
+
+        // double alpha = std::atan2(closest_voxel_point[1] - robot_pos[1], closest_voxel_point[0] - robot_pos[0]); //azimuth
+        // double beta = std::atan2(closest_voxel_point[2] - robot_pos[2], std::sqrt(std::pow(closest_voxel_point[0] - robot_pos[0], 2) + std::pow(closest_voxel_point[1] - robot_pos[1], 2))); //elevation
+        // Eigen::Vector3d d_xyz(std::cos(beta)*std::cos(alpha), std::cos(beta)*std::sin(alpha), std::sin(beta));
+        
+        // if (d_xyz.dot(point_to_robot) > cwvd_obs * dist_robot_to_voxel) { //todo rename this
+        //   // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
+        //   Eigen::Vector3d tilde_p_i = encumbrance * (voxel_point - robot_pos)/( (voxel_point - robot_pos).norm() ) + robot_pos;
+
+        //   Eigen::Vector3d normal = closest_voxel_point - tilde_p_i;
+        //   // plane.first = normal; //normal pointing away from uav
+        //   // plane.second = tilde_p_i + cwvd_obs * normal; //point on the plane
+        //   plane_normals.push_back(normal);
+        //   plane_points.push_back(tilde_p_i + cwvd_obs * normal);
+        // }
       } else {
         remove_mask[i] = true;
       }
@@ -739,8 +758,8 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel(cons
   }
   // auto start_time = std::chrono::high_resolution_clock::now();
 
-  // publishPlanes(planes);
-  // publishNorms(planes);
+  publishPlanes(planes);
+  // publishNorms(plane_normals);
 
   // Precompute plane offset values
   std::vector<double> plane_offsets(plane_normals.size());
@@ -1055,7 +1074,6 @@ Eigen::Matrix3d RBLController::Rx(double angle) {
   return Rx;
 }
 
-
 Eigen::Matrix3d RBLController::Ry(double angle) {
   Eigen::Matrix3d Ry;
   Ry << std::cos(angle), 0, std::sin(angle),
@@ -1094,8 +1112,8 @@ std::vector<Eigen::Vector3d> RBLController::slice_sphere(std::vector<Eigen::Vect
   plane_upper.first = norm_upper;
   plane_upper.second = livox_pos; 
   planes.push_back(plane_upper);
-  publishPlanes(planes);
-  publishNorms(planes);
+  // publishPlanes(planes);
+  // publishNorms(planes);
 
   points.erase(
     std::remove_if(points.begin(), points.end(), [&](const Eigen::Vector3d& point) {

@@ -254,7 +254,7 @@ public:
   bool                           use_bonxai_mapping;
   // bool                           use_voxel;
   double                         map_resolution;
-  Eigen::Vector3d closest_point_from_voxel(Eigen::Vector3d p1, Eigen::Vector3d voxel_center, double map_resolution);
+  Eigen::Vector3d closest_point_from_voxel(Eigen::Vector3d robot_pos, Eigen::Vector3d voxel_center, double map_resolution);
   std::vector<Eigen::Vector3d> find_closest_points_using_voxel(const Eigen::Vector3d                        &robot_pos,
                                                               const std::vector<Eigen::Vector3d>           &points,
                                                               const std::vector<Eigen::Vector3d>           &neighbors,

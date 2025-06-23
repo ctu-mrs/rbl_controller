@@ -1252,9 +1252,9 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     if (legal_centroid_position.size() > 0) {
       publishCellActivelySensedA(legal_centroid_position);
     }
-    centroid = closest_in_legal_set(centroid, legal_centroid_position, robot_pos, step_size);
-    centroid_no_neigh = closest_in_legal_set(centroid_no_neigh, legal_centroid_position, robot_pos, step_size);
-    centroid_no_conn = closest_in_legal_set(centroid_no_conn, legal_centroid_position, robot_pos, step_size);
+    // centroid = closest_in_legal_set(centroid, legal_centroid_position, robot_pos, step_size);
+    // centroid_no_neigh = closest_in_legal_set(centroid_no_neigh, legal_centroid_position, robot_pos, step_size);
+    // centroid_no_conn = closest_in_legal_set(centroid_no_conn, legal_centroid_position, robot_pos, step_size);
   } else {
     if (voronoi_circle_intersection.size() > 0){
       publishCellA(voronoi_circle_intersection);

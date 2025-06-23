@@ -167,13 +167,14 @@ void RBLController::onInit() {
   sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
 
   // initialize publishers
-  pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
-  pub_position_    = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
-  pub_centroid_    = nh.advertise<visualization_msgs::Marker>("centroid_out", 1, true);
-  pub_pointCloud_  = nh.advertise<sensor_msgs::PointCloud2>("point_cloud", 1, true);
-  pub_cellA_       = nh.advertise<sensor_msgs::PointCloud2>("cell_A", 1, true);
-  pub_planes_      = nh.advertise<visualization_msgs::MarkerArray>("planes", 1, true);
-  pub_norms_       = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
+  pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
+  pub_position_       = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
+  pub_centroid_       = nh.advertise<visualization_msgs::Marker>("centroid_out", 1, true);
+  pub_pointCloud_     = nh.advertise<sensor_msgs::PointCloud2>("point_cloud", 1, true);
+  pub_cellA_          = nh.advertise<sensor_msgs::PointCloud2>("cell_A", 1, true);
+  pub_cell_sensed_A_  = nh.advertise<sensor_msgs::PointCloud2>("actively_sensed_A", 1, true);
+  pub_planes_         = nh.advertise<visualization_msgs::MarkerArray>("planes", 1, true);
+  pub_norms_          = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
 
   if (simulation_) {
     // sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/livox_fake_scan", 1, &RBLController::pointCloud2Callback, this);
@@ -329,6 +330,29 @@ void RBLController::publishCellA(std::vector<Eigen::Vector3d> points) {
   cloud_msg.header.stamp = ros::Time::now();
 
   pub_cellA_.publish(cloud_msg);
+}
+//}
+
+/*RBLController::publishCellA () //{ */
+void RBLController::publishCellActivelySensedA(std::vector<Eigen::Vector3d> points) {
+  pcl::PointCloud<pcl::PointXYZ> pclCloud;
+  pclCloud.width = points.size();
+  pclCloud.height = 1;
+  pclCloud.is_dense = true;
+  pclCloud.points.resize(pclCloud.width * pclCloud.height);
+
+  for (size_t i = 0; i < points.size(); ++i) {
+    pclCloud.points[i].x = static_cast<float>(points[i].x());
+    pclCloud.points[i].y = static_cast<float>(points[i].y());
+    pclCloud.points[i].z = static_cast<float>(points[i].z());
+  }
+
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(pclCloud, cloud_msg);
+  cloud_msg.header.frame_id = _control_frame_;
+  cloud_msg.header.stamp = ros::Time::now();
+
+  pub_cell_sensed_A_.publish(cloud_msg);
 }
 //}
 
@@ -1205,7 +1229,10 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
   if (use_livox_tilted) {
     std::vector<Eigen::Vector3d> legal_centroid_position = slice_sphere(voronoi_circle_intersection, robot_pos, livox_tilt_deg, livox_fov, roll_pitch_yaw);
     if (legal_centroid_position.size() > 0){
-      publishCellA(legal_centroid_position);
+      publishCellA(voronoi_circle_intersection);
+    }
+    if (legal_centroid_position.size() > 0) {
+      publishCellActivelySensedA(legal_centroid_position);
     }
     centroid = closest_in_legal_set(centroid, legal_centroid_position, robot_pos, step_size);
     centroid_no_neigh = closest_in_legal_set(centroid_no_neigh, legal_centroid_position, robot_pos, step_size);

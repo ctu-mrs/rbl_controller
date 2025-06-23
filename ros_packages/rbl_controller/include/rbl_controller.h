@@ -243,6 +243,8 @@ public:
   void publishPcl();
   ros::Publisher                 pub_cellA_;
   void publishCellA(std::vector<Eigen::Vector3d> points);
+  ros::Publisher                 pub_cell_sensed_A_;
+  void publishCellActivelySensedA(std::vector<Eigen::Vector3d> points);
   ros::Publisher                 pub_planes_;
   void publishPlanes(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
   ros::Publisher                 pub_norms_;

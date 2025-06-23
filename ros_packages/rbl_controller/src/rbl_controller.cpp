@@ -1599,11 +1599,19 @@ void RBLController::waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& 
    ROS_INFO("Received %lu waypoints", msg->poses.size());
 
 
-    for (size_t i = 0; i < msg->poses.size(); ++i) {
+    // for (size_t i = 0; i < msg->poses.size(); ++i) {
+    int i = 1;
         const auto& pose = msg->poses[i];
         ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f",
-                 i, pose.position.x, pose.position.y, pose.position.z);
-    }
+            i, pose.position.x, pose.position.y, pose.position.z);
+        destination[0] = pose.position.x;
+        destination[1] = pose.position.y;
+        destination[2] = pose.position.z; 
+        goal[0] = pose.position.x;
+        goal[1] = pose.position.y;
+        goal[2] = pose.position.z;
+    // }
+
 }
 //     ROS_INFO("Received %lu waypoints", msg->poses.size());
 

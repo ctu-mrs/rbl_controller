@@ -23,7 +23,7 @@ refZ: 1.0
 max_obstacle_integration_dist: 9.0
 replanner_flag: false
 connectivity_flag: false
-Adj_matrix_uav1: [0,1,1,0,0,0,0,0,0]
+Adj_matrix_uav1: [0,1,0,0,0,0,0,0,1]
 Adj_matrix_uav2: [1,0,1,0,0,0,0,0,0]
 Adj_matrix_uav3: [0,1,0,1,0,0,0,0,0]
 Adj_matrix_uav4: [0,0,1,0,1,0,0,0,0]

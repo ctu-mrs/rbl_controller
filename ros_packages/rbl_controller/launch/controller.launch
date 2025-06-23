@@ -34,10 +34,21 @@
             <param name="simulation" value="$(eval arg('RUN_TYPE') == 'simulation')" />
             <param name="uav_name" value="$(arg UAV_NAME)" />
             <!-- TODO: move this to config .yaml so you can change if simulation or experiment -->
-            <param name="control_frame" value="$(arg UAV_NAME)/world_origin" />
+              
             <!-- <param name="control_frame" value="$(arg UAV_NAME)/hector_origin" /> -->
+            
+           <!-- <param name="control_frame" value="$(arg UAV_NAME)/fcu" /> -->
 
-            <!-- ROS parameters config file -->
+
+            <!-- <param name="control_frame" value="$(arg UAV_NAME)/point_lio_origin" />  -->
+            <param name="control_frame" value="$(arg UAV_NAME)/world_origin" />
+
+
+            <!-- <param name="control_frame" value="$(arg UAV_NAME)/livox" /> -->
+            <!-- <node pkd="tf2_ros" type="static_transform_publisher" name="point_lio_init_to_control_frame" args="0 0 0 0 0.785 0 $(arg UAV_NAME)/point_lio_init point_lio_init_for_control_frame" />
+            <param name="control_frame" value="$(arg UAV_NAME)/point_lio_init_for_control_frame" /> -->
+            
+              <!-- ROS parameters config file -->
             <rosparam file="$(find rbl_controller)/config/default.yaml" />
             <rosparam file="$(arg custom_config)" />
             <!-- <rosparam file="$(find formation_controller_susd)/config/$(arg RUN_TYPE).yaml" /> -->
@@ -50,9 +61,9 @@
             <remap from="~goto_out" to="control_manager/goto" />
             <!-- Service servers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~control_activation_in" to="~activation" />
-            <remap from="~control_activation_params_in" to="~activation_params" />
             <remap from="~control_deactivation_in" to="~deactivation" />
             <remap from="~fly_to_start_in" to="~fly_to_start" />
+            <remap from="~save_to_csv_in" to="~save_to_csv" />
 
             <!-- Publishers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~destination_out" to="~destination_vis" />

@@ -24,7 +24,6 @@ exclude=(
 # '(.*)theora(.*)'
 # Every topic containing "h264"
 # '(.*)h264(.*)'
-
 )
 
 # file's header

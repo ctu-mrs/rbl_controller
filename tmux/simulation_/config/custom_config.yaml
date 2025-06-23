@@ -4,40 +4,36 @@ mrs_uav_managers:
 
     # loaded state estimator plugins
     state_estimators: [
-      "gps_baro",
       # "gps_garmin",
+      "gps_baro",
+      # "ground_truth",
     ]
 
     initial_state_estimator: "gps_baro" # will be used as the first state estimator
-    agl_height_estimator: ""# only slightly filtered height for checking min height (not used in control feedback)
+    agl_height_estimator: "" # only slightly filtered height for checking min height (not used in control feedback)
 
   uav_manager:
 
-    min_height_checking:
-      enabled: false
+    takeoff:
 
-    max_height_checking:
-      enabled: false
+      after_takeoff:
+        controller: "Se3Controller"
 
-  constraint_manager:
+mrs_uav_trajectory_generation:
 
-    default_constraints:
-      gps_baro: "medium"
+  # execution time limiter
+  max_time: 0.5 # [s]
 
-  control_manager:
+  # check and fix the max deviation between the input path and the output trajectory
+  # by subsampling the original path with more waypoints
+  check_trajectory_deviation:
+    max_deviation: 0.20 # [m]
 
-    Se3Controller:
-      eland_threshold: 4.0 # [m], position error triggering eland
-      failsafe_threshold: 6.0 # [m], position error triggering failsafe land
-      odometry_innovation_threshold: 1.5 # [m], position odometry innovation threshold
+  # allows to neglect waypoints in the original path if the new path
+  # does not violate max distance from the original path.
+  # This makes for similar but sparser paths, which are easier for the
+  # trajectory generator to work with.
+  path_straightener:
+    enabled: true
+    max_deviation: 0.20 # [m]
 
-mrs_uav_trackers:
-
-  mpc_tracker:
-    # mrs collision avoidance
-    collision_avoidance:
-
-      enabled:           false # disabling this will stop this UAV to react to others, but it will still transmit data to others
-      enabled_passively: false # disabling this will stop this uav to even transmit its data to others (only if enabled: false)
-      radius: 3.0 # [m]
-      correction: 3.0 # [m]

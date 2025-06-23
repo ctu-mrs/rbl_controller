@@ -58,6 +58,7 @@ windows:
       layout: tiled
       panes:
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE --pos 0 0 1 0 --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
+
   - mapplan:
       layout: tiled
       panes:
@@ -73,10 +74,10 @@ windows:
   #     panes:
   #       - waitForControl; roslaunch uvdar_multirobot_simulator example.launch
         
-  - lidar:
-      layout: tiled
-      panes:
-        - export UAV_NAME=uav1; waitForControl; roslaunch laserscan_clusters example.launch
+  # - lidar:
+  #     layout: tiled
+  #     panes:
+  #       - export UAV_NAME=uav1; waitForControl; roslaunch laserscan_clusters example.launch
 
         
   # - replanner:

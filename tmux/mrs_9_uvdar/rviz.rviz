@@ -144,6 +144,38 @@ Visualization Manager:
             destination: true
           Queue Size: 10
           Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav6/rbl_controller/destination_vis
+          Name: UAV6
+          Namespaces:
+            destination: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav7/rbl_controller/destination_vis
+          Name: UAV7
+          Namespaces:
+            destination: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav8/rbl_controller/destination_vis
+          Name: UAV8
+          Namespaces:
+            destination: true
+          Queue Size: 10
+          Value: true
+        - Class: rviz/Marker
+          Enabled: true
+          Marker Topic: /uav9/rbl_controller/destination_vis
+          Name: UAV9
+          Namespaces:
+            destination: true
+          Queue Size: 10
+          Value: true
       Enabled: true
       Name: Destinations
     - Class: rviz/Group
@@ -466,7 +498,7 @@ Visualization Manager:
           Topic: /uav9/control_manager/mpc_tracker/mpc_reference_debugging
           Unreliable: false
           Value: true
-      Enabled: true
+      Enabled: false
       Name: Reference trajectories
     - Alpha: 1
       Axes Length: 1
@@ -488,7 +520,7 @@ Visualization Manager:
           Scale: 1
           Value: false
         Value: true
-      Enabled: true
+      Enabled: false
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
       Name: UAV1_UVDAR
@@ -585,7 +617,7 @@ Visualization Manager:
             {}
           Queue Size: 100
           Value: false
-      Enabled: true
+      Enabled: false
       Name: VoroCells
     - Class: rviz/Group
       Displays:
@@ -739,7 +771,7 @@ Visualization Manager:
   Views:
     Current:
       Angle: -0.009999671950936317
-      Class: rviz/TopDownOrtho
+      Class: rviz/ThirdPersonFollower
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -756,7 +788,7 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: true
-  Height: 1027
+  Height: 720
   Hide Left Dock: true
   Hide Right Dock: true
   QMainWindow State: 000000ff00000000fd0000000400000000000001ce000003adfc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000004c6000004b0000001a900000153fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003b000003ad000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006502000003c9000003450000025b000000c90000000100000116000003adfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003b000003ad000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000038f0000003efc0100000002fb0000000800540069006d006500000000000000038f0000035c00fffffffb0000000800540069006d006501000000000000045000000000000000000000027c000003ad00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
@@ -768,6 +800,6 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: true
-  Width: 636
+  Width: 1280
   X: 640
-  Y: 1251
+  Y: 360

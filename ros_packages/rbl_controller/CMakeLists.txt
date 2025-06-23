@@ -16,11 +16,19 @@ find_package(catkin REQUIRED COMPONENTS
   mrs_lib
   visualization_msgs
   pcl_ros
-  message_generation
+  pcl_msgs
+  pcl_conversions
 )
+
+find_package(OpenMP REQUIRED)
 
 # Find Eigen
 find_package(Eigen3 REQUIRED)
+
+# Find Pcl
+find_package(pcl_ros REQUIRED)
+
+message(STATUS "pcl_ros_INCLUDE_DIRS: ${pcl_ros_INCLUDE_DIRS}")
 
 # Find Boost
 find_package(Boost REQUIRED)
@@ -29,19 +37,10 @@ find_package(Boost REQUIRED)
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN_LIBRARIES})
 
-add_service_files(
-  FILES
-  ActivateParams.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
 # Declare catkin package
 catkin_package(
   LIBRARIES RBLController 
-  CATKIN_DEPENDS roscpp mrs_lib mrs_msgs geometry_msgs nav_msgs message_runtime
+  CATKIN_DEPENDS roscpp mrs_lib mrs_msgs geometry_msgs nav_msgs pcl_ros pcl_msgs pcl_conversions
   DEPENDS Eigen
 )
 
@@ -50,18 +49,24 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  ${pcl_ros_INCLUDE_DIRS}
 )
 
 # Declare C++ library
 add_library(RBLController src/rbl_controller.cpp)
+add_dependencies(RBLController
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
 # add_library(lidar_clusters src/lidar_clusters.cpp)
 
 # Link libraries for the RBLController library
 target_link_libraries(RBLController
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${pcl_ros_LIBRARIES}
+  OpenMP::OpenMP_CXX
 )
-
 
 # Declare the lidar_clusters executable
 

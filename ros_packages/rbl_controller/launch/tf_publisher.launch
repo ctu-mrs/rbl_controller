@@ -9,7 +9,7 @@
   <arg name="uav_third" default="uav3" />
   <arg name="uav_fourth" default="uav4" />
   <arg name="uav_fifth" default="uav5" />
-  <arg name="uav_sixth" default="uav32" />
+  <arg name="uav_sixth" default="uav29" />
 
 
 

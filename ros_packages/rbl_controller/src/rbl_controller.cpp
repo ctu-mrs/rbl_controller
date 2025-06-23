@@ -1598,12 +1598,15 @@ void RBLController::waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& 
 
    ROS_INFO("Received %lu waypoints", msg->poses.size());
 
+  for (size_t i = 0; i < msg->poses.size(); ++i) {
+      const auto& pose = msg->poses[i];
+      ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f", 
+               i, pose.position.x, pose.position.y, pose.position.z);
+  }
 
     // for (size_t i = 0; i < msg->poses.size(); ++i) {
     int i = 1;
         const auto& pose = msg->poses[i];
-        ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f",
-            i, pose.position.x, pose.position.y, pose.position.z);
         destination[0] = pose.position.x;
         destination[1] = pose.position.y;
         destination[2] = pose.position.z; 
@@ -1773,7 +1776,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
       double difference = (diff < -M_PI) ? diff + 2 * M_PI : diff;
 
-      if (std::abs(difference) < M_PI/6) {
+      if (std::abs(difference) < M_PI/4) {
         p_ref.position.x = c1_no_conn[0];  // next_values[0];
         p_ref.position.y = c1_no_conn[1];
         p_ref.position.z = c1_no_conn[2];

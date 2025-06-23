@@ -54,11 +54,11 @@ d4: 0.5
 d5: 0.5
 d6: 1.0
 d7: 0.2
-radius: 2.0  #point lio 
-betaD: 1.0
+radius: 3.0  #point lio 
+betaD: 0.5
 beta_min: 0.1
 dt: 0.1
-step_size: 0.33
+step_size: 0.43
 
 
 monitored_area_origin:

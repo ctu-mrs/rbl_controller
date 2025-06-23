@@ -19,6 +19,11 @@ mrs_uav_managers:
       after_takeoff:
         controller: "Se3Controller"
 
+  constraint_manager:
+
+    default_constraints:
+      gps_baro: "fast"
+
 mrs_uav_trajectory_generation:
 
   # execution time limiter

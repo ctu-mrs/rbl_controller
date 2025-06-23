@@ -149,8 +149,8 @@ void RBLController::onInit() {
 
   // clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
 
-  waypoints_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/replanner/waypoints_", 1, &RBLController::waypointsCallback, this));
-
+  // waypoints_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/replanner/waypoints_", 1, &RBLController::waypointsCallback, this));
+  waypoint_sub = nh.subscribe<geometry_msgs::PoseArray>("/" + _uav_name_ + "/octomap_planner/waypoints", 1, &RBLController::waypointsCallback, this);
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
@@ -1593,19 +1593,26 @@ void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
 
 
 /* waypointsCallback() //{ */
-void RBLController::waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg) {
-  // Clear the waypoints vector before populating it with new data
-  waypoints_.clear();
 
-  for (const auto &marker : marker_array_msg->markers) {
-    // Ensure that the marker has a valid position (check if position is available)
-    if (marker.pose.position.x && marker.pose.position.y) {
-      // Extract the x, y coordinates from the marker pose and store them in waypoints_
-      waypoints_.emplace_back(marker.pose.position.x, marker.pose.position.y);
+void RBLController::waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& msg) {
+
+   ROS_INFO("Received %lu waypoints", msg->poses.size());
+
+
+    for (size_t i = 0; i < msg->poses.size(); ++i) {
+        const auto& pose = msg->poses[i];
+        ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f",
+                 i, pose.position.x, pose.position.y, pose.position.z);
     }
-  }
-
 }
+//     ROS_INFO("Received %lu waypoints", msg->poses.size());
+
+//     for (size_t i = 0; i < msg->poses.size(); ++i) {
+//         const auto& pose = msg->poses[i];
+//         ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f", 
+//                  i, pose.position.x, pose.position.y, pose.position.z);
+//     }
+// }
 
 //}
 

@@ -134,9 +134,11 @@ public:
   std::vector<ros::Subscriber> clusters_sub_;
   std::vector<ros::Subscriber> clusters_sub_1;
   std::vector<ros::Subscriber> waypoints_sub_;
+  ros::Subscriber waypoint_sub;
   void                         clustersCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   void                         clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
-  void                         waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
+  // void                         waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
+  void                         waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& msg);
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;

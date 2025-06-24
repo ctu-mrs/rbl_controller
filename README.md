@@ -13,5 +13,6 @@ then `rosservice call /uav1/rbl_controller/activation`
 - [ ] Speed up computation of the cell and centroid
 - [ ] Check if the replanner consider the other robots as obstacle. If so,
       filter them 
-- [ ] update service call
+- [ ] Update service call
+- [ ] Adjust parameters map. Robots remain in the map too much 
 - [ ] update README.md

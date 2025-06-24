@@ -26,6 +26,16 @@ windows:
           custom_config:=./config/custom_config.yaml
           world_config:=./config/world_config.yaml
           network_config:=./config/network_config.yaml
+        - export UAV_NAME=uav3; waitForHw; roslaunch mrs_uav_core core.launch
+          platform_config:=`rospack find mrs_uav_gazebo_simulation`/config/mrs_uav_system/$UAV_TYPE.yaml
+          custom_config:=./config/custom_config.yaml
+          world_config:=./config/world_config.yaml
+          network_config:=./config/network_config.yaml
+        # - export UAV_NAME=uav4; waitForHw; roslaunch mrs_uav_core core.launch
+        #   platform_config:=`rospack find mrs_uav_gazebo_simulation`/config/mrs_uav_system/$UAV_TYPE.yaml
+        #   custom_config:=./config/custom_config.yaml
+        #   world_config:=./config/world_config.yaml
+        #   network_config:=./config/network_config.yaml
   # - simulator:
   #     layout: tiled
   #     panes:
@@ -41,6 +51,8 @@ windows:
       panes:
         -  export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_px4_api api.launch
         -  export UAV_NAME=uav2; waitForTime; roslaunch mrs_uav_px4_api api.launch
+        -  export UAV_NAME=uav3; waitForTime; roslaunch mrs_uav_px4_api api.launch
+        # -  export UAV_NAME=uav4; waitForTime; roslaunch mrs_uav_px4_api api.launch
         
   # - control:
   #     layout: tiled
@@ -53,6 +65,8 @@ windows:
       panes:
         - export UAV_NAME=uav1; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
         - export UAV_NAME=uav2; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav3; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+        - export UAV_NAME=uav4; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
 
   - reflective_markers:
       layout: tiled
@@ -66,8 +80,12 @@ windows:
         - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=grass_plane gui:=true
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "1 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "2 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
+        - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "3 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
+        # - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "4 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
         - export UAV_NAME=uav1; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
         - export UAV_NAME=uav2; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
+        - export UAV_NAME=uav3; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
+        # - export UAV_NAME=uav4; waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
 
   - mapplan:
       layout: tiled
@@ -84,6 +102,20 @@ windows:
           config_pcl_filter_ouster:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/ouster_filter_mapping.yaml
           config_pcl_filter_rs_front:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_front_filter.yaml
           config_pcl_filter_rs_down:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_down_filter.yaml
+        - export UAV_NAME=uav3; waitForHw; roslaunch mrs_octomap_mapping_planning mapplan.launch
+          config_octomap_server:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_server.yaml
+          config_octomap_planner:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_planner.yaml
+          config_pcl_filter_ouster:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/ouster_filter_mapping.yaml
+          config_pcl_filter_rs_front:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_front_filter.yaml
+          config_pcl_filter_rs_down:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_down_filter.yaml
+        # - export UAV_NAME=uav4; waitForHw; roslaunch mrs_octomap_mapping_planning mapplan.launch
+        #   config_octomap_server:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_server.yaml
+        #   config_octomap_planner:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_planner.yaml
+        #   config_pcl_filter_ouster:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/ouster_filter_mapping.yaml
+        #   config_pcl_filter_rs_front:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_front_filter.yaml
+        #   config_pcl_filter_rs_down:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_down_filter.yaml
+
+
 
   # - uvdar:
   #     layout: tiled
@@ -107,6 +139,8 @@ windows:
       panes:
         - export UAV_NAME=uav1; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
         - export UAV_NAME=uav2; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
+        - export UAV_NAME=uav3; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
+        # - export UAV_NAME=uav4; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
 
   # - fly_to_start:
   #     layout: tiled
@@ -119,6 +153,8 @@ windows:
       panes:
         - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
         - export UAV_NAME=uav2; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
+        - export UAV_NAME=uav3; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
+        # - export UAV_NAME=uav4; waitForTime; roslaunch mrs_uav_autostart automatic_start.launch custom_config:=./config/automatic_start.yaml
   
   # - gazebo: 
   #   layout: tiled
@@ -131,13 +167,18 @@ windows:
       panes:
         - export UAV_NAME=uav1; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
         - export UAV_NAME=uav2; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
+        - export UAV_NAME=uav3; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
+        # - export UAV_NAME=uav4; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
       
         # - waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
         # - 'waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard'
   - goto:
       layout: tiled
       panes:
-        - 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        - export UAV_NAME=uav1; 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        - export UAV_NAME=uav2; 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        - export UAV_NAME=uav3; 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        # - export UAV_NAME=uav3; 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
 
   # - tf_connector:
   #     layout: tiled

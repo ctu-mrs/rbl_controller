@@ -11,8 +11,8 @@ then `rosservice call /uav1/rbl_controller/activation`
 - [ ] Add reflective markers in simulator
 - [ ] Make the replanner team-aware
 - [ ] Speed up computation of the cell and centroid
-- [ ] Check if the replanner consider the other robots as obstacle. If so,
-      filter them 
+- [ ] filter the robot pointcloud for the path planner they should not be considered as obstacles 
 - [ ] Update service call
 - [ ] Adjust parameters map. Robots remain in the map too much 
+- [ ] Fix The replanner, sometimes it can be chattering, frequency of replanner probably is too high
 - [ ] update README.md

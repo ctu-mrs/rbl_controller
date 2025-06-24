@@ -175,6 +175,7 @@ void RBLController::onInit() {
   pub_cell_sensed_A_  = nh.advertise<sensor_msgs::PointCloud2>("actively_sensed_A", 1, true);
   pub_planes_         = nh.advertise<visualization_msgs::MarkerArray>("planes", 1, true);
   pub_norms_          = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
+  pub_path_           = nh.advertise<nav_msgs::Path>("path", 1, true);
 
   if (simulation_) {
     // sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/livox_fake_scan", 1, &RBLController::pointCloud2Callback, this);
@@ -202,6 +203,39 @@ void RBLController::onInit() {
 
 /*Publisher for Visualization //{ */
 
+
+
+/*RBLController::publishNorms () //{ */
+void RBLController::publishPath(const std::vector<Eigen::Vector3d>& path) {
+  if (path.empty()) {
+    ROS_WARN("publishPath: Received empty path.");
+    return;
+  }
+
+  nav_msgs::Path path_msg;
+  path_msg.header.stamp = ros::Time::now();
+  path_msg.header.frame_id = _control_frame_;
+
+  for (const auto& pt : path) {
+    geometry_msgs::PoseStamped pose;
+    pose.header.stamp = ros::Time::now();
+    pose.header.frame_id = _control_frame_;
+    pose.pose.position.x = pt.x();
+    pose.pose.position.y = pt.y();
+    pose.pose.position.z = pt.z();
+
+    // Optional: Set orientation to identity
+    pose.pose.orientation.x = 0.0;
+    pose.pose.orientation.y = 0.0;
+    pose.pose.orientation.z = 0.0;
+    pose.pose.orientation.w = 1.0;
+
+    path_msg.poses.push_back(pose);
+  }
+
+  pub_path_.publish(path_msg);
+}
+//}
 
 /*RBLController::publishNorms () //{ */
 void RBLController::publishNorms(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes) {
@@ -1749,6 +1783,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       }
 
     }
+
+
+    std::vector<Eigen::Vector3d> path_points;
+    path_points.push_back(robot_pos);
+    path_points.push_back(destination);
+
+    publishPath(path_points);
+
 
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                         encumbrance, active_wp, beta, neighbors_and_obstacles_noisy);

@@ -20,6 +20,7 @@
 #include <mrs_msgs/Reference.h>
 #include <mrs_msgs/TrackerCommand.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseArray.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
@@ -251,6 +252,8 @@ public:
   void publishPlanes(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
   ros::Publisher                 pub_norms_;
   void publishNorms(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
+  ros::Publisher                 pub_path_;
+  void publishPath(const std::vector<Eigen::Vector3d>& path);
   size_t                         last_marker_count = 0;
   std::vector<double>            c1_to_rviz = {0, 0, 0};
   bool                           use_bonxai_mapping;

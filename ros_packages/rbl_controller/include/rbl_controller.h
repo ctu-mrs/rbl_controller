@@ -264,6 +264,11 @@ public:
                                                               const std::vector<Eigen::Vector3d>           &points,
                                                               const std::vector<Eigen::Vector3d>           &neighbors,
                                                               pcl::PointCloud<pcl::PointXYZ>  cloud);
+  std::vector<Eigen::Vector3d> find_closest_points_using_voxel_fast(const Eigen::Vector3d                        &robot_pos,
+                                                              const std::vector<Eigen::Vector3d>           &points,
+                                                              const std::vector<Eigen::Vector3d>            &boundary_cell_A_points,
+                                                              const std::vector<Eigen::Vector3d>           &neighbors,
+                                                              pcl::PointCloud<pcl::PointXYZ>  cloud);
 
   Eigen::Matrix3d Rx(double angle);
   Eigen::Matrix3d Ry(double angle);
@@ -296,6 +301,8 @@ public:
 
   std::vector<Eigen::Vector3d> points_inside_circle(Eigen::Vector3d robot_pos, double radius, double step_size);
   std::vector<Eigen::Vector3d> points_inside_sphere(Eigen::Vector3d robot_pos, double radius, double step_size);
+  std::vector<Eigen::Vector3d> boundary_points_sphere(Eigen::Vector3d robot_pos, double radius, double step_size);
+  std::vector<Eigen::Vector3d> project_boundary_points_on_encumbrance(Eigen::Vector3d robot_pos, double encumbrance, std::vector<Eigen::Vector3d> boundary_points);
 
 
   std::vector<Eigen::Vector3d> fixed_neighbors(const std::vector<Eigen::Vector3d> &positions, const std::vector<int> &adjacency_matrix,

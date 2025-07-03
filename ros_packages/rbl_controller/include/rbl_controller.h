@@ -93,6 +93,7 @@ public:
   ros::ServiceClient       sc_set_velocity_;
   ros::ServiceClient       sc_set_position_;
   ros::Timer               timer_set_reference_;
+  ros::Timer               timer_set_active_wp_;
   ros::Timer               timer_pub_;
   int                      _rate_timer_set_reference_;
   void                     callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
@@ -105,6 +106,7 @@ public:
   void       callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEvent &te);
   double     _odom_timeout_;
 
+  void goalUpdateLoop(const ros::TimerEvent&);
   // trigger service
   ros::ServiceServer service_activate_control_;
   ros::ServiceServer service_deactivate_control_;
@@ -140,6 +142,9 @@ public:
   void                         clustersCallback1(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   // void                         waypointsCallback(const visualization_msgs::MarkerArray::ConstPtr &marker_array_msg);
   void                         waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& msg);
+
+  void markerCallback(const visualization_msgs::MarkerArray::ConstPtr& msg);
+
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
@@ -220,6 +225,8 @@ public:
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;
   std::mutex                             mutex_waypoints_;
+  std::mutex                             points_mutex_;  
+  std::vector<geometry_msgs::Point>      dense_points_;
   std::string                            _odometry_topic_name_;
   ros::Subscriber                        uav_odom_subscriber_;
   /* void                         odomCallback(const nav_msgs::OdometryConstPtr &msg, int idx); */

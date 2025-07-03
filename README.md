@@ -16,3 +16,4 @@ then `rosservice call /uav1/rbl_controller/activation`
 - [ ] Adjust parameters map. Robots remain in the map too much 
 - [ ] Fix The replanner, sometimes it can be chattering, frequency of replanner probably is too high
 - [ ] update README.md
+- [ ] upgrade to ROS2, FlightForge simulator 

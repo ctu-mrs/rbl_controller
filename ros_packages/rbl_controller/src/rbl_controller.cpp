@@ -150,9 +150,12 @@ void RBLController::onInit() {
   // clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
 
   // waypoints_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/replanner/waypoints_", 1, &RBLController::waypointsCallback, this));
-  waypoint_sub = nh.subscribe<geometry_msgs::PoseArray>("/" + _uav_name_ + "/octomap_planner/waypoints", 1, &RBLController::waypointsCallback, this);
+  // waypoint_sub = nh.subscribe<geometry_msgs::PoseArray>("/" + _uav_name_ + "/octomap_planner/waypoints", 1, &RBLController::waypointsCallback, this);
+    waypoint_sub = nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/trajectory_generation/markers/final", 1, &RBLController::markerCallback, this);
+    
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
+  timer_set_active_wp_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::goalUpdateLoop, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
   // timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
 
@@ -838,7 +841,7 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
 
   auto end_time = std::chrono::high_resolution_clock::now(); // End timing
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time); // Calculate duration
-  std::cout << "Faster partitioning of the cell A based on voxels and neighbors took: " << duration.count() << " milliseconds." << std::endl;
+  // std::cout << "Faster partitioning of the cell A based on voxels and neighbors took: " << duration.count() << " milliseconds." << std::endl;
 
   return result_points;
 }
@@ -1305,6 +1308,99 @@ std::vector<Eigen::Vector3d> RBLController::slice_sphere(std::vector<Eigen::Vect
   return points;
 }
 
+void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
+
+    std::vector<geometry_msgs::Point> points_copy;
+
+    {
+        std::lock_guard<std::mutex> lock(points_mutex_);
+        if (dense_points_.empty()) return;
+        points_copy = dense_points_;
+    }
+
+    // Step 1: Find the closest point on the path to the current robot position
+    size_t start_idx = 0;
+    double min_dist = std::numeric_limits<double>::max();
+    for (size_t i = 0; i < points_copy.size(); ++i) {
+        double dx = points_copy[i].x - robot_pos[0];
+        double dy = points_copy[i].y - robot_pos[1];
+        double dz = points_copy[i].z - robot_pos[2];
+        double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (dist < min_dist) {
+            min_dist = dist;
+            start_idx = i;
+        }
+    }
+
+    // Step 2: Walk forward along the path and accumulate distance
+    const double target_distance = 3.0;
+    double accumulated_distance = 0.0;
+    size_t best_idx = start_idx;
+
+    for (size_t i = start_idx; i < points_copy.size() - 1; ++i) {
+        const geometry_msgs::Point& p1 = points_copy[i];
+        const geometry_msgs::Point& p2 = points_copy[i + 1];
+        double dx = p2.x - p1.x;
+        double dy = p2.y - p1.y;
+        double dz = p2.z - p1.z;
+        double segment = std::sqrt(dx * dx + dy * dy + dz * dz);
+        accumulated_distance += segment;
+
+        if (accumulated_distance >= target_distance) {
+            best_idx = i + 1;
+            break;
+        }
+    }
+
+    const geometry_msgs::Point& chosen = points_copy[best_idx];
+    destination[0] = goal[0] = chosen.x;
+    destination[1] = goal[1] = chosen.y;
+    destination[2] = goal[2] = chosen.z;
+
+    ROS_DEBUG("Goal updated at path distance ~4m: idx=%lu, x=%.2f y=%.2f z=%.2f",
+              best_idx, chosen.x, chosen.y, chosen.z);
+}
+
+// void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
+
+//     std::vector<geometry_msgs::Point> points_copy;
+
+//     std::cout << "ciao1  " << std::endl;
+//     {
+//         std::lock_guard<std::mutex> lock(points_mutex_);
+//         std::cout << "Dense points size: " << dense_points_.size() << std::endl;
+//         if (dense_points_.empty()) return;
+//         std::cout << "ciao " << std::endl;
+//         points_copy = dense_points_;
+//     }
+
+//     // Same logic: find point closest to 4 meters
+//     const double target_distance = 4.0;
+//     size_t best_idx = 0;
+//     double min_diff = std::numeric_limits<double>::max();
+
+//     for (size_t i = 0; i < points_copy.size(); ++i) {
+//         const geometry_msgs::Point& pt = points_copy[i];
+//         double dx = pt.x - robot_pos[0];
+//         double dy = pt.y - robot_pos[1];
+//         double dz = pt.z - robot_pos[2];
+//         double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+//         double diff = std::abs(dist - target_distance);
+
+//         if (diff < min_diff) {
+//             min_diff = diff;
+//             best_idx = i;
+//         }
+//     }
+
+//     const geometry_msgs::Point& chosen = points_copy[best_idx];
+//     destination[0] = goal[0] = chosen.x;
+//     destination[1] = goal[1] = chosen.y;
+//     destination[2] = goal[2] = chosen.z;
+
+//     ROS_DEBUG("High-freq goal update: x=%.2f y=%.2f z=%.2f", chosen.x, chosen.y, chosen.z);
+// }
+
 std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get_centroid(
     Eigen::Vector3d robot_pos, double radius, double step_size, std::vector<Eigen::Vector3d> &neighbors,
     const std::vector<double> &size_neighbors, std::vector<Eigen::Vector3d> &neighbors_and_obstacles,
@@ -1332,7 +1428,7 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     // voronoi_circle_intersection = find_closest_points_using_voxel(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, processed_cloud);
     // std::cout << "1 voronoi slow: " << voronoi_circle_intersection.size() << std::endl;
     voronoi_circle_intersection = find_closest_points_using_voxel_fast(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
-    std::cout << "2 voronoi fast: " << voronoi_circle_intersection.size() << std::endl;
+    // std::cout << "2 voronoi fast: " << voronoi_circle_intersection.size() << std::endl;
     // } else {
       // voronoi_circle_intersection = find_closest_points(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, size_neighbors, mesh);
     // }
@@ -1777,41 +1873,65 @@ void RBLController::odomCallback(const nav_msgs::Odometry::ConstPtr &msg) {
 // }
 /* //} */
 
+void RBLController::markerCallback(const visualization_msgs::MarkerArray::ConstPtr& msg)
+{
+    if (!msg->markers.empty() && msg->markers[0].points.size() > 1) {
 
-/* waypointsCallback() //{ */
+        std::lock_guard<std::mutex> lock(points_mutex_);
+        const visualization_msgs::Marker& marker0 = msg->markers[0];
+        const std::vector<geometry_msgs::Point>& input_points = marker0.points;
+        std::vector<geometry_msgs::Point> dense_points;
 
-void RBLController::waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& msg) {
+        const double interpolation_resolution = 0.2;  // meters between interpolated points
 
-   ROS_INFO("Received %lu waypoints", msg->poses.size());
+        // Interpolate between each consecutive pair
+        for (size_t i = 0; i < input_points.size() - 1; ++i) {
+            const geometry_msgs::Point& p1 = input_points[i];
+            const geometry_msgs::Point& p2 = input_points[i + 1];
 
-  for (size_t i = 0; i < msg->poses.size(); ++i) {
-      const auto& pose = msg->poses[i];
-      ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f", 
-               i, pose.position.x, pose.position.y, pose.position.z);
-  }
+            double dx = p2.x - p1.x;
+            double dy = p2.y - p1.y;
+            double dz = p2.z - p1.z;
 
-    // for (size_t i = 0; i < msg->poses.size(); ++i) {
-    int i = 1;
-        const auto& pose = msg->poses[i];
-        destination[0] = pose.position.x;
-        destination[1] = pose.position.y;
-        destination[2] = pose.position.z; 
-        goal[0] = pose.position.x;
-        goal[1] = pose.position.y;
-        goal[2] = pose.position.z;
-    // }
+            double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+            int steps = std::max(1, static_cast<int>(dist / interpolation_resolution));
 
+            for (int j = 0; j <= steps; ++j) {
+                double t = static_cast<double>(j) / steps;
+                geometry_msgs::Point interp;
+                interp.x = p1.x + t * dx;
+                interp.y = p1.y + t * dy;
+                interp.z = p1.z + t * dz;
+                dense_points.push_back(interp);
+            }
+        }
+
+        ROS_INFO("Interpolated to %lu total points", dense_points.size());
+        // const geometry_msgs::Point& chosen = dense_points[best_idx];
+        dense_points_ = dense_points;
+
+        // Find point closest to exactly 4m from robot_pos
+        const double target_distance = 4.0;
+        size_t best_idx = 0;
+        double min_diff = std::numeric_limits<double>::max();
+
+        for (size_t i = 0; i < dense_points.size(); ++i) {
+            const geometry_msgs::Point& pt = dense_points[i];
+            double dx = pt.x - robot_pos[0];
+            double dy = pt.y - robot_pos[1];
+            double dz = pt.z - robot_pos[2];
+            double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+            double diff = std::abs(dist - target_distance);
+
+            if (diff < min_diff) {
+                min_diff = diff;
+                best_idx = i;
+            }
+        }
+    } else {
+        ROS_WARN("Not enough points to interpolate.");
+    }
 }
-//     ROS_INFO("Received %lu waypoints", msg->poses.size());
-
-//     for (size_t i = 0; i < msg->poses.size(); ++i) {
-//         const auto& pose = msg->poses[i];
-//         ROS_INFO("Waypoint %lu: x=%.2f, y=%.2f, z=%.2f", 
-//                  i, pose.position.x, pose.position.y, pose.position.z);
-//     }
-// }
-
-//}
 
 /*RBLController::callbackNeighborsUsingUVDAR() //{ */
 void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
@@ -1873,6 +1993,7 @@ void RBLController::callbackTimerPubNeighbors([[maybe_unused]] const ros::TimerE
 
 
 //}
+
 
 /* callbackTimerSetReference() Callback where we set the p_ref //{ */
 void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te) {
@@ -1944,6 +2065,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     publishPath(path_points);
 
 
+
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                         encumbrance, active_wp, beta, neighbors_and_obstacles_noisy);
     auto centroids_no_rotation = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles, encumbrance,
@@ -2011,7 +2133,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     flag_stop                    = true;
     ros::Time     end_time_1     = ros::Time::now();
     ros::Duration elapsed_time_1 = end_time_1 - start_time_1;
-    ROS_INFO("Elapsed time: %.2f seconds", elapsed_time_1.toSec());
+    // ROS_INFO("Elapsed time: %.2f seconds", elapsed_time_1.toSec());
   }
 }
 //}

@@ -6,6 +6,9 @@ connections:
   - root_frame_id: "uav1/fcu"
     equal_frame_id: "uav1/world_origin"
 
+  - root_frame_id: "uav2/fcu"
+    equal_frame_id: "uav2/world_origin"
+
 
   - root_frame_id: "simulator_origin"
     equal_frame_id: "simulator_origin"

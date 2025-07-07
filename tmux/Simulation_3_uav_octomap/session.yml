@@ -181,11 +181,11 @@ windows:
         - 'history -s rosservice call /uav3/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
         # - 'history -s rosservice call /uav4/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
 
-  # - tf_connector:
-  #     layout: tiled
-  #     panes:
-  #       - waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
-  #       - waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
+  - tf_connector:
+      layout: tiled
+      panes:
+        - waitForTime; roslaunch mrs_tf_connector tf_connector.launch custom_config:=./config/tf_connector.yaml
+        - waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
 
   - rviz:
       layout: tiled

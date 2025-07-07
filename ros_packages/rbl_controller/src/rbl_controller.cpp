@@ -2044,7 +2044,7 @@ void RBLController::markerCallback(const visualization_msgs::MarkerArray::ConstP
             }
         }
 
-        ROS_INFO("Interpolated to %lu total points", dense_points.size());
+        // ROS_INFO("Interpolated to %lu total points", dense_points.size());
         // const geometry_msgs::Point& chosen = dense_points[best_idx];
         dense_points_ = dense_points;
 
@@ -2230,7 +2230,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
       double difference = (diff < -M_PI) ? diff + 2 * M_PI : diff;
 
-      if (std::abs(difference) < M_PI/4) {
+      if (std::abs(difference) < M_PI/2) {
         p_ref.position.x = c1_no_conn[0];  // next_values[0];
         p_ref.position.y = c1_no_conn[1];
         p_ref.position.z = c1_no_conn[2];
@@ -2420,7 +2420,7 @@ void RBLController::pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_clou
   pcl::fromROSMsg(pcl_cloud2, *temp_cloud);
 
   cloud = *temp_cloud;
-  ROS_INFO_STREAM("Received point cloud with " << cloud.size() << "points.");
+  /* ROS_INFO_STREAM("Received point cloud with " << cloud.size() << "points."); */
 }
 
 
@@ -2464,6 +2464,8 @@ bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req,
     ROS_INFO("[RBLController]: %s", res.message.c_str());
   }
 
+  ros::Duration elapsed_time1 = ros::Time::now() - starting_time;
+  std::cout << "elapsed time : "  <<  elapsed_time1 << std::endl;
   return true;
 }
 //}

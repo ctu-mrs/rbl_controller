@@ -19,7 +19,7 @@ bias_error: 0.0 #0.5
 cwvd_obs: 0.99
 cwvd_rob: 0.99
 sim: true
-refZ: 0.0
+refZ: 2.0
 max_obstacle_integration_dist: 9.0
 
 Adj_matrix_uav1: [0]
@@ -68,13 +68,13 @@ monitored_area_origin:
 
 final_positions: # defined with respect to monitored_area_origin
   uav1:
-    x: 22.0
-    y: 34.0
-    z: 0.0
+    x: 50.0
+    y: 0.0
+    z: 2.0
 
 
 initial_positions: # defined with respect to monitored_area_origin
   uav1:
-    x: -22.0
-    y: -34.0
-    z: 1.0
+    x: 0.0
+    y: 0.0
+    z: 2.0

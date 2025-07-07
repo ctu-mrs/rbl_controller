@@ -1418,6 +1418,7 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     projected_boundry_A_points = project_boundary_points_on_encumbrance(robot_pos, encumbrance, boundary_cell_A_points);
   } else {
     cell_A_points = points_inside_circle(robot_pos, radius, step_size);
+    projected_boundry_A_points = cell_A_points;
   }
   
   std::vector<Eigen::Vector3d> voronoi_circle_intersection;

@@ -33,7 +33,7 @@ max_distance_to_initial_position: 2.0
 min_z: -100.0  
 max_z: 100.0
 
-flag_3D: true
+flag_3D: false
 use_z_rule: true
 
 use_livox_tilted: true

@@ -726,6 +726,9 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
   std::vector<int> k_indices(1);
   std::vector<float> k_sqr_distances(1);
 
+  std::vector<int> radius_indices;
+  std::vector<float> radius_sqr_distances;
+
   //check other agents
   for (const auto &neighbor : neighbors) {
     // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
@@ -757,18 +760,31 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
     // double dist_to_robot = (point - robot_pos).norm();
 
     if (!remove_mask[i] && cloud.size() > 0) {
-      pcl::PointXYZ searchPoint;
-      searchPoint.x = point[0];
-      searchPoint.y = point[1];
-      searchPoint.z = point[2];
+      pcl::PointXYZ searchPoint(point[0], point[1], point[2]);
+      Eigen::Vector3d voxel_to_check;
+      Eigen::Vector3d dirVec = point - robot_pos;
+      bool found_valid_voxel = false;
 
-      if (kdtree.nearestKSearch(searchPoint, 1, k_indices, k_sqr_distances) > 0) {
-        int nearestVoxelIndex = k_indices[0];
-        const auto& voxel = cloud.points[nearestVoxelIndex];
-        Eigen::Vector3d voxel_point; //center point of voxel
-        voxel_point[0] = voxel.x;
-        voxel_point[1] = voxel.y;
-        voxel_point[2] = voxel.z;
+      if (kdtree.radiusSearch(searchPoint, radius_sensing, radius_indices, radius_sqr_distances) > 0) {
+        for (size_t j = 0; j< radius_indices.size(); ++j) {
+          const auto& current_voxel = cloud.points[radius_indices[j]];
+          voxel_to_check = Eigen::Vector3d(current_voxel.x, current_voxel.y, current_voxel.z);
+          if (dirVec.dot(voxel_to_check) > 0){
+            found_valid_voxel = true;
+            break;
+          }
+        }
+        if (!found_valid_voxel) {
+          continue;
+        }
+      // if (kdtree.nearestKSearch(searchPoint, 1, k_indices, k_sqr_distances) > 0) {
+        // int nearestVoxelIndex = k_indices[0];
+        // const auto& voxel = cloud.points[k_indices[0]];
+        // Eigen::Vector3d voxel_point(voxel[0], voxel[1], voxel[2]); //center point of voxel
+        Eigen::Vector3d voxel_point = voxel_to_check;
+        // voxel_point[0] = voxel.x;
+        // voxel_point[1] = voxel.y;
+        // voxel_point[2] = voxel.z;
         Eigen::Vector3d closest_p_on_vox = closest_point_from_voxel(robot_pos, voxel_point, map_resolution); //closest point on the voxel
         // double Delta_i_j = encumbrance + (voxel_point - closest_p_on_vox).norm();
         double Delta_i_j = encumbrance + sqrt(3*pow(map_resolution/2.0, 2));
@@ -781,7 +797,6 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
           plane_point = tilde_p_i + cwvd_obs * plane_norm;
         } else {
           plane_norm = tilde_p_i - tilde_p_j;
-          // plane_point = tilde_p_j + cwvd_obs * plane_norm;
           plane_point = tilde_p_j;
         }
         plane_normals.push_back(plane_norm);
@@ -791,10 +806,7 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
           closest_plane.first = plane_norm;
           closest_plane.second = plane_point;
         }
-        // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
-        // plane.first = plane_norm;
-        // plane.second = plane_point; 
-        // planes.push_back(plane);
+
       } else {
         remove_mask[i] = true;
       }
@@ -841,7 +853,131 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
 
   auto end_time = std::chrono::high_resolution_clock::now(); // End timing
   auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time); // Calculate duration
-  // std::cout << "Faster partitioning of the cell A based on voxels and neighbors took: " << duration.count() << " milliseconds." << std::endl;
+  // std::cout << "1 Fast partitioning of the cell A based on voxels and neighbors took: " << duration.count() << " milliseconds." << std::endl;
+
+  return result_points;
+}
+
+std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_faster( const Eigen::Vector3d                         &robot_pos,
+                                                                                  const std::vector<Eigen::Vector3d>            &points,
+                                                                                  const std::vector<Eigen::Vector3d>            &boundary_cell_A_points,
+                                                                                  const std::vector<Eigen::Vector3d>            &neighbors,
+                                                                                  pcl::PointCloud<pcl::PointXYZ>                cloud) {
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  std::vector<bool> remove_mask(points.size(), false);
+
+  std::vector<Eigen::Vector3d> plane_normals;
+  std::vector<Eigen::Vector3d> plane_points;
+
+  std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> planes;
+  std::pair<Eigen::Vector3d, Eigen::Vector3d> closest_plane;
+  Eigen::Vector3d far_plane = Eigen::Vector3d(1000.0, 0.0, 0.0);
+  closest_plane.first = far_plane;
+  closest_plane.second = far_plane;
+
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+  if (cloud.size() > 0) {
+    kdtree.setInputCloud(cloud.makeShared());
+  }
+
+  // Query KD-tree for nearest neighbors
+  std::vector<int> k_indices(1);
+  std::vector<float> k_sqr_distances(1);
+
+  std::vector<int> radius_indices;
+  std::vector<float> radius_sqr_distances;
+
+  //check other agents
+  for (const auto &neighbor : neighbors) {
+    // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
+    double Delta_i_j = 2*encumbrance; //TODO redo this if encum is different
+    Eigen::Vector3d tilde_p_i = Delta_i_j * (neighbor - robot_pos)/( (neighbor - robot_pos).norm() ) + robot_pos;
+    Eigen::Vector3d tilde_p_j = Delta_i_j * (robot_pos - neighbor)/( (robot_pos - neighbor).norm() ) + neighbor;
+    Eigen::Vector3d plane_norm = tilde_p_j - tilde_p_i;
+    Eigen::Vector3d plane_point = tilde_p_i + cwvd_rob * plane_norm;
+
+    if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
+      plane_normals.push_back(plane_norm);
+      plane_points.push_back(plane_point);
+    } else {
+      plane_normals.push_back(-plane_norm);
+      plane_points.push_back(plane_point);
+    }
+  }
+
+  pcl::PointXYZ searchPoint(robot_pos[0], robot_pos[1], robot_pos[2]);
+  if (kdtree.radiusSearch(searchPoint, radius_sensing, radius_indices, radius_sqr_distances) > 0) {
+    for (size_t i = 0; i < radius_indices.size(); ++i) {
+      const auto& current_voxel = cloud.points[radius_indices[i]];
+    
+      Eigen::Vector3d voxel_point(current_voxel.x, current_voxel.y, current_voxel.z);
+      Eigen::Vector3d closest_p_on_vox = closest_point_from_voxel(robot_pos, voxel_point, map_resolution);
+      double Delta_i_j = encumbrance + sqrt(3*pow(map_resolution/2.0, 2));
+      Eigen::Vector3d tilde_p_i = Delta_i_j * (voxel_point - robot_pos)/(voxel_point - robot_pos).norm() + robot_pos;
+      Eigen::Vector3d tilde_p_j = Delta_i_j * (robot_pos - voxel_point)/(robot_pos - voxel_point).norm() + voxel_point;
+
+      Eigen::Vector3d plane_norm, plane_point;
+      if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
+        plane_norm = tilde_p_j - tilde_p_i;
+        plane_point = tilde_p_i + cwvd_obs * plane_norm;
+      } else {
+        plane_norm = tilde_p_i - tilde_p_j;
+        plane_point = tilde_p_j;
+      }
+      plane_normals.push_back(plane_norm);
+      plane_points.push_back(plane_point);
+      
+      if ((closest_plane.second - robot_pos).norm() >= (plane_point - robot_pos).norm() ) {
+        closest_plane.first = plane_norm;
+        closest_plane.second = plane_point;
+      }
+    }
+  }
+
+  // auto start_time = std::chrono::high_resolution_clock::now();
+  planes.push_back(closest_plane);
+  publishPlanes(planes);
+  // publishNorms(plane_normals);
+
+  // Precompute plane offset values
+  std::vector<double> plane_offsets(plane_normals.size());
+
+  #pragma omp parallel for
+  for (int j = 0; j < static_cast<int>(plane_normals.size()); ++j) {
+    plane_offsets[j] = plane_normals[j].dot(plane_points[j]);
+  }
+
+
+  #pragma omp parallel for schedule(dynamic, 64)
+  for (int i = 0; i < static_cast<int>(points.size()); ++i) {
+    if (remove_mask[i]) continue;
+
+    const Eigen::Vector3d& point = points[i];
+    bool should_remove = false;
+
+    for (size_t j = 0; j < plane_normals.size(); ++j) {
+      double side = plane_normals[j].dot(point) - plane_offsets[j];
+      if (side >= 0) {
+        should_remove = true;
+        break;
+      }
+    }
+
+    if (should_remove) remove_mask[i] = true;
+  }
+
+  std::vector<Eigen::Vector3d> result_points;
+  for ( size_t i = 0; i < points.size(); ++i) {
+    if (!remove_mask[i]) {
+      result_points.push_back(points[i]);
+    }
+  }
+
+  auto end_time = std::chrono::high_resolution_clock::now(); // End timing
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time); // Calculate duration
+  // std::cout << "2 Fastest partitioning of the cell A based on voxels and neighbors took: " << duration.count() << " milliseconds." << std::endl;
 
   return result_points;
 }
@@ -1418,6 +1554,7 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     projected_boundry_A_points = project_boundary_points_on_encumbrance(robot_pos, encumbrance, boundary_cell_A_points);
   } else {
     cell_A_points = points_inside_circle(robot_pos, radius, step_size);
+    projected_boundry_A_points = cell_A_points;
   }
   
   std::vector<Eigen::Vector3d> voronoi_circle_intersection;
@@ -1427,7 +1564,8 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     // if (use_voxel) {
     // voronoi_circle_intersection = find_closest_points_using_voxel(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, processed_cloud);
     // std::cout << "1 voronoi slow: " << voronoi_circle_intersection.size() << std::endl;
-    voronoi_circle_intersection = find_closest_points_using_voxel_fast(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
+    // voronoi_circle_intersection = find_closest_points_using_voxel_fast(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
+    voronoi_circle_intersection = find_closest_points_using_voxel_faster(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
     // std::cout << "2 voronoi fast: " << voronoi_circle_intersection.size() << std::endl;
     // } else {
       // voronoi_circle_intersection = find_closest_points(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, size_neighbors, mesh);

@@ -1469,7 +1469,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
     }
 
     // Step 2: Walk forward along the path and accumulate distance
-    const double target_distance = 3.0;
+    const double target_distance = 5.0;
     double accumulated_distance = 0.0;
     size_t best_idx = start_idx;
 
@@ -2048,24 +2048,6 @@ void RBLController::markerCallback(const visualization_msgs::MarkerArray::ConstP
         // const geometry_msgs::Point& chosen = dense_points[best_idx];
         dense_points_ = dense_points;
 
-        // Find point closest to exactly 4m from robot_pos
-        const double target_distance = 4.0;
-        size_t best_idx = 0;
-        double min_diff = std::numeric_limits<double>::max();
-
-        for (size_t i = 0; i < dense_points.size(); ++i) {
-            const geometry_msgs::Point& pt = dense_points[i];
-            double dx = pt.x - robot_pos[0];
-            double dy = pt.y - robot_pos[1];
-            double dz = pt.z - robot_pos[2];
-            double dist = std::sqrt(dx * dx + dy * dy + dz * dz);
-            double diff = std::abs(dist - target_distance);
-
-            if (diff < min_diff) {
-                min_diff = diff;
-                best_idx = i;
-            }
-        }
     } else {
         ROS_WARN("Not enough points to interpolate.");
     }

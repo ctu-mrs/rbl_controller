@@ -70,11 +70,11 @@ final_positions: # defined with respect to monitored_area_origin
   uav1:
     x: 50.0
     y: 0.0
-    z: 2.0
+    z: 1.0
 
 
 initial_positions: # defined with respect to monitored_area_origin
   uav1:
     x: 0.0
     y: 0.0
-    z: 2.0
+    z: 1.0

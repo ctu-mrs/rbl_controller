@@ -17,3 +17,4 @@ then `rosservice call /uav1/rbl_controller/activation`
 - [ ] Fix The replanner, sometimes it can be chattering, frequency of replanner probably is too high
 - [ ] long-term upgrade to ROS2
 - [ ] maybe FlightForge simulator 
+- [ ] create image for robofly. to add option for communication between robots.

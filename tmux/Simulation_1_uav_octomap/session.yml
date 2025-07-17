@@ -40,13 +40,11 @@ windows:
   #     layout: tiled
   #     panes:
   #       - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_core core.launch
-
-        
+  
   - rbl_controller:
       layout: tiled
       panes:
         - export UAV_NAME=uav1; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
-
 
   - gazebo:
       layout: tiled
@@ -64,7 +62,7 @@ windows:
       panes:
         - waitForHw; roslaunch mrs_octomap_mapping_planning mapplan.launch
           config_octomap_server:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_server.yaml
-          config_octomap_planner:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/octomap_planner.yaml
+          config_octomap_planner:=./config/octomap_planner.yaml
           config_pcl_filter_ouster:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/ouster_filter_mapping.yaml
           config_pcl_filter_rs_front:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_front_filter.yaml
           config_pcl_filter_rs_down:=../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/config/rs_down_filter.yaml

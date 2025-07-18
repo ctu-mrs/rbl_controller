@@ -85,7 +85,7 @@ windows:
   - gazebo:
       layout: tiled
       panes:
-        - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=grass_plane gui:=true
+        - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=grass_plane gui:=false
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "1 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "2 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"
         - waitForGazebo; rosservice call /mrs_drone_spawner/spawn "3 --$UAV_TYPE --enable-rangefinder --enable-ouster model:=OS0-128 use_gpu:=True"

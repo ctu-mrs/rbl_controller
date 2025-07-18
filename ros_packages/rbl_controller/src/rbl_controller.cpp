@@ -181,6 +181,7 @@ void RBLController::onInit() {
   pub_planes_         = nh.advertise<visualization_msgs::MarkerArray>("planes", 1, true);
   pub_norms_          = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
   pub_path_           = nh.advertise<nav_msgs::Path>("path", 1, true);
+  pub_active_wp_ = nh.advertise<geometry_msgs::PointStamped>("destination_point", 1, true);
 
   if (simulation_) {
     // sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/livox_fake_scan", 1, &RBLController::pointCloud2Callback, this);
@@ -2215,6 +2216,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     active_wp = destination;
 
+    auto msg_active_wp = geometry_msgs::PointStamped();
+    msg_active_wp.header.stamp = ros::Time::now();
+    msg_active_wp.header.frame_id = _control_frame_;
+
+    msg_active_wp.point.x = active_wp(0);
+    msg_active_wp.point.y = active_wp(1);
+    msg_active_wp.point.z = active_wp(2);
+    pub_active_wp_.publish(msg_active_wp);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_ptr = cloud.makeShared();
     if (cloud_ptr && !cloud_ptr->empty()) { 

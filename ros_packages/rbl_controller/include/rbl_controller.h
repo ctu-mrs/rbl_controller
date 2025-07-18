@@ -130,6 +130,7 @@ public:
   ros::Publisher pub_destination_;
   ros::Publisher pub_position_;
   ros::Publisher pub_centroid_;
+  ros::Publisher pub_active_wp_;
   void           publishDestination();
   void           publishPosition();
   void           publishCentroid();

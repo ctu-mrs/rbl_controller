@@ -9,7 +9,7 @@ set_reference_timer:
   
 size_neighbors1: 0.5 
 size_obstacles1: 0.5 
-encumbrance: 0.5
+encumbrance: 0.2
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3

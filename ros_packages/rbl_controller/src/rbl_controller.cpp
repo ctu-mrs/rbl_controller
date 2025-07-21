@@ -1471,7 +1471,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
     }
 
     // Step 2: Walk forward along the path and accumulate distance
-    const double target_distance = 5.0;
+    const double target_distance = radius ;
     double accumulated_distance = 0.0;
     size_t best_idx = start_idx;
 
@@ -1483,7 +1483,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
         double dz = p2.z - p1.z;
         double segment = std::sqrt(dx * dx + dy * dy + dz * dz);
         accumulated_distance += segment;
-
+        best_idx = i;
         if (accumulated_distance >= target_distance) {
             best_idx = i + 1;
             break;

@@ -16,6 +16,7 @@ noisy_angle: 0.0 #0.3
 threshold: 0.8 
 window_length: 1 #10
 bias_error: 0.0 #0.5
+connectivity_flag: false #not used for now
 cwvd_obs: 0.9
 cwvd_rob: 0.9
 sim: true

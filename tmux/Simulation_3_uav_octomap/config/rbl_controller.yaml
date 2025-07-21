@@ -12,6 +12,7 @@ size_obstacles1: 0.5
 encumbrance: 0.5
 maximum_distance_conn: 10.0
 noisy_measurements: 0.0 #0.15
+connectivity_flag: false #not used for now
 noisy_angle: 0.0 #0.3
 threshold: 0.8 
 window_length: 1 #10

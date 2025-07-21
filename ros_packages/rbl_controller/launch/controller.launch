@@ -61,6 +61,7 @@
             <remap from="~goto_out" to="control_manager/goto" />
             <!-- Service servers (note that the service names will also be remapped using the namespace as a prefix) -->
             <remap from="~control_activation_in" to="~activation" />
+              <remap from="~control_activation_params_in" to="~activation_params" />
             <remap from="~control_deactivation_in" to="~deactivation" />
             <remap from="~fly_to_start_in" to="~fly_to_start" />
             <remap from="~save_to_csv_in" to="~save_to_csv" />

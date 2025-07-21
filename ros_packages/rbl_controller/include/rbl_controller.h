@@ -66,6 +66,8 @@
 #include <deque>
 #include <utility>
 #include <chrono>
+#include "rbl_controller/ActivateParams.h"
+
 namespace formation_control
 {
 
@@ -109,11 +111,13 @@ public:
   void goalUpdateLoop(const ros::TimerEvent&);
   // trigger service
   ros::ServiceServer service_activate_control_;
+  ros::ServiceServer service_activate_params_control_;
   ros::ServiceServer service_deactivate_control_;
   ros::ServiceServer service_save_to_csv_;
   bool               control_allowed_ = false;
   bool               activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
 
   // trigger goto service
   ros::ServiceServer service_fly_to_start_;
@@ -222,6 +226,7 @@ public:
   bool                                   flag_3D;
   bool                                   use_z_rule;
   bool                                   simulation_;
+  bool                                   connectivity_flag;
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;

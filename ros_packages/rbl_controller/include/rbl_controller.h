@@ -251,9 +251,11 @@ public:
   Eigen::Vector3d              livox_translation;
 
   ros::Subscriber                 sub_pointCloud2_;
+  ros::Subscriber                 sub_neighbors_;
   pcl::PointCloud<pcl::PointXYZ>  cloud;
   pcl::PointCloud<pcl::PointXYZ>  processed_cloud;
   pcl::PointCloud<pcl::PointXYZ>  downsampled_cloud;
+  void neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl);
   void pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_cloud2);
   ros::Publisher                 pub_pointCloud_; //for rviz
   void publishPcl();

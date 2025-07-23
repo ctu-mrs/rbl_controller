@@ -196,6 +196,7 @@ void RBLController::onInit() {
       sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/pcl_filter/livox_points_processed", 1, &RBLController::pointCloud2Callback, this);
     }
   }
+  sub_neighbors_ = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
 
   //TODO del
   sub_velocity_ = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
@@ -896,20 +897,35 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
 
   //check other agents
   for (const auto &neighbor : neighbors) {
-    // std::pair<Eigen::Vector3d, Eigen::Vector3d> plane;
-    double Delta_i_j = 2*encumbrance; //TODO redo this if encum is different
+    double Delta_i_j = 2*encumbrance;
     Eigen::Vector3d tilde_p_i = Delta_i_j * (neighbor - robot_pos)/( (neighbor - robot_pos).norm() ) + robot_pos;
     Eigen::Vector3d tilde_p_j = Delta_i_j * (robot_pos - neighbor)/( (robot_pos - neighbor).norm() ) + neighbor;
-    Eigen::Vector3d plane_norm = tilde_p_j - tilde_p_i;
-    Eigen::Vector3d plane_point = tilde_p_i + cwvd_rob * plane_norm;
 
+    Eigen::Vector3d plane_norm, plane_point;
     if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
-      plane_normals.push_back(plane_norm);
-      plane_points.push_back(plane_point);
+      plane_norm = tilde_p_j - tilde_p_i;
+      plane_point = tilde_p_i + cwvd_obs * plane_norm;
     } else {
-      plane_normals.push_back(-plane_norm);
-      plane_points.push_back(plane_point);
+      plane_norm = tilde_p_i - tilde_p_j;
+      plane_point = tilde_p_j;
     }
+    plane_normals.push_back(plane_norm);
+    plane_points.push_back(plane_point);
+
+    // std::cout << "Distance from robot to detected neighbor is: " << (robot_pos - neighbor).norm() << std::endl;
+
+    // Eigen::Vector3d plane_norm = tilde_p_j - tilde_p_i;
+    // Eigen::Vector3d plane_point = tilde_p_i + cwvd_rob * plane_norm;
+
+    // std::cout << "Plane from neighbor" << std::endl;
+
+    // if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
+    //   plane_normals.push_back(plane_norm);
+    //   plane_points.push_back(plane_point);
+    // } else {
+    //   plane_normals.push_back(-plane_norm);
+    //   plane_points.push_back(plane_point);
+    // }
   }
 
   pcl::PointXYZ searchPoint(robot_pos[0], robot_pos[1], robot_pos[2]);
@@ -1553,6 +1569,9 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
   std::vector<Eigen::Vector3d> cell_A_points;
   std::vector<Eigen::Vector3d> boundary_cell_A_points;
   std::vector<Eigen::Vector3d> projected_boundry_A_points;
+
+  std::cout << "Neighbors size: " << neighbors.size() << std::endl;
+
   if (flag_3D){
     cell_A_points = points_inside_sphere(robot_pos, radius, step_size);
     boundary_cell_A_points = boundary_points_sphere(robot_pos, radius, step_size);
@@ -1570,7 +1589,7 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     // voronoi_circle_intersection = find_closest_points_using_voxel(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, processed_cloud);
     // std::cout << "1 voronoi slow: " << voronoi_circle_intersection.size() << std::endl;
     // voronoi_circle_intersection = find_closest_points_using_voxel_fast(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
-    voronoi_circle_intersection = find_closest_points_using_voxel_faster(robot_pos, cell_A_points, projected_boundry_A_points, neighbors_and_obstacles_noisy, processed_cloud);
+    voronoi_circle_intersection = find_closest_points_using_voxel_faster(robot_pos, cell_A_points, projected_boundry_A_points, neighbors, processed_cloud);
     // std::cout << "2 voronoi fast: " << voronoi_circle_intersection.size() << std::endl;
     // } else {
       // voronoi_circle_intersection = find_closest_points(robot_pos, cell_A_points, neighbors_and_obstacles_noisy, size_neighbors, mesh);
@@ -2190,7 +2209,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   {
     std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
     auto                                   start = std::chrono::steady_clock::now();
-    std::vector<Eigen::Vector3d> neighbors;
+    // std::vector<Eigen::Vector3d> neighbors;
     std::vector<Eigen::Vector3d> neighbors_and_obstacles;
     if (flag_3D){
       robot_pos = {uav_position_[0], uav_position_[1], uav_position_[2]};
@@ -2199,12 +2218,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     }
 
     double distance2neigh;
+
+    //ground truth
     for (int j = 0; j < n_drones_; ++j) {
       if (flag_3D) {
-        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
+        // neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
         neighbors_and_obstacles.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
       } else {
-        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
+        // neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
         neighbors_and_obstacles.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
       }
     }
@@ -2240,8 +2261,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     path_points.push_back(destination);
 
     publishPath(path_points);
-
-
 
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                         encumbrance, active_wp, beta, neighbors_and_obstacles_noisy);
@@ -2460,6 +2479,20 @@ void RBLController::pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_clou
 
   cloud = *temp_cloud;
   /* ROS_INFO_STREAM("Received point cloud with " << cloud.size() << "points."); */
+}
+
+void RBLController::neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl) {
+  pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>); 
+  pcl::fromROSMsg(neighbors_pcl, *temp_cloud);
+
+  std::vector<Eigen::Vector3d> neighbors_;
+  neighbors_.reserve(temp_cloud->points.size());
+
+  for (const auto& point : temp_cloud->points) {
+    neighbors_.emplace_back(point.x, point.y, point.z);
+  }
+
+  neighbors = neighbors_;
 }
 
 

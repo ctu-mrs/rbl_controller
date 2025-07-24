@@ -7,6 +7,7 @@ uav_uvdar_ids: [1,2] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 set_reference_timer:
   rate: 15 # [Hz]
   
+# size_obstacles1 is already being handled by the octomap
 size_obstacles1: 0.01 
 # encumberance == size_neighbors1
 size_neighbors1: 0.5 

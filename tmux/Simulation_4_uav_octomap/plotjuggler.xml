@@ -1,18 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
- <tabbed_widget name="Main Window" parent="main_window">
-  <Tab containers="1" tab_name="tab1">
+ <tabbed_widget parent="main_window" name="Main Window">
+  <Tab tab_name="tab1" containers="1">
    <Container>
-    <DockSplitter count="1" orientation="-" sizes="1">
+    <DockSplitter orientation="-" sizes="1" count="1">
      <DockArea name="...">
-      <plot mode="TimeSeries" flip_x="false" flip_y="false" style="Lines">
-       <range bottom="-3.000000" top="3.000000" left="167.960000" right="198.840000"/>
-       <limitY min="-3" max="3"/>
-       <curve name="uav1_speed" color="#1f77b4"/>
-       <curve name="uav2_speed" color="#d627d5"/>
-       <curve name="uav3_speed" color="#1ac938"/>
-       <curve name="uav4_speed" color="#0e20ff"/>
-       <curve name="/order_metric/data" color="#ea0b22"/>
+      <plot flip_y="false" flip_x="false" mode="TimeSeries" style="Lines">
+       <range bottom="-3.000000" left="369.596000" top="3.000000" right="375.208000"/>
+       <limitY max="3" min="-3"/>
+       <curve name="uav1_speed" color="#69a9d6"/>
+       <curve name="uav2_speed" color="#fb8afa"/>
+       <curve name="uav3_speed" color="#4fe869"/>
+       <curve name="uav4_speed" color="#a3aafa"/>
+       <curve name="threshold_1" color="#693622"/>
+       <curve name="threshold_minus_1" color="#ff7f0e"/>
+       <curve name="/motion_metric/order/value" color="#f33c2c"/>
+       <curve name="/motion_metric/uav1/path_persistence/value" color="#a01234"/>
+       <curve name="/motion_metric/uav2/path_persistence/value" color="#358543"/>
+       <curve name="/motion_metric/uav3/path_persistence/value" color="#d36402"/>
+       <curve name="/motion_metric/uav4/path_persistence/value" color="#b12c8a"/>
       </plot>
      </DockArea>
     </DockSplitter>
@@ -43,7 +49,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/uav1/estimation_manager/odom_main;/uav2/estimation_manager/odom_main;/uav3/estimation_manager/odom_main;/uav4/estimation_manager/odom_main;/order_metric"/>
+   <selected_topics value="/motion_metric/order;/motion_metric/uav1/path_persistence;/motion_metric/uav2/path_persistence;/motion_metric/uav3/path_persistence;/motion_metric/uav4/path_persistence;/uav1/estimation_manager/odom_main;/uav2/estimation_manager/odom_main;/uav3/estimation_manager/odom_main;/uav4/estimation_manager/odom_main"/>
   </plugin>
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>
@@ -63,74 +69,9 @@
  <previouslyLoaded_Streamer name="ROS Topic Subscriber"/>
  <!-- - - - - - - - - - - - - - - -->
  <customMathEquations>
-  <snippet name="order_metric_4_uav">
-   <global></global>
-   <function>return (1/12)*(v1*v2 + v1*v3 + v1*v4 + v2*v1 + v2*v3 + v2*v4 + v3*v1 + v3*v2 + v3*v4 + v4*v1 + v4*v2 + v4*v3)</function>
-   <linked_source>/uav1/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>uav1_unit_velocity</v1>
-    <v2>uav2_unit_velocity</v2>
-    <v3>uav3_unit_velocity</v3>
-    <v4>uav4_unit_velocity</v4>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav1_unit_velocity">
-   <global></global>
-   <function>norm = math.sqrt(v1*v1 + v2*v2 + v3*v3)
-            return {x = v1/norm, y = v2/norm, z = v3/norm}</function>
-   <linked_source>/uav1/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>/uav1/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav1/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav1/estimation_manager/odom_main/twist/twist/linear/z</v3>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav2_unit_velocity">
-   <global></global>
-   <function>norm = math.sqrt(v1*v1 + v2*v2 + v3*v3)
-            return {x = v1/norm, y = v2/norm, z = v3/norm}</function>
-   <linked_source>/uav2/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>/uav2/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav2/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav2/estimation_manager/odom_main/twist/twist/linear/z</v3>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav3_speed">
+  <snippet name="uav4_speed">
    <global></global>
    <function>return math.sqrt(v1*v1 + v2*v2 + v3*v3)</function>
-   <linked_source>/uav3/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>/uav3/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav3/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav3/estimation_manager/odom_main/twist/twist/linear/z</v3>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav3_unit_velocity">
-   <global></global>
-   <function>norm = math.sqrt(v1*v1 + v2*v2 + v3*v3)
-            return {x = v1/norm, y = v2/norm, z = v3/norm}</function>
-   <linked_source>/uav3/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>/uav3/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav3/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav3/estimation_manager/odom_main/twist/twist/linear/z</v3>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav1_speed">
-   <global></global>
-   <function>return math.sqrt(v1*v1 + v2*v2 + v3*v3)</function>
-   <linked_source>/uav1/estimation_manager/odom_main/header/header/stamp</linked_source>
-   <additional_sources>
-    <v1>/uav1/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav1/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav1/estimation_manager/odom_main/twist/twist/linear/z</v3>
-   </additional_sources>
-  </snippet>
-  <snippet name="uav4_unit_velocity">
-   <global></global>
-   <function>norm = math.sqrt(v1*v1 + v2*v2 + v3*v3)
-            return {x = v1/norm, y = v2/norm, z = v3/norm}</function>
    <linked_source>/uav4/estimation_manager/odom_main/header/header/stamp</linked_source>
    <additional_sources>
     <v1>/uav4/estimation_manager/odom_main/twist/twist/linear/x</v1>
@@ -148,15 +89,35 @@
     <v3>/uav2/estimation_manager/odom_main/twist/twist/linear/z</v3>
    </additional_sources>
   </snippet>
-  <snippet name="uav4_speed">
+  <snippet name="uav1_speed">
    <global></global>
    <function>return math.sqrt(v1*v1 + v2*v2 + v3*v3)</function>
-   <linked_source>/uav4/estimation_manager/odom_main/header/header/stamp</linked_source>
+   <linked_source>/uav1/estimation_manager/odom_main/header/header/stamp</linked_source>
    <additional_sources>
-    <v1>/uav4/estimation_manager/odom_main/twist/twist/linear/x</v1>
-    <v2>/uav4/estimation_manager/odom_main/twist/twist/linear/y</v2>
-    <v3>/uav4/estimation_manager/odom_main/twist/twist/linear/z</v3>
+    <v1>/uav1/estimation_manager/odom_main/twist/twist/linear/x</v1>
+    <v2>/uav1/estimation_manager/odom_main/twist/twist/linear/y</v2>
+    <v3>/uav1/estimation_manager/odom_main/twist/twist/linear/z</v3>
    </additional_sources>
+  </snippet>
+  <snippet name="threshold_minus_1">
+   <global></global>
+   <function>return -1.0</function>
+   <linked_source>/motion_metric/order/header/stamp</linked_source>
+  </snippet>
+  <snippet name="uav3_speed">
+   <global></global>
+   <function>return math.sqrt(v1*v1 + v2*v2 + v3*v3)</function>
+   <linked_source>/uav3/estimation_manager/odom_main/header/header/stamp</linked_source>
+   <additional_sources>
+    <v1>/uav3/estimation_manager/odom_main/twist/twist/linear/x</v1>
+    <v2>/uav3/estimation_manager/odom_main/twist/twist/linear/y</v2>
+    <v3>/uav3/estimation_manager/odom_main/twist/twist/linear/z</v3>
+   </additional_sources>
+  </snippet>
+  <snippet name="threshold_1">
+   <global></global>
+   <function>return 1.0</function>
+   <linked_source>/motion_metric/order/header/stamp</linked_source>
   </snippet>
  </customMathEquations>
  <snippets/>

@@ -133,10 +133,10 @@ windows:
       layout: tiled
       panes:
         - waitForControl; sleep 5; ~/.i3/layout_manager.sh ./layout.json
-  - order_metric:
+  - motion_metric:
       layout: tiled
       panes:
-        - waitForControl; roscd rbl_controller; cd ../../scripts; python order_metric.py
+        - waitForControl; roscd rbl_controller; cd ../../scripts; python motion_metric.py
 
 
 

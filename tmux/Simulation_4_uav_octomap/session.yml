@@ -114,6 +114,7 @@ windows:
         - export UAV_NAME=uav4; waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard
   - goto:
       layout: tiled
+      synchronize: after
       panes:
         - 'history -s rosservice call /uav1/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
         - 'history -s rosservice call /uav2/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
@@ -137,6 +138,7 @@ windows:
       layout: tiled
       panes:
         - waitForControl; roscd rbl_controller; cd ../../scripts; python motion_metric.py
+        # - waitForControl; rosrun plotjuggler plotjuggler
 
 
 

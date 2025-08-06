@@ -84,7 +84,7 @@ windows:
   - rviz:
       layout: tiled
       panes:
-        - waitForControl; rosrun rviz rviz -d ../../../mrs_octomap_mapping_planning/ros_packages/mrs_octomap_mapping_planning/tmux/simulation_example/rviz.rviz
+        - waitForControl; rosrun rviz rviz -d rviz_config.rviz
         - waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
         - waitForTime; waitForControl; roslaunch mrs_rviz_plugins rviz_interface.launch rviz_topic_name:='/move_base_simple/goal' reference_service_name:="/$UAV_NAME/octomap_planner/reference"
   - layout:

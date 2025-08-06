@@ -2214,7 +2214,13 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     size_neighbors_and_obstacles = size_neighbors;  // Copy vec1 to vec3
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
-    active_wp = destination;
+    auto goal_position = Eigen::Vector3d{goal[0], goal[1], goal[2]};
+    if (is_closest(uav_position_, goal_position, neighbors)) { 
+      active_wp = destination;
+    }
+    else {
+      active_wp = get_desired_target(uav_position_, goal_position, neighbors);
+    }
 
     auto msg_active_wp = geometry_msgs::PointStamped();
     msg_active_wp.header.stamp = ros::Time::now();
@@ -2560,6 +2566,37 @@ bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, s
 
 
   return true;
+}
+
+Eigen::Vector3d RBLController::get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha) {
+  double max_value = std::numeric_limits<long long>::min();
+  auto target = uav_position;
+
+  for(const auto& position: neighbor_positions) {
+    double dist_to_goal = (position - goal_position).norm();
+    double dist_to_uav = (position - uav_position).norm();
+
+    double value = alpha * std::log(1.0 / dist_to_goal) + (1 - alpha) * std::log(dist_to_uav);
+    ROS_INFO_STREAM("[RBLPlanner]: Value: " << value << ", for position: " << position(0) << ", " << position(1) << ", " << position(2));
+    if (value >= max_value) {
+      max_value = value;
+      target = position;
+      ROS_INFO_STREAM("[RBLPlanner]: Target set to position: " << target(0) << ", " << target(1) << ", " << target(2));
+    }
+  }
+
+  return target;
+}
+
+bool RBLController::is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions) {
+    double dist_uav_to_goal = (uav_position - goal_position).norm();
+    for(const auto& position: neighbor_positions) {
+      double dist_to_goal = (position - goal_position).norm();
+      if (dist_uav_to_goal > dist_to_goal) {
+        return false;
+      }
+    }
+    return true;
 }
 //}
 //}

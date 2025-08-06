@@ -355,6 +355,9 @@ public:
 
   // transformer
   std::shared_ptr<mrs_lib::Transformer> transformer_;
+
+Eigen::Vector3d get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha=0.5);
+bool is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions);
 };
 
 

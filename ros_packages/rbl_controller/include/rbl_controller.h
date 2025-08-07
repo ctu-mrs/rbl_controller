@@ -91,7 +91,10 @@ public:
   ros::Time                start_time_1;
   bool                     flag_stop = false;
   ros::ServiceClient       sc_set_velocity_;
+
+  std::mutex mutex_srv_cl_;
   ros::ServiceClient       sc_set_position_;
+
   ros::Timer               timer_set_reference_;
   ros::Timer               timer_set_active_wp_;
   ros::Timer               timer_pub_;
@@ -115,11 +118,17 @@ public:
   bool               activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
 
+
+  ros::ServiceServer service_goto_;
+  bool goalServiceCallback(mrs_msgs::Vec4::Request &req, mrs_msgs::Vec4::Response &res);
+  Eigen::Vector3d group_goal_{0, 0, 0};
+
   // trigger goto service
   ros::ServiceServer service_fly_to_start_;
   bool               fly_to_start_called_ = false;
   bool               flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   ros::ServiceClient sc_goto_position_;
+  ros::ServiceClient sc_planner_goto_position_;
   Eigen::Vector3d    _required_initial_position_;
   bool               is_at_initial_position_ = true;
   double             _dist_to_start_limit_;
@@ -263,6 +272,7 @@ public:
   void publishNorms(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
   ros::Publisher                 pub_path_;
   void publishPath(const std::vector<Eigen::Vector3d>& path);
+  ros::Publisher                 pub_viz_target_;
   size_t                         last_marker_count = 0;
   std::vector<double>            c1_to_rviz = {0, 0, 0};
   bool                           use_bonxai_mapping;
@@ -356,8 +366,9 @@ public:
   // transformer
   std::shared_ptr<mrs_lib::Transformer> transformer_;
 
-Eigen::Vector3d get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha=0.5);
+Eigen::Vector3d get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha=0.8);
 bool is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions);
+void publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position);
 };
 
 

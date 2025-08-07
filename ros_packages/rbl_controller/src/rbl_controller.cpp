@@ -166,10 +166,12 @@ void RBLController::onInit() {
   service_deactivate_control_ = nh.advertiseService("control_deactivation_in", &RBLController::deactivationServiceCallback, this);
   service_fly_to_start_       = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
   service_save_to_csv_        = nh.advertiseService("save_to_csv_in", &RBLController::saveToCsvServiceCallback, this);
+  service_goto_ = nh.advertiseService("goto_in", &RBLController::goalServiceCallback, this);
 
   // initialize service clients
   sc_set_position_  = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("ref_pos_out");
   sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
+  sc_planner_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("planner_goto_out");
 
   // initialize publishers
   pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
@@ -182,6 +184,7 @@ void RBLController::onInit() {
   pub_norms_          = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
   pub_path_           = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_active_wp_ = nh.advertise<geometry_msgs::PointStamped>("destination_point", 1, true);
+  pub_viz_target_ = nh.advertise<visualization_msgs::Marker>("viz/target", 1, true);
 
   if (simulation_) {
     // sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/livox_fake_scan", 1, &RBLController::pointCloud2Callback, this);
@@ -1449,6 +1452,42 @@ std::vector<Eigen::Vector3d> RBLController::slice_sphere(std::vector<Eigen::Vect
 
 void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
 
+  if (!is_initialized_) {
+    return;
+  }
+
+  if (!control_allowed_) {
+    ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for activation.");
+    return;
+  }
+    auto msg_vec4 = mrs_msgs::Vec4();
+    {
+    std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
+    std::vector<Eigen::Vector3d> neighbors;
+    for (int j = 0; j < n_drones_; ++j) {
+      if (flag_3D) {
+        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
+      } else {
+        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
+      }
+    }
+
+    // the desired goal is either the group goal (when agent is closest to the group goal)
+    // Or the position of the neighbor with the highest value
+    auto desired_goal = get_desired_target(uav_position_, group_goal_, neighbors, 0.5);
+    msg_vec4.request.goal[0] = desired_goal[0];
+    msg_vec4.request.goal[1] = desired_goal[1];
+    msg_vec4.request.goal[2] = desired_goal[2];
+    msg_vec4.request.goal[0] = 0.0;
+
+    std::scoped_lock lck(mutex_srv_cl_);
+    if (sc_planner_goto_position_.exists()) {
+      auto success = sc_planner_goto_position_.call(msg_vec4);
+      publish_connection_to_target(desired_goal, uav_position_);
+      ROS_INFO_STREAM("[RBLPlanner]: Setting goal to the desired target");
+    }
+  }
+
     std::vector<geometry_msgs::Point> points_copy;
 
     {
@@ -1472,7 +1511,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
     }
 
     // Step 2: Walk forward along the path and accumulate distance
-    const double target_distance = 3.5;
+    const double target_distance = 1.5;
     double accumulated_distance = 0.0;
     size_t best_idx = start_idx;
 
@@ -1583,11 +1622,9 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
     voronoi_circle_intersection_connectivity = voronoi_circle_intersection;
 
     if (voronoi_circle_intersection_connectivity.empty()){
-      std::cout << "WARNING" << std::endl;
       voronoi_circle_intersection_connectivity.push_back(Eigen::Vector3d(robot_pos[0], robot_pos[1], robot_pos[2]));
     }
     if (voronoi_circle_intersection.empty()) {
-      std::cout << "WARNING de luxe" << std::endl;
       voronoi_circle_intersection.push_back(Eigen::Vector3d(robot_pos[0], robot_pos[1], robot_pos[2]));
     }
   } else {
@@ -2196,7 +2233,6 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       robot_pos = {uav_position_[0], uav_position_[1], refZ_};
     }
 
-    double distance2neigh;
     for (int j = 0; j < n_drones_; ++j) {
       if (flag_3D) {
         neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
@@ -2214,13 +2250,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     size_neighbors_and_obstacles = size_neighbors;  // Copy vec1 to vec3
     size_neighbors_and_obstacles.insert(size_neighbors_and_obstacles.end(), size_obstacles.begin(), size_obstacles.end());
 
-    auto goal_position = Eigen::Vector3d{goal[0], goal[1], goal[2]};
-    if (is_closest(uav_position_, goal_position, neighbors)) { 
-      active_wp = destination;
-    }
-    else {
-      active_wp = get_desired_target(uav_position_, goal_position, neighbors);
-    }
+    active_wp = destination;
 
     auto msg_active_wp = geometry_msgs::PointStamped();
     msg_active_wp.header.stamp = ros::Time::now();
@@ -2246,14 +2276,11 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     }
 
-
     std::vector<Eigen::Vector3d> path_points;
     path_points.push_back(robot_pos);
     path_points.push_back(destination);
 
     publishPath(path_points);
-
-
 
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                         encumbrance, active_wp, beta, neighbors_and_obstacles_noisy);
@@ -2569,14 +2596,17 @@ bool RBLController::flyToStartServiceCallback(std_srvs::Trigger::Request &req, s
 }
 
 Eigen::Vector3d RBLController::get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha) {
-  double max_value = std::numeric_limits<long long>::min();
-  auto target = uav_position;
+  // start with the value of the agent itself
+  // if none of the neighbors have a higher value, the agent moves to the group goal
+  double dist_uav_to_goal = std::max((uav_position - goal_position).norm(), 0.1);
+  double max_value = alpha * std::log((1.0 / dist_uav_to_goal) + 1) + 1.0;
+  auto target = goal_position;
 
   for(const auto& position: neighbor_positions) {
-    double dist_to_goal = (position - goal_position).norm();
-    double dist_to_uav = (position - uav_position).norm();
+    double dist_to_goal = std::max((position - goal_position).norm(), 0.1);
+    double dist_to_uav = std::max((position - uav_position).norm(), 3.1);
 
-    double value = alpha * std::log(1.0 / dist_to_goal) + (1 - alpha) * std::log(dist_to_uav);
+    double value = alpha * std::log((1.0 / dist_to_goal) + 1) + (1 - alpha) * std::log(dist_to_uav - 3);
     ROS_INFO_STREAM("[RBLPlanner]: Value: " << value << ", for position: " << position(0) << ", " << position(1) << ", " << position(2));
     if (value >= max_value) {
       max_value = value;
@@ -2597,6 +2627,65 @@ bool RBLController::is_closest(const Eigen::Vector3d& uav_position, const Eigen:
       }
     }
     return true;
+}
+
+bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request &req, mrs_msgs::Vec4::Response &res) {
+  if (!is_initialized_) {
+    return false;
+  }
+
+  {
+    std::scoped_lock lck(mutex_srv_cl_, mutex_position_command_);
+    if (sc_planner_goto_position_.exists()) {
+      auto success = sc_planner_goto_position_.call(req, res);
+
+      group_goal_ = Eigen::Vector3d{req.goal[0], req.goal[1], req.goal[2]};
+
+      control_allowed_ = true;
+      starting_time = ros::Time::now();
+      start_time_1 = ros::Time::now();
+      return true;
+    }
+  }
+  return false;
+}
+
+void RBLController::publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position) {
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = _control_frame_; // Use the provided frame ID
+  marker.header.stamp = ros::Time::now();
+  marker.ns = "target";
+  marker.id = 0;
+  marker.type = visualization_msgs::Marker::ARROW;
+
+  // Set marker scale (length and thickness of the arrow)
+  marker.scale.x = 0.1; // is the shaft diameter
+  marker.scale.y = 0.15; //is the head diameter.
+  marker.scale.z = 0.2; // is not zero, it specifies the head length.
+
+  // Set marker color
+  marker.color.r = 1.0f; // Red
+  marker.color.g = 0.0f;
+  marker.color.b = 0.0f;
+  marker.color.a = 0.8f; // Opaque
+
+  // Set the end point of the arrow (vector direction)
+  marker.pose.orientation.w = 1;
+  marker.pose.orientation.x = 0;
+  marker.pose.orientation.y = 0;
+  marker.pose.orientation.z = 0;
+
+  marker.points.resize(2);
+  marker.points[0].x = uav_position(0);
+  marker.points[0].y = uav_position(1);
+  marker.points[0].z = uav_position(2);
+
+  marker.points[1].x = target_point(0);
+  marker.points[1].y = target_point(1);
+  marker.points[1].z = target_point(2);
+
+  marker.lifetime = ros::Duration(); // Infinite lifetime
+  pub_viz_target_.publish(marker);
 }
 //}
 //}

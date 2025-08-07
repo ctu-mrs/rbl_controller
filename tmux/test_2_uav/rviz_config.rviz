@@ -25,7 +25,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -686,9 +686,7 @@ Visualization Manager:
           Marker Topic: /uav1/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -803,9 +801,7 @@ Visualization Manager:
           Marker Topic: /uav2/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -845,7 +841,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/destination_vis
           Name: destination
           Namespaces:
-            destination: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -877,7 +873,7 @@ Visualization Manager:
           Marker Topic: /uav3/rbl_controller/centroid_vis
           Name: centroid
           Namespaces:
-            centroid: true
+            {}
           Queue Size: 100
           Value: true
         - Angle Tolerance: 0.009999999776482582
@@ -920,9 +916,7 @@ Visualization Manager:
           Marker Topic: /uav3/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -962,7 +956,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/destination_vis
           Name: destination
           Namespaces:
-            destination: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -994,7 +988,7 @@ Visualization Manager:
           Marker Topic: /uav4/rbl_controller/centroid_vis
           Name: centroid
           Namespaces:
-            centroid: true
+            {}
           Queue Size: 100
           Value: true
         - Angle Tolerance: 0.009999999776482582
@@ -1037,9 +1031,7 @@ Visualization Manager:
           Marker Topic: /uav4/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
       Enabled: true
@@ -1078,6 +1070,22 @@ Visualization Manager:
         Value: Arrow
       Topic: /motion_metric/desired_target
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /uav1/rbl_controller/viz/target
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /uav2/rbl_controller/viz/target
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:

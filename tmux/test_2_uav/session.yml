@@ -76,7 +76,8 @@ windows:
   - goto:
       layout: tiled
       panes:
-        - 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        - 'history -s rosservice call /$UAV_NAME/rbl_controller/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
+        - 'history -s rosservice call /$UAV_NAME/rbl_controller/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
   - tf_connector:
       layout: tiled
       panes:

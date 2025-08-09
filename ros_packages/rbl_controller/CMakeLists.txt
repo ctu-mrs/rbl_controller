@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_msgs
   pcl_conversions
+  mrs_octomap_planner
 )
 
 find_package(OpenMP REQUIRED)

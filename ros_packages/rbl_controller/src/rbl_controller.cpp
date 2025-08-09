@@ -172,6 +172,7 @@ void RBLController::onInit() {
   sc_set_position_  = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("ref_pos_out");
   sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
   sc_planner_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("planner_goto_out");
+  sc_get_path_ = nh.serviceClient<mrs_octomap_planner::Path>("get_path_out");
 
   // initialize publishers
   pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
@@ -1460,33 +1461,33 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&) {
     ROS_WARN_THROTTLE(3.0, "[RBLController]: Waiting for activation.");
     return;
   }
-    auto msg_vec4 = mrs_msgs::Vec4();
-    {
-    std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
-    std::vector<Eigen::Vector3d> neighbors;
-    for (int j = 0; j < n_drones_; ++j) {
-      if (flag_3D) {
-        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
-      } else {
-        neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
-      }
-    }
+  //   auto msg_vec4 = mrs_msgs::Vec4();
+  //   {
+  //   std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
+  //   std::vector<Eigen::Vector3d> neighbors;
+  //   for (int j = 0; j < n_drones_; ++j) {
+  //     if (flag_3D) {
+  //       neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2]});
+  //     } else {
+  //       neighbors.push_back(Eigen::Vector3d{uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_});
+  //     }
+  //   }
 
-    // the desired goal is either the group goal (when agent is closest to the group goal)
-    // Or the position of the neighbor with the highest value
-    auto desired_goal = get_desired_target(uav_position_, group_goal_, neighbors, 0.5);
-    msg_vec4.request.goal[0] = desired_goal[0];
-    msg_vec4.request.goal[1] = desired_goal[1];
-    msg_vec4.request.goal[2] = desired_goal[2];
-    msg_vec4.request.goal[0] = 0.0;
+  //   // the desired goal is either the group goal (when agent is closest to the group goal)
+  //   // Or the position of the neighbor with the highest value
+  //   auto desired_goal = get_desired_target(uav_position_, group_goal_, neighbors, 0.5);
+  //   msg_vec4.request.goal[0] = desired_goal[0];
+  //   msg_vec4.request.goal[1] = desired_goal[1];
+  //   msg_vec4.request.goal[2] = desired_goal[2];
+  //   msg_vec4.request.goal[0] = 0.0;
 
-    std::scoped_lock lck(mutex_srv_cl_);
-    if (sc_planner_goto_position_.exists()) {
-      auto success = sc_planner_goto_position_.call(msg_vec4);
-      publish_connection_to_target(desired_goal, uav_position_);
-      ROS_INFO_STREAM("[RBLPlanner]: Setting goal to the desired target");
-    }
-  }
+  //   std::scoped_lock lck(mutex_srv_cl_);
+  //   if (sc_planner_goto_position_.exists()) {
+  //     auto success = sc_planner_goto_position_.call(msg_vec4);
+  //     publish_connection_to_target(desired_goal, uav_position_);
+  //     ROS_INFO_STREAM("[RBLPlanner]: Setting goal to the desired target");
+  //   }
+  // }
 
     std::vector<geometry_msgs::Point> points_copy;
 
@@ -2280,7 +2281,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     path_points.push_back(robot_pos);
     path_points.push_back(destination);
 
-    publishPath(path_points);
+    // publishPath(path_points);
 
     auto centroids = RBLController::get_centroid(robot_pos, radius, step_size, neighbors, size_neighbors, neighbors_and_obstacles, size_neighbors_and_obstacles,
                                         encumbrance, active_wp, beta, neighbors_and_obstacles_noisy);
@@ -2629,25 +2630,55 @@ bool RBLController::is_closest(const Eigen::Vector3d& uav_position, const Eigen:
     return true;
 }
 
-bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request &req, mrs_msgs::Vec4::Response &res) {
+bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
+                                        mrs_msgs::Vec4::Response& res)
+{
   if (!is_initialized_) {
     return false;
   }
 
+  auto uav_position                = mrs_lib::get_mutexed(mutex_position_command_, uav_position_);
+  auto msg_path                    = mrs_octomap_planner::Path();
+  msg_path.request.header.stamp    = ros::Time::now();
+  msg_path.request.header.frame_id = _control_frame_;
+
+  msg_path.request.start.x = uav_position(0);
+  msg_path.request.start.y = uav_position(1);
+  msg_path.request.start.z = uav_position(2);
+
+  msg_path.request.end.x = req.goal[0];
+  msg_path.request.end.y = req.goal[1];
+  msg_path.request.end.z = req.goal[2];
+
   {
-    std::scoped_lock lck(mutex_srv_cl_, mutex_position_command_);
-    if (sc_planner_goto_position_.exists()) {
-      auto success = sc_planner_goto_position_.call(req, res);
+    std::scoped_lock lck(mutex_srv_cl_);
 
-      group_goal_ = Eigen::Vector3d{req.goal[0], req.goal[1], req.goal[2]};
+    if (!sc_get_path_.exists()) {
+      ROS_WARN_STREAM("[RBLPlanner]: Service 'get_path' does not exist");
+      return false;
+    }
+    if (sc_get_path_.call(msg_path)) {
+      ROS_INFO_STREAM("[RBLPlanner]: Successfully called service to get a path"); 
+      res.success = msg_path.response.success;
+      res.message = msg_path.response.message;
 
-      control_allowed_ = true;
-      starting_time = ros::Time::now();
-      start_time_1 = ros::Time::now();
-      return true;
+      if (msg_path.response.success) {
+      ROS_INFO_STREAM("[RBLPlanner]: " << res.message.c_str());
+        dense_points_ = msg_path.response.path;
+
+        control_allowed_ = true;
+        starting_time    = ros::Time::now();
+        start_time_1     = ros::Time::now();
+
+        publishPath(msg_path.response.path);
+      }
+      else {
+      ROS_WARN_STREAM("[RBLPlanner]: " << res.message.c_str());
+        dense_points_.clear();
+      }
     }
   }
-  return false;
+  return true;
 }
 
 void RBLController::publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position) {
@@ -2686,6 +2717,34 @@ void RBLController::publish_connection_to_target(const Eigen::Vector3d& target_p
 
   marker.lifetime = ros::Duration(); // Infinite lifetime
   pub_viz_target_.publish(marker);
+}
+
+void RBLController::publishPath(const std::vector<geometry_msgs::Point>& path) {
+  if (path.empty()) {
+    ROS_WARN("publishPath: Received empty path.");
+    return;
+  }
+
+  nav_msgs::Path path_msg;
+  path_msg.header.stamp = ros::Time::now();
+  path_msg.header.frame_id = _control_frame_;
+
+  for (const auto& pt : path) {
+    geometry_msgs::PoseStamped pose;
+    pose.header.stamp = ros::Time::now();
+    pose.header.frame_id = _control_frame_;
+    pose.pose.position = pt;
+
+    // Optional: Set orientation to identity
+    pose.pose.orientation.x = 0.0;
+    pose.pose.orientation.y = 0.0;
+    pose.pose.orientation.z = 0.0;
+    pose.pose.orientation.w = 1.0;
+
+    path_msg.poses.push_back(pose);
+  }
+
+  pub_path_.publish(path_msg);
 }
 //}
 //}

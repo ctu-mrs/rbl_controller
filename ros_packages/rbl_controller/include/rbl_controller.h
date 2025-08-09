@@ -66,6 +66,7 @@
 #include <deque>
 #include <utility>
 #include <chrono>
+#include <mrs_octomap_planner/Path.h>
 namespace formation_control
 {
 
@@ -91,6 +92,7 @@ public:
   ros::Time                start_time_1;
   bool                     flag_stop = false;
   ros::ServiceClient       sc_set_velocity_;
+  ros::ServiceClient       sc_get_path_;
 
   std::mutex mutex_srv_cl_;
   ros::ServiceClient       sc_set_position_;
@@ -272,6 +274,7 @@ public:
   void publishNorms(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
   ros::Publisher                 pub_path_;
   void publishPath(const std::vector<Eigen::Vector3d>& path);
+  void publishPath(const std::vector<geometry_msgs::Point>& path);
   ros::Publisher                 pub_viz_target_;
   size_t                         last_marker_count = 0;
   std::vector<double>            c1_to_rviz = {0, 0, 0};

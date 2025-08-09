@@ -93,6 +93,8 @@
                    to="control_manager/reference" />
             <remap from="~goto_out"
                    to="control_manager/goto" />
+            <remap from="~get_path_out"
+                   to="minimal_octomap_planner/get_path"/>
             <!-- Service servers (note that the service names will also be remapped using the
             namespace as a prefix) -->
             <remap from="~control_activation_in"

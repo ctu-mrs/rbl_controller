@@ -67,6 +67,7 @@
 #include <utility>
 #include <chrono>
 #include <mrs_octomap_planner/Path.h>
+#include<optional>
 namespace formation_control
 {
 
@@ -372,6 +373,8 @@ public:
 Eigen::Vector3d get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha=0.8);
 bool is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions);
 void publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position);
+std::optional<std::vector<geometry_msgs::Point>> getPath(const Eigen::Vector3d& start,
+                                                         const Eigen::Vector3d& end);
 };
 
 

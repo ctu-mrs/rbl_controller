@@ -1,4 +1,4 @@
-planning_tree_resolution: 0.5
+planning_tree_resolution: 0.4
 distance_transform_distance: 20.0 # [m] from the UAV into all directions
 safe_obstacle_distance: 0.7 
 distance_penalty: 1.0 # coefficient for traveled distance from start in A* cost function

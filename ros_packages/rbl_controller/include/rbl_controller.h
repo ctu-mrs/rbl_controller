@@ -375,6 +375,9 @@ bool is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal
 void publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position);
 std::optional<std::vector<geometry_msgs::Point>> getPath(const Eigen::Vector3d& start,
                                                          const Eigen::Vector3d& end);
+std::vector<geometry_msgs::Point>
+getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
+                                   double                                   resolution=0.2);
 };
 
 

@@ -1504,7 +1504,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
     {
       std::scoped_lock lck(points_mutex_);
       if (ret) {
-        dense_points_ = ret.value();
+        dense_points_ = getInterpolatedPath(ret.value(), 1.0);
         points_copy   = dense_points_;
 
         publishPath(dense_points_);
@@ -2664,7 +2664,7 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
       res.message = "Path not found";
       return false;
     }
-    dense_points_ = ret.value();
+    dense_points_ = getInterpolatedPath(ret.value());
     group_goal_ = goto_goal;
 
     control_allowed_ = true;
@@ -2778,6 +2778,35 @@ std::optional<std::vector<geometry_msgs::Point>> RBLController::getPath(const Ei
     ROS_WARN_STREAM("[RBLPlanner]: Failed to call 'get_path' service");
     return std::nullopt;
   }
+}
+
+std::vector<geometry_msgs::Point>
+RBLController::getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
+                                   double                                   resolution)
+{
+  std::vector<geometry_msgs::Point> interpolated_pts;
+  // Interpolate between each consecutive pair
+  for (size_t i = 0; i < input_points.size() - 1; ++i) {
+    const geometry_msgs::Point& p1 = input_points[i];
+    const geometry_msgs::Point& p2 = input_points[i + 1];
+
+    double dx = p2.x - p1.x;
+    double dy = p2.y - p1.y;
+    double dz = p2.z - p1.z;
+
+    double dist  = std::sqrt(dx * dx + dy * dy + dz * dz);
+    int    steps = std::max(1, static_cast<int>(dist / resolution));
+
+    for (int j = 0; j <= steps; ++j) {
+      double               t = static_cast<double>(j) / steps;
+      geometry_msgs::Point interp;
+      interp.x = p1.x + t * dx;
+      interp.y = p1.y + t * dy;
+      interp.z = p1.z + t * dz;
+      interpolated_pts.push_back(interp);
+    }
+  }
+  return interpolated_pts;
 }
 //}
 //}

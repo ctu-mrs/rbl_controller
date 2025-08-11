@@ -1480,27 +1480,27 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   if (dist_uav_to_end <= dist_path / 2.0) {
     ROS_INFO_STREAM("[RBLController]: Near the end of old path, replanning");
 
-    // std::vector<Eigen::Vector3d> neighbors;
-    // {
-    //   std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
+    std::vector<Eigen::Vector3d> neighbors;
+    {
+      std::scoped_lock lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
 
-    //   for (int j = 0; j < n_drones_; ++j) {
-    //     if (flag_3D) {
-    //       neighbors.push_back(Eigen::Vector3d{ uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2] });
-    //     }
-    //     else {
-    //       neighbors.push_back(Eigen::Vector3d{ uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_ });
-    //     }
-    //   }
-    // }
+      for (int j = 0; j < n_drones_; ++j) {
+        if (flag_3D) {
+          neighbors.push_back(Eigen::Vector3d{ uav_neighbors_[j][0], uav_neighbors_[j][1], uav_neighbors_[j][2] });
+        }
+        else {
+          neighbors.push_back(Eigen::Vector3d{ uav_neighbors_[j][0], uav_neighbors_[j][1], refZ_ });
+        }
+      }
+    }
 
-    // // the desired goal is either the group goal (when agent is closest to the group goal)
-    // // Or the position of the neighbor with the highest value
-    // auto desired_goal = get_desired_target(uav_position, group_goal, neighbors, 0.5);
-    // ROS_INFO("[RBLPlanner]: Setting goal to the desired target");
-    // publish_connection_to_target(desired_goal, uav_position);
+    // the desired goal is either the group goal (when agent is closest to the group goal)
+    // Or the position of the neighbor with the highest value
+    auto desired_goal = get_desired_target(uav_position, group_goal, neighbors, 0.5);
+    ROS_INFO("[RBLPlanner]: Setting goal to the desired target");
+    publish_connection_to_target(desired_goal, uav_position);
 
-    auto ret = getPath(uav_position, group_goal);
+    auto ret = getPath(uav_position, desired_goal);
     {
       std::scoped_lock lck(points_mutex_);
       if (ret) {
@@ -2692,10 +2692,10 @@ void RBLController::publish_connection_to_target(const Eigen::Vector3d& target_p
   marker.scale.z = 0.2; // is not zero, it specifies the head length.
 
   // Set marker color
-  marker.color.r = 1.0f; // Red
-  marker.color.g = 0.0f;
-  marker.color.b = 0.0f;
-  marker.color.a = 0.8f; // Opaque
+  marker.color.r = 0.3f; // Red
+  marker.color.g = 0.5f;
+  marker.color.b = 0.8f;
+  marker.color.a = 0.6f; // Opaque
 
   // Set the end point of the arrow (vector direction)
   marker.pose.orientation.w = 1;

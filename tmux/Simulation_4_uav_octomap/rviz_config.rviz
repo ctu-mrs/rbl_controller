@@ -686,9 +686,7 @@ Visualization Manager:
           Marker Topic: /uav1/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -814,9 +812,7 @@ Visualization Manager:
           Marker Topic: /uav2/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -942,9 +938,7 @@ Visualization Manager:
           Marker Topic: /uav3/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -1070,9 +1064,7 @@ Visualization Manager:
           Marker Topic: /uav4/trajectory_generation/markers/final
           Name: final
           Namespaces:
-            markers/final_lines: true
-            markers/final_points: true
-            markers/final_triangles: true
+            {}
           Queue Size: 100
           Value: true
         - Alpha: 1
@@ -1093,7 +1085,7 @@ Visualization Manager:
       Marker Topic: /uav2/rbl_controller/viz/target
       Name: Marker
       Namespaces:
-        target: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -1101,7 +1093,7 @@ Visualization Manager:
       Marker Topic: /uav3/rbl_controller/viz/target
       Name: Marker
       Namespaces:
-        target: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -1117,8 +1109,17 @@ Visualization Manager:
       Marker Topic: /uav1/rbl_controller/viz/target
       Name: Marker
       Namespaces:
-        target: true
+        {}
       Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Class: rviz/Axes
+      Enabled: true
+      Length: 1
+      Name: Axes
+      Radius: 0.10000000149011612
+      Reference Frame: <Fixed Frame>
+      Show Trail: false
       Value: true
   Enabled: true
   Global Options:

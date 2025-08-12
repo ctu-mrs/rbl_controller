@@ -23,6 +23,7 @@ cwvd_rob: 0.90
 sim: true
 refZ: 0.0
 max_obstacle_integration_dist: 9.0
+connectivity_flag: false
 
 Adj_matrix_uav1: [0,0]
 Adj_matrix_uav2: [0,0]

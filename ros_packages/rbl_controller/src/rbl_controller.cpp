@@ -173,6 +173,7 @@ void RBLController::onInit() {
   sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
   sc_planner_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("planner_goto_out");
   sc_get_path_ = nh.serviceClient<mrs_octomap_planner::Path>("get_path_out");
+  // sc_traj_gen_ = nh.serviceClient<mrs_octomap_planner::Path>("get_path_out");
 
   // initialize publishers
   pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
@@ -1465,20 +1466,15 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   auto points_copy  = mrs_lib::get_mutexed(points_mutex_, dense_points_);
   auto uav_position = mrs_lib::get_mutexed(mutex_position_command_, uav_position_);
   auto group_goal   = mrs_lib::get_mutexed(mutex_position_command_, group_goal_);
+  auto centroid     = mrs_lib::get_mutexed(mutex_centroid_, centroid_);
 
   if (points_copy.size() < 2) {
     ROS_WARN_STREAM("[RBLController]: Can not select a new goal, path length = " << points_copy.size());
     return;
   }
 
-  auto dist_path = (Eigen::Vector3d{ points_copy.front().x, points_copy.front().y, points_copy.front().z } -
-                    Eigen::Vector3d{ points_copy.back().x, points_copy.back().y, points_copy.back().z })
-                       .norm();
-  auto dist_uav_to_end =
-      (uav_position - Eigen::Vector3d{ points_copy.back().x, points_copy.back().y, points_copy.back().z }).norm();
-
-  if (dist_uav_to_end <= dist_path / 2.0) {
-    ROS_INFO_STREAM("[RBLController]: Near the end of old path, replanning");
+if (isReplanNeeded(uav_position, points_copy, centroid)) {
+  ROS_INFO_STREAM("[RBLController]: Replanning");
 
     std::vector<Eigen::Vector3d> neighbors;
     {
@@ -1504,7 +1500,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
     {
       std::scoped_lock lck(points_mutex_);
       if (ret) {
-        dense_points_ = getInterpolatedPath(ret.value(), 1.0);
+        dense_points_ = getInterpolatedPath(ret.value(), 0.2);
         points_copy   = dense_points_;
 
         publishPath(dense_points_);
@@ -1527,7 +1523,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   }
 
   // Step 2: Walk forward along the path and accumulate distance
-  const double target_distance      = 1.5;
+  const double target_distance      = radius;
   double       accumulated_distance = 0.0;
   size_t       best_idx             = start_idx;
 
@@ -2313,8 +2309,9 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     current_position[1] = robot_pos[1];
     current_position[2] = robot_pos[2];
 
-    RBLController::apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, d5, d6, d7, destination, c1_no_rotation);
+    apply_rules(beta, c1_no_conn, c2, current_position, dt, beta_min, betaD, goal, d1, th, d2, d3, d4, d5, d6, d7, destination, c1_no_rotation);
 
+    mrs_lib::set_mutexed(mutex_centroid_, Eigen::Vector3d{ c1_no_conn[0], c1_no_conn[1], c1_no_conn[2] }, centroid_);
     c1_to_rviz = c1_no_conn;
 
     if (use_livox_tilted) {
@@ -2622,11 +2619,11 @@ Eigen::Vector3d RBLController::get_desired_target(const Eigen::Vector3d& uav_pos
     double dist_to_uav = std::max((position - uav_position).norm(), 3.1);
 
     double value = alpha * std::log((1.0 / dist_to_goal) + 1) + (1 - alpha) * std::log(dist_to_uav - 3);
-    ROS_INFO_STREAM("[RBLPlanner]: Value: " << value << ", for position: " << position(0) << ", " << position(1) << ", " << position(2));
+    ROS_INFO_STREAM("[RBLController]: Value: " << value << ", for position: " << position(0) << ", " << position(1) << ", " << position(2));
     if (value >= max_value) {
       max_value = value;
       target = position;
-      ROS_INFO_STREAM("[RBLPlanner]: Target set to position: " << target(0) << ", " << target(1) << ", " << target(2));
+      ROS_INFO_STREAM("[RBLController]: Target set to position: " << target(0) << ", " << target(1) << ", " << target(2));
     }
   }
 
@@ -2664,7 +2661,7 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
       res.message = "Path not found";
       return false;
     }
-    dense_points_ = getInterpolatedPath(ret.value());
+    dense_points_ = getInterpolatedPath(ret.value(), 0.2);
     group_goal_ = goto_goal;
 
     control_allowed_ = true;
@@ -2760,22 +2757,22 @@ std::optional<std::vector<geometry_msgs::Point>> RBLController::getPath(const Ei
   msg_path.request.end.z = end(2);
 
   if (!sc_get_path_.exists()) {
-    ROS_WARN_STREAM("[RBLPlanner]: Service 'get_path' does not exist");
+    ROS_WARN_STREAM("[RBLController]: Service 'get_path' does not exist");
     return std::nullopt;
   }
 
   if (sc_get_path_.call(msg_path)) {
-    ROS_INFO_STREAM("[RBLPlanner]: Successfully called service to get a path");
+    ROS_INFO_STREAM("[RBLController]: Successfully called service to get a path");
 
     if (!msg_path.response.success) {
-      ROS_WARN_STREAM("[RBLPlanner]: " << msg_path.response.message.c_str());
+      ROS_WARN_STREAM("[RBLController]: " << msg_path.response.message.c_str());
       return std::nullopt;
     }
-    ROS_INFO_STREAM("[RBLPlanner]: " << msg_path.response.message.c_str());
+    ROS_INFO_STREAM("[RBLController]: " << msg_path.response.message.c_str());
     return std::make_optional<std::vector<geometry_msgs::Point>>(msg_path.response.path);
   }
   else {
-    ROS_WARN_STREAM("[RBLPlanner]: Failed to call 'get_path' service");
+    ROS_WARN_STREAM("[RBLController]: Failed to call 'get_path' service");
     return std::nullopt;
   }
 }
@@ -2807,6 +2804,27 @@ RBLController::getInterpolatedPath(const std::vector<geometry_msgs::Point>& inpu
     }
   }
   return interpolated_pts;
+}
+
+bool RBLController::isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid) {
+
+  if ((centroid - uav_position).norm() < encumbrance) {
+    ROS_INFO_STREAM("[RBLController]: Dist b/w UAV and centroid is less than encumberance, replanning");
+    return true;
+  }
+
+  auto dist_path = (Eigen::Vector3d{ path.front().x, path.front().y, path.front().z } -
+                    Eigen::Vector3d{ path.back().x, path.back().y, path.back().z })
+                       .norm();
+  auto dist_uav_to_end =
+      (uav_position - Eigen::Vector3d{ path.back().x, path.back().y, path.back().z }).norm();
+
+  if (dist_uav_to_end <= dist_path / 2.0) {
+    ROS_INFO_STREAM("[RBLController]: UAV already travelled more than half of the path, replanning");
+    return true;
+  }
+
+  return false;
 }
 //}
 //}

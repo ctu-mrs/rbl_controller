@@ -66,8 +66,8 @@
 #include <deque>
 #include <utility>
 #include <chrono>
-#include "rbl_controller/ActivateParams.h"
-
+#include <mrs_octomap_planner/Path.h>
+#include<optional>
 namespace formation_control
 {
 
@@ -93,7 +93,11 @@ public:
   ros::Time                start_time_1;
   bool                     flag_stop = false;
   ros::ServiceClient       sc_set_velocity_;
+  ros::ServiceClient       sc_get_path_;
+
+  std::mutex mutex_srv_cl_;
   ros::ServiceClient       sc_set_position_;
+
   ros::Timer               timer_set_reference_;
   ros::Timer               timer_set_active_wp_;
   ros::Timer               timer_pub_;
@@ -119,11 +123,17 @@ public:
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
 
+
+  ros::ServiceServer service_goto_;
+  bool goalServiceCallback(mrs_msgs::Vec4::Request &req, mrs_msgs::Vec4::Response &res);
+  Eigen::Vector3d group_goal_{0, 0, 0};
+
   // trigger goto service
   ros::ServiceServer service_fly_to_start_;
   bool               fly_to_start_called_ = false;
   bool               flyToStartServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   ros::ServiceClient sc_goto_position_;
+  ros::ServiceClient sc_planner_goto_position_;
   Eigen::Vector3d    _required_initial_position_;
   bool               is_at_initial_position_ = true;
   double             _dist_to_start_limit_;
@@ -134,6 +144,7 @@ public:
   ros::Publisher pub_destination_;
   ros::Publisher pub_position_;
   ros::Publisher pub_centroid_;
+  ros::Publisher pub_active_wp_;
   void           publishDestination();
   void           publishPosition();
   void           publishCentroid();
@@ -269,11 +280,16 @@ public:
   void publishNorms(const std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>>& planes);
   ros::Publisher                 pub_path_;
   void publishPath(const std::vector<Eigen::Vector3d>& path);
+  void publishPath(const std::vector<geometry_msgs::Point>& path);
+  ros::Publisher                 pub_viz_target_;
   size_t                         last_marker_count = 0;
   std::vector<double>            c1_to_rviz = {0, 0, 0};
   bool                           use_bonxai_mapping;
   // bool                           use_voxel;
   double                         map_resolution;
+  std::mutex mutex_centroid_;
+  Eigen::Vector3d centroid_;
+
   Eigen::Vector3d closest_point_from_voxel(Eigen::Vector3d robot_pos, Eigen::Vector3d voxel_center, double map_resolution);
   std::vector<Eigen::Vector3d> find_closest_points_using_voxel(const Eigen::Vector3d                        &robot_pos,
                                                               const std::vector<Eigen::Vector3d>           &points,
@@ -361,6 +377,16 @@ public:
 
   // transformer
   std::shared_ptr<mrs_lib::Transformer> transformer_;
+
+Eigen::Vector3d get_desired_target(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions, const double alpha=0.8);
+bool is_closest(const Eigen::Vector3d& uav_position, const Eigen::Vector3d& goal_position, const std::vector<Eigen::Vector3d>& neighbor_positions);
+void publish_connection_to_target(const Eigen::Vector3d& target_point, const Eigen::Vector3d& uav_position);
+std::optional<std::vector<geometry_msgs::Point>> getPath(const Eigen::Vector3d& start,
+                                                         const Eigen::Vector3d& end);
+std::vector<geometry_msgs::Point>
+getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
+                                   double                                   resolution=0.2);
+bool isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid);
 };
 
 

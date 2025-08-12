@@ -282,6 +282,9 @@ public:
   bool                           use_bonxai_mapping;
   // bool                           use_voxel;
   double                         map_resolution;
+  std::mutex mutex_centroid_;
+  Eigen::Vector3d centroid_;
+
   Eigen::Vector3d closest_point_from_voxel(Eigen::Vector3d robot_pos, Eigen::Vector3d voxel_center, double map_resolution);
   std::vector<Eigen::Vector3d> find_closest_points_using_voxel(const Eigen::Vector3d                        &robot_pos,
                                                               const std::vector<Eigen::Vector3d>           &points,
@@ -378,6 +381,7 @@ std::optional<std::vector<geometry_msgs::Point>> getPath(const Eigen::Vector3d& 
 std::vector<geometry_msgs::Point>
 getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
                                    double                                   resolution=0.2);
+bool isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid);
 };
 
 

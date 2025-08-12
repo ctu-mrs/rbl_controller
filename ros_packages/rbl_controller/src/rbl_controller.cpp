@@ -1528,7 +1528,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   }
 
   // Step 2: Walk forward along the path and accumulate distance
-  const double target_distance      = 3.5;
+  const double target_distance      = radius;
   double       accumulated_distance = 0.0;
   size_t       best_idx             = start_idx;
 
@@ -2665,7 +2665,7 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
       res.message = "Path not found";
       return false;
     }
-    dense_points_ = getInterpolatedPath(ret.value());
+    dense_points_ = getInterpolatedPath(ret.value(), 0.2);
     group_goal_ = goto_goal;
 
     control_allowed_ = true;

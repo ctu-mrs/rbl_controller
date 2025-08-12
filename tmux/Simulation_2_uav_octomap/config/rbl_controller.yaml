@@ -16,6 +16,7 @@ noisy_angle: 0.0 #0.3
 threshold: 0.8 
 window_length: 1 #10
 bias_error: 0.0 #0.5
+connectivity_flag: false #not used for now
 cwvd_obs: 0.9
 cwvd_rob: 0.9
 sim: true
@@ -34,8 +35,8 @@ max_distance_to_initial_position: 2.0
 min_z: -100.0  
 max_z: 100.0
 
-flag_3D: true
-use_z_rule: true
+flag_3D: false
+use_z_rule: false
 
 use_livox_tilted: true
 rotate_recieved_pcl: false #difference between simulation and livox

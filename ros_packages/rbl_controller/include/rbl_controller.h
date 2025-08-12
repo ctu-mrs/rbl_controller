@@ -115,11 +115,13 @@ public:
   void goalUpdateLoop(const ros::TimerEvent&);
   // trigger service
   ros::ServiceServer service_activate_control_;
+  ros::ServiceServer service_activate_params_control_;
   ros::ServiceServer service_deactivate_control_;
   ros::ServiceServer service_save_to_csv_;
   bool               control_allowed_ = false;
   bool               activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
 
 
   ros::ServiceServer service_goto_;
@@ -235,6 +237,7 @@ public:
   bool                                   flag_3D;
   bool                                   use_z_rule;
   bool                                   simulation_;
+  bool                                   connectivity_flag;
   std::mutex                             mutex_uav_odoms_;
   std::mutex                             mutex_uav_uvdar_;
   std::mutex                             mutex_obstacles_;
@@ -259,9 +262,11 @@ public:
   Eigen::Vector3d              livox_translation;
 
   ros::Subscriber                 sub_pointCloud2_;
+  ros::Subscriber                 sub_neighbors_;
   pcl::PointCloud<pcl::PointXYZ>  cloud;
   pcl::PointCloud<pcl::PointXYZ>  processed_cloud;
   pcl::PointCloud<pcl::PointXYZ>  downsampled_cloud;
+  void neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl);
   void pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_cloud2);
   ros::Publisher                 pub_pointCloud_; //for rviz
   void publishPcl();

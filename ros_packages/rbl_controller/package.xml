@@ -24,6 +24,7 @@
   <depend>pcl_conversions</depend>
   <depend>pcl_msgs</depend>
   <depend>mrs_octomap_planner</depend>
+  <depend>message_runtime</depend>
  
 
   <export>

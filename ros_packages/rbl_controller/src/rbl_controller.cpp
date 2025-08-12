@@ -173,6 +173,7 @@ void RBLController::onInit() {
   sc_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("goto_out");
   sc_planner_goto_position_ = nh.serviceClient<mrs_msgs::Vec4>("planner_goto_out");
   sc_get_path_ = nh.serviceClient<mrs_octomap_planner::Path>("get_path_out");
+  // sc_traj_gen_ = nh.serviceClient<mrs_octomap_planner::Path>("get_path_out");
 
   // initialize publishers
   pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
@@ -1504,7 +1505,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
     {
       std::scoped_lock lck(points_mutex_);
       if (ret) {
-        dense_points_ = getInterpolatedPath(ret.value(), 1.0);
+        dense_points_ = getInterpolatedPath(ret.value(), 0.2);
         points_copy   = dense_points_;
 
         publishPath(dense_points_);
@@ -1527,7 +1528,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   }
 
   // Step 2: Walk forward along the path and accumulate distance
-  const double target_distance      = 1.5;
+  const double target_distance      = 3.5;
   double       accumulated_distance = 0.0;
   size_t       best_idx             = start_idx;
 

@@ -40,7 +40,7 @@
 #include <mrs_lib/transformer.h>
 
 #include <mrs_msgs/Float64Stamped.h>
-
+#include "rbl_controller/ActivateParams.h"
 
 
 // #include <process_pointcloud.h>
@@ -121,7 +121,7 @@ public:
   bool               control_allowed_ = false;
   bool               activationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
   bool               deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
-  // bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
+  bool               activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req, rbl_controller::ActivateParams::Response &res);
 
 
   ros::ServiceServer service_goto_;

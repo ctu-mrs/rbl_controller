@@ -166,7 +166,7 @@ void RBLController::onInit() {
   // initialize service servers
   service_activate_control_   = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
   service_deactivate_control_ = nh.advertiseService("control_deactivation_in", &RBLController::deactivationServiceCallback, this);
-  // service_activate_params_control_   = nh.advertiseService("control_activation_params_in", &RBLController::activationParamsServiceCallback, this);
+  service_activate_params_control_   = nh.advertiseService("control_activation_params_in", &RBLController::activationParamsServiceCallback, this);
   service_fly_to_start_       = nh.advertiseService("fly_to_start_in", &RBLController::flyToStartServiceCallback, this);
   service_save_to_csv_        = nh.advertiseService("save_to_csv_in", &RBLController::saveToCsvServiceCallback, this);
   service_goto_ = nh.advertiseService("goto_in", &RBLController::goalServiceCallback, this);
@@ -2556,45 +2556,45 @@ bool RBLController::activationServiceCallback(std_srvs::Trigger::Request &req, s
 //}
 
 
-// bool RBLController::activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req,
-//                                rbl_controller::ActivateParams::Response &res)
-// {
+bool RBLController::activationParamsServiceCallback(rbl_controller::ActivateParams::Request &req,
+                               rbl_controller::ActivateParams::Response &res)
+{
 
-//     // Your logic
-//     // ROS_INFO("Received: %f %f %f %f %f", a, b, c, d, e);
+    // Your logic
+    // ROS_INFO("Received: %f %f %f %f %f", a, b, c, d, e);
 
-//     res.success = true;
-//     res.message = "Parameters received and processed.";
+    res.success = true;
+    res.message = "Parameters received and processed.";
     
-//     destination[0] = req.x;
-//     destination[1] = req.y;
-//     destination[2] = req.z;
+    destination[0] = req.x;
+    destination[1] = req.y;
+    destination[2] = req.z;
 
-//     goal[0]= req.x;
-//     goal[1]= req.y;
-//     goal[2]= req.z;
+    goal[0]= req.x;
+    goal[1]= req.y;
+    goal[2]= req.z;
 
-//     betaD = req.betaD;
-//     beta_min = req.beta_min;
-//     radius = req.radius;
-//     encumbrance = req.encumbrance;
-//     size_neighbors1 = req.encumbrance;
-//     connectivity_flag = req.connectivity;
-//     cwvd_rob = req.cwvd;
-//     cwvd_obs = req.cwvd;
+    betaD = req.betaD;
+    beta_min = req.beta_min;
+    radius = req.radius;
+    encumbrance = req.encumbrance;
+    size_neighbors1 = req.encumbrance;
+    connectivity_flag = req.connectivity;
+    cwvd_rob = req.cwvd;
+    cwvd_obs = req.cwvd;
     
 
-//     control_allowed_ = true;
-//    // if (control_allowed_) {
-//     //   res.message = "Control was already allowed.";
-//     //   ROS_WARN("[RBLController]: %s", res.message.c_str());
-//     // } else {
-//     //   res.message      = "Control allowed.";
-//     //   ROS_INFO("[RBLController]: %s", res.message.c_str());
-//     // }
+    control_allowed_ = true;
+   // if (control_allowed_) {
+    //   res.message = "Control was already allowed.";
+    //   ROS_WARN("[RBLController]: %s", res.message.c_str());
+    // } else {
+    //   res.message      = "Control allowed.";
+    //   ROS_INFO("[RBLController]: %s", res.message.c_str());
+    // }
 
-//     return true;
-// }
+    return true;
+}
 
 /* deactivationServiceCallback() //{ */
 bool RBLController::deactivationServiceCallback(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res) {

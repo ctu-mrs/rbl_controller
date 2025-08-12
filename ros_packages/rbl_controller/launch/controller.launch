@@ -99,6 +99,8 @@
             namespace as a prefix) -->
             <remap from="~control_activation_in"
                    to="~activation" />
+            <remap from="~control_activation_params_in"  
+                   to="~activation_params" />
             <remap from="~control_deactivation_in"
                    to="~deactivation" />
             <remap from="~fly_to_start_in"

@@ -1,6 +1,5 @@
 #include <rbl_controller.h>
 
-
 namespace formation_control
 {
 // Get the start time

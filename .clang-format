@@ -1,0 +1,73 @@
+Standard: c++20
+BasedOnStyle: Google
+UseTab: Never
+AccessModifierOffset: -2
+ColumnLimit: 120
+MaxEmptyLinesToKeep: 2
+AlignAfterOpenBracket: Align
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+BreakTemplateDeclarations: Yes
+AlignConsecutiveAssignments: true
+SpaceBeforeParens: ControlStatements
+AlignOperands: Align
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: true
+  AtStartOfFile: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+SortIncludes: true
+NamespaceIndentation: All
+AlignConsecutiveDeclarations: true
+IncludeBlocks: Merge
+BinPackArguments: false
+BinPackParameters: AlwaysOnePerLine
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
+InsertTrailingCommas: Wrapped
+ConstructorInitializerIndentWidth: 2
+AlignEscapedNewlinesLeft: false
+AlignTrailingComments: true
+AlwaysBreakBeforeMultilineStrings: true
+BreakBeforeTernaryOperators: false
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerBinding: false
+PointerBindsToType: true
+ExperimentalAutoDetectBinPacking: false
+IndentCaseLabels: true
+ObjCSpaceBeforeProtocolList: true
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 60
+PenaltyBreakString: 1
+PenaltyBreakFirstLessLess: 1000
+PenaltyExcessCharacter: 1000
+PenaltyReturnTypeOnItsOwnLine: 90
+SpacesBeforeTrailingComments: 2
+Cpp11BracedListStyle: false
+IndentWidth: 2
+TabWidth: 2
+IndentFunctionDeclarationAfterType: false
+SpacesInParentheses: false
+SpacesInAngles: false
+SpaceInEmptyParentheses: false
+SpacesInCStyleCastParentheses: false
+SpaceAfterControlStatementKeyword: true
+SpaceBeforeAssignmentOperators: true
+ContinuationIndentWidth: 4
+SpaceAfterCStyleCast: false

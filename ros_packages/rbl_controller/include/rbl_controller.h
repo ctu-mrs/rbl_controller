@@ -159,11 +159,13 @@ public:
   void                         waypointsCallback(const geometry_msgs::PoseArray::ConstPtr& msg);
 
   void markerCallback(const visualization_msgs::MarkerArray::ConstPtr& msg);
-
+  void callbackPoses(const mrs_msgs::PoseWithCovarianceArrayStamped::ConstPtr msg);
   void                         callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_pose);
   /* UVDAR */
   std::vector<ros::Subscriber> sub_uvdar_filtered_poses_;
   std::vector<ros::Subscriber> other_uav_odom_subscribers_;
+  /* REFLECTIVE MARKERS */
+  mrs_lib::SubscribeHandler<mrs_msgs::PoseWithCovarianceArrayStamped>															sh_uav_position_estimation_;
 
   // | --------------------------- timer callbacks ----------------------------- |
 
@@ -202,6 +204,9 @@ public:
   std::vector<double>                    size_neighbors_and_obstacles;
   std::vector<double>                    size_neighbors;
   std::vector<double>                    size_obstacles;
+
+  std::vector<std::pair<ros::Time, Eigen::Vector3d>>																				neighbor_pos_ref_marker;
+
   double                                 size_neighbors1;
   double                                 size_obstacles1;
   double                                 encumbrance;
@@ -387,6 +392,7 @@ std::vector<geometry_msgs::Point>
 getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
                                    double                                   resolution=0.2);
 bool isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid);
+void timeoutGeneric(const std::string& topic, const ros::Time& last_msg);
 };
 
 

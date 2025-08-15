@@ -149,6 +149,7 @@ void RBLController::onInit() {
   shopts.transport_hints    = ros::TransportHints().tcpNoDelay();
 
   sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
+  sh_uav_position_estimation_ = mrs_lib::SubscribeHandler<mrs_msgs::PoseWithCovarianceArrayStamped>(shopts, "estimated_pos", ros::Duration(1.0), &RBLController::timeoutGeneric, this, &RBLController::callbackPoses, this);
   // clusters_sub_.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_", 1, &RBLController::clustersCallback, this));
 
   // clusters_sub_1.push_back(nh.subscribe<visualization_msgs::MarkerArray>("/" + _uav_name_ + "/rplidar/clusters_1", 1, &RBLController::clustersCallback1, this));
@@ -2158,6 +2159,23 @@ void RBLController::markerCallback(const visualization_msgs::MarkerArray::ConstP
     }
 }
 
+
+void RBLController::callbackPoses(const mrs_msgs::PoseWithCovarianceArrayStamped::ConstPtr msg) {
+
+	/* uav_positions.clear(); */
+  ros::Time now = ros::Time::now();
+  ros::Time pose_time = msg->header.stamp;
+	for (const auto& pose : msg->poses) {
+		double x = pose.pose.position.x;
+		double y = pose.pose.position.y;
+		double z = pose.pose.position.z;
+
+    neighbor_pos_ref_marker.emplace_back(pose_time ,Eigen::Vector3d(x, y, z));
+	}
+  neighbor_pos_ref_marker.erase(std::remove_if(neighbor_pos_ref_marker.begin(), neighbor_pos_ref_marker.end(),[&](const auto& entry) {
+  return (now - entry.first).toSec() > 0.5;}),neighbor_pos_ref_marker.end());
+}
+
 /*RBLController::callbackNeighborsUsingUVDAR() //{ */
 void RBLController::callbackNeighborsUsingUVDAR(const mrs_msgs::PoseWithCovarianceArrayStampedConstPtr &array_poses) {
 
@@ -2238,8 +2256,13 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
   {
     std::scoped_lock                       lock(mutex_uav_odoms_, mutex_position_command_, mutex_uav_uvdar_);
     auto                                   start = std::chrono::steady_clock::now();
-    // std::vector<Eigen::Vector3d> neighbors;
+    std::vector<Eigen::Vector3d> neighbors;
     std::vector<Eigen::Vector3d> neighbors_and_obstacles;
+
+    for (size_t i = 0; i < neighbor_pos_ref_marker.size(); ++i) {
+      neighbors.push_back(neighbor_pos_ref_marker[i].second);
+    }
+
     if (flag_3D){
       robot_pos = {uav_position_[0], uav_position_[1], uav_position_[2]};
     } else {
@@ -2883,6 +2906,11 @@ bool RBLController::isReplanNeeded(const Eigen::Vector3d& uav_position, const st
 
   return false;
 }
+
+void RBLController::timeoutGeneric(const std::string& topic, const ros::Time& last_msg) {
+  ROS_WARN_THROTTLE(1.0, "[FilterReflectiveUavs]: not receiving '%s' for %.3f s", topic.c_str(), (ros::Time::now() - last_msg).toSec());
+}
+
 //}
 //}
 

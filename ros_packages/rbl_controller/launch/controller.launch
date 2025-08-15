@@ -87,6 +87,8 @@
             <remap from="~tracker_cmd_in"
                    to="control_manager/tracker_cmd" />
 
+            <remap from="~estimated_pos" to="reflective_marker_detection/estimates"/>    
+
             <!-- Service clients (note that the service names will also be remapped using the
             namespace as a prefix) -->
             <remap from="~ref_pos_out"

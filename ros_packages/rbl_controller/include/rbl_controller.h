@@ -38,6 +38,7 @@
 #include <mrs_lib/msg_extractor.h>
 #include <mrs_lib/geometry/misc.h>
 #include <mrs_lib/transformer.h>
+#include <mrs_lib/scope_timer.h>
 
 #include <mrs_msgs/Float64Stamped.h>
 #include "rbl_controller/ActivateParams.h"
@@ -52,7 +53,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 
 #include <filesystem>
-#include <omp.h>
+// #include <omp.h>
 
 // helper libraries
 #include <string>
@@ -291,20 +292,20 @@ public:
   Eigen::Vector3d centroid_;
 
   Eigen::Vector3d closest_point_from_voxel(Eigen::Vector3d robot_pos, Eigen::Vector3d voxel_center, double map_resolution);
-  std::vector<Eigen::Vector3d> find_closest_points_using_voxel(const Eigen::Vector3d                        &robot_pos,
-                                                              const std::vector<Eigen::Vector3d>           &points,
-                                                              const std::vector<Eigen::Vector3d>           &neighbors,
-                                                              pcl::PointCloud<pcl::PointXYZ>  cloud);
-  std::vector<Eigen::Vector3d> find_closest_points_using_voxel_fast(const Eigen::Vector3d                        &robot_pos,
-                                                              const std::vector<Eigen::Vector3d>           &points,
-                                                              const std::vector<Eigen::Vector3d>            &boundary_cell_A_points,
-                                                              const std::vector<Eigen::Vector3d>           &neighbors,
-                                                              pcl::PointCloud<pcl::PointXYZ>  cloud);
+  // std::vector<Eigen::Vector3d> find_closest_points_using_voxel(const Eigen::Vector3d                        &robot_pos,
+  //                                                             const std::vector<Eigen::Vector3d>           &points,
+  //                                                             const std::vector<Eigen::Vector3d>           &neighbors,
+  //                                                             pcl::PointCloud<pcl::PointXYZ>  cloud);
+  // std::vector<Eigen::Vector3d> find_closest_points_using_voxel_fast(const Eigen::Vector3d                        &robot_pos,
+  //                                                             const std::vector<Eigen::Vector3d>           &points,
+  //                                                             const std::vector<Eigen::Vector3d>            &boundary_cell_A_points,
+  //                                                             const std::vector<Eigen::Vector3d>           &neighbors,
+  //                                                             pcl::PointCloud<pcl::PointXYZ>  cloud);
   std::vector<Eigen::Vector3d> find_closest_points_using_voxel_faster(const Eigen::Vector3d                        &robot_pos,
                                                               const std::vector<Eigen::Vector3d>           &points,
                                                               const std::vector<Eigen::Vector3d>            &boundary_cell_A_points,
                                                               const std::vector<Eigen::Vector3d>           &neighbors,
-                                                              pcl::PointCloud<pcl::PointXYZ>  cloud);
+                                                              const pcl::PointCloud<pcl::PointXYZ>  &cloud);
 
   Eigen::Matrix3d Rx(double angle);
   Eigen::Matrix3d Ry(double angle);

@@ -9,6 +9,7 @@
 #include <mrs_lib/subscribe_handler.h>
 #include <mrs_lib/transformer.h>
 #include <mrs_msgs/Float64Stamped.h>
+#include <mrs_msgs/PoseWithCovarianceArrayStamped.h>
 #include <mrs_msgs/Reference.h>
 #include <mrs_msgs/ReferenceStamped.h>
 #include <mrs_msgs/ReferenceStampedSrv.h>
@@ -27,7 +28,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <mrs_msgs/PoseWithCovarianceArrayStamped.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Trigger.h>
 #include <stdio.h>
@@ -67,25 +67,23 @@ public:
   pcl::PointCloud<pcl::PointXYZ> cloud_;
   pcl::PointCloud<pcl::PointXYZ> processed_cloud_;
 
-  bool            _only_2d_ = false;
-  double          _z_ref_;
-  double          _z_min_;
-  double          _z_max_;
-  int             _num_of_agents_;
-  std::string     _agent_name_;
-  std::string     _frame_;
-  double          _timeout_odom_;
-  bool            _use_livox_;
-  double          _livox_tilt_deg_;
-  double          _livox_fov_;
-  Eigen::Vector3d _livox_translation_;
+  bool        _only_2d_ = false;
+  double      _z_ref_;
+  double      _z_min_;
+  double      _z_max_;
+  int         _num_of_agents_;
+  std::string _agent_name_;
+  std::string _frame_;
+  double      _timeout_odom_;
+  bool        _use_livox_;
+  double      _livox_tilt_deg_;
+  double      _livox_fov_;
 
   std::mutex                        mtx_rbl_;
   std::vector<geometry_msgs::Point> path_;
   Eigen::Vector3d                   target_{ 0, 0, 0 };
   Eigen::Vector3d                   group_goal_{ 0, 0, 0 };
   Eigen::Vector3d                   centroid_;
-  double                            radius_sense_;
   // RBL params
   double _step_size_;
   double _radius_;
@@ -181,12 +179,11 @@ public:
   mrs_lib::SubscribeHandler sh_pcl_;
   void                      cbSubPCL(const sensor_msgs::PointCloud2& pcl_cloud2);
 
-  std::vector<Eigen::Vector3d> pointCloudToEigenVector(const pcl::PointCloud<pcl::PointXYZ>& cloud);
-
   std::shared_ptr<mrs_lib::Transformer> transformer_;
 
   std::optional<std::vector<geometry_msgs::Point>> getPath(const Eigen::Vector3d& start,
                                                            const Eigen::Vector3d& end);
+  std::vector<Eigen::Vector3d>                     pointCloudToEigenVector(const pcl::PointCloud<pcl::PointXYZ>& cloud);
 };
 
 void WrapperRosRBL::onInit()
@@ -208,7 +205,7 @@ void WrapperRosRBL::onInit()
   param_loader.loadParam("livox/enabled", _use_livox_);
   param_loader.loadParam("livox/tilt_deg", _livox_tilt_deg_);
   param_loader.loadParam("livox/fov", _livox_fov_);
-  auto livox_wrt_uav       = param_loader.loadParam2("livox/translation");
+
   auto odom_topic_name     = param_loader.loadParam2("odometry_topic");
   auto rate_tm_set_ref     = param_loader.loadParam2("rate/timer_set_ref");
   auto rate_tm_diagnostics = param_loader.loadParam2("rate/timer_diagnostics");
@@ -223,7 +220,7 @@ void WrapperRosRBL::onInit()
   param_loader.loadParam("rbl_controller/radius", _radiu_s);
   param_loader.loadParam("rbl_controller/encumbrance", encumbrance);
   param_loader.loadParam("rbl_controller/step_size", _step_size_);
-  param_loader.loadParam("rbl_controller/betaD", betaD);
+  param_loader.loadParam("rbl_controller/betaD", _betaD_);
   param_loader.loadParam("rbl_controller/beta", _beta_);
   param_loader.loadParam("rbl_controller/_beta_min", beta_min);
   param_loader.loadParam("rbl_controller/use_z_rule", _use_z_rule_);
@@ -238,52 +235,12 @@ void WrapperRosRBL::onInit()
     ros::shutdown();
   }
 
-  _livox_translation_ = Eigen::Vector3d{ livox_wrt_uav[0], livox_wrt_uav[1], livox_wrt_uav[2] };
-  radius_sense_       = _radius_ / _cwvd_obs_ + _radius_search_;
-
-  auto it = std::find(_uav_names_.begin(), _uav_names_.end(), _agent_name_);
-
-  if (it != _uav_names_.end()) {
-    this_uav_idx_ = it - _uav_names_.begin();
-    _uav_names_.erase(it);
-    _uvdar_ids_.erase(_uvdar_ids_.begin() + this_uav_idx_);
-  }
-  else {
-    ROS_ERROR("[WrapperRosRBL]: This UAV is not part of the formation! Check the config file. Shutting down node.");
-    ros::shutdown();
-  }
-  beta            = betaD;
-  _num_of_agents_ = _uav_names_.size();
-
   group_positions_.resize(_num_of_agents_);
-  uav_positions_.resize(_num_of_agents_);
-  neighbors_and_obstacles_noisy.resize(_num_of_agents_);
 
-  goal[0]          = target[0];
-  goal[1]          = target[1];
-  goal[2]          = target[2];
-  goal_original[0] = target[0];
-  goal_original[1] = target[1];
-  goal_original[2] = target[2];
+  ros::master::V_TopicInfo all_topics;
+  ros::master::getTopics(all_topics);
+  int count = 0;
 
-  // std::vector<Eigen::Vector3d> uav_positionsN_(uav_positions_);
-  /* create multiple subscribers to read uav odometries */
-  // iterate through drones except this drone and target
-  for (int i = 0; i < _uav_names_.size(); i++) {
-    std::string topic_name = std::string("/") + _uav_names_[i] + std::string("/") + _odometry_topic_name_;
-    sh_group_odoms_.push_back(
-        nh.subscribe<nav_msgs::Odometry>(topic_name.c_str(),
-                                         1,
-                                         boost::bind(&WrapperRosRBL::cbSubGroupOdom, this, _1, i)));
-    _uav_uvdar_ids_[_uvdar_ids_[i]] = i;
-  }
-  sh_odom_ = nh.subscribe("/" + _agent_name_ + "/estimation_manager/odom_main", 1, &WrapperRosRBL::cbSubOdom, this);
-  sh_uvdar_poses_.push_back(
-      nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>("/" + _agent_name_ + "/uvdar/measuredPoses",
-                                                             1,
-                                                             boost::bind(&WrapperRosRBL::cbSubUvdar, this, _1)));
-  mrs_lib::SubscribeHandlerOptions shopts;
-  //
   shopts.nh                 = nh;
   shopts.node_name          = "WrapperRosRBL";
   shopts.no_message_timeout = mrs_lib::no_timeout;
@@ -292,13 +249,43 @@ void WrapperRosRBL::onInit()
   shopts.queue_size         = 10;
   shopts.transport_hints    = ros::TransportHints().tcpNoDelay();
 
-  sh_position_command_ = mrs_lib::SubscribeHandler<mrs_msgs::TrackerCommand>(shopts, "tracker_cmd_in");
-  sh_traj_ = nh.subscribe<visualization_msgs::MarkerArray>("/" + _agent_name_ + "/trajectory_generation/markers/final",
-                                                           1,
+  for (const auto& topic : all_topics) {
+    if (topic.name.find(_odometry_topic_name_) != std::string::npos) {
+      ROS_INFO_STREAM("[RBLController]: Subscribing to topic: " << topic.name);
+
+      ros::Subscriber sub = nh.subscribe<std_msgs::String>(topic.name, 10, boost::bind(&topicCallback, _1, topic.name));
+      sh_group_odoms_.push_back(mrs_lib::SubscribeHandler<nav_msgs::Odometry>(
+          shopts,
+          topic_name.c_str(),
+          boost::bind(&WrapperRosRBL::cbSubGroupOdom, this, _1, count + 1)));
+      count++;
+    }
+  }
+
+  if (sh_group_odoms_.empty()) {
+    ROS_WARN_STREAM("[RBLController]: No topics matched: " << _odometry_topic_name_.c_str());
+  }
+
+  sh_odom_ = mrs_lib::SubscribeHandler<nav_msgs::Odometry>(shopts,
+                                                           "/" + _agent_name_ + "/" + _odometry_topic_name_,
+                                                           &WrapperRosRBL::cbSubOdom,
+                                                           this);
+
+  sh_uvdar_poses_ = mrs_lib::SubscribeHandler<mrs_msgs::PoseWithCovarianceArrayStamped>(shopts,
+                                                           "/" + _agent_name_ + "/uvdar/filteredPoses",
+                                                           &WrapperRosRBL::cbSubUvdar,
+                                                           this);
+
+  sh_traj_  = mrs_lib::SubscribeHandler<visualization_msgs::MarkerArray>(shopts,
+                                                           "/" + _agent_name_ + "/trajectory_generation/markers/final",
                                                            &WrapperRosRBL::cbSubTraj,
                                                            this);
 
-  // initialize timers
+  sh_pcl_   = mrs_lib::SubscribeHandler<sensor_msgs::PointCloud2>(shopts,
+                                                           "/" + _agent_name_ + "/pcl_filter/livox_points_processed",
+                                                           &WrapperRosRBL::cbSubPCL,
+                                                           this);
+
   tm_set_ref_       = nh.createTimer(ros::Rate(rate_tm_set_ref), &WrapperRosRBL::cbTmSetRef, this);
   tm_update_target_ = nh.createTimer(ros::Rate(rate_tm_set_ref), &WrapperRosRBL::cbTmUpdateTarget, this);
   tm_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &WrapperRosRBL::cbTmDiagnostics, this);
@@ -330,49 +317,12 @@ void WrapperRosRBL::onInit()
   pub_viz_path_          = nh.advertise<nav_msgs::Path>("path", 1, true);
   pub_viz_target_        = nh.advertise<visualization_msgs::Marker>("viz/target", 1, true);
 
-  if (simulation_) {
-    // sh_pcl_  = nh.subscribe("/" + _agent_name_ + "/livox_fake_scan", 1, &WrapperRosRBL::cbSubPCL, this);
-    sh_pcl_ = nh.subscribe("/" + _agent_name_ + "/octomap_local_vis/octomap_point_cloud_centers",
-                           1,
-                           &WrapperRosRBL::cbSubPCL,
-                           this);
-  }
-  else {
-    if (use_bonxai_mapping) {
-      // sh_pcl_  = nh.subscribe("/" + _agent_name_ + "/bonxai_server/local_pc", 1, &WrapperRosRBL::cbSubPCL, this);
-      sh_pcl_ = nh.subscribe("/" + _agent_name_ + "/octomap_local_vis/octomap_point_cloud_centers",
-                             1,
-                             &WrapperRosRBL::cbSubPCL,
-                             this);
-    }
-    else {
-      sh_pcl_ =
-          nh.subscribe("/" + _agent_name_ + "/pcl_filter/livox_points_processed", 1, &WrapperRosRBL::cbSubPCL, this);
-    }
-  }
-  sub_neighbors_ = nh.subscribe("/" + _agent_name_ + "/filter_reflective_uavs/agents_pcl",
-                                1,
-                                &WrapperRosRBL::neighborCallback,
-                                this);
 
-  // initialize transformer
   transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "WrapperRosRBL");
   transformer_->retryLookupNewest(true);
 
   is_initialized_ = true;
   ROS_INFO("[WrapperRosRBL]: Initialization completed.");
-}
-
-std::vector<Eigen::Vector3d> WrapperRosRBL::pointCloudToEigenVector(const pcl::PointCloud<pcl::PointXYZ>& cloud)
-{
-  std::vector<Eigen::Vector3d> eigen_points;
-  eigen_points.reserve(cloud.size());
-
-  for (const auto& pt : cloud.points) {
-    eigen_points.emplace_back(pt.x, pt.y, pt.z);
-  }
-
-  return eigen_points;
 }
 
 void WrapperRosRBL::cbTmUpdateTarget(const ros::TimerEvent&)

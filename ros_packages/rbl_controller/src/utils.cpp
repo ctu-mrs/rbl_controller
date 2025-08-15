@@ -218,3 +218,15 @@ visualization_msgs::Marker WrapperRosRBL::getVizConnection(const Eigen::Vector3d
 
 return marker;
 }
+
+std::vector<Eigen::Vector3d> WrapperRosRBL::pointCloudToEigenVector(const pcl::PointCloud<pcl::PointXYZ>& cloud)
+{
+  std::vector<Eigen::Vector3d> eigen_points;
+  eigen_points.reserve(cloud.size());
+
+  for (const auto& pt : cloud.points) {
+    eigen_points.emplace_back(pt.x, pt.y, pt.z);
+  }
+
+  return eigen_points;
+}

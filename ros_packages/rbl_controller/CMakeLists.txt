@@ -4,6 +4,7 @@ project(rbl_controller)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-std=c++17)
+add_compile_options("-O3")
 
 # Find catkin packages
 find_package(catkin REQUIRED COMPONENTS

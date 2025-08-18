@@ -19,11 +19,21 @@
          name="launch_prefix_debug"
          value="debug_roslaunch" />
 
+    <!-- will it run using Perf profiler? -->
+    <arg name="profile"
+         default="false" />
+    <arg unless="$(arg profile)"
+         name="launch_prefix_profile"
+         value="" />
+    <arg if="$(arg profile)"
+         name="launch_prefix_profile"
+         value="valgrind --tool=callgrind --callgrind-out-file='callgrind.rbl_controller'" />
+
     <!-- will it run as standalone nodelet or using a nodelet manager? -->
     <arg name="standalone"
          default="true" />
     <arg name="manager"
-         default="$(arg UAV_NAME)_waypointflier_manager" />
+         default="$(arg UAV_NAME)_rbl_controller_manager" />
     <arg name="n_threads"
          default="8" />
     <arg unless="$(arg standalone)"
@@ -48,7 +58,7 @@
               type="nodelet"
               name="rbl_controller"
               args="$(arg nodelet) formation_control/RBLController $(arg nodelet_manager)"
-              launch-prefix="$(arg launch_prefix_debug)"
+              launch-prefix="$(arg launch_prefix_debug) $(arg launch_prefix_profile)"
               output="screen">
 
             <!-- lidar clustering to measure distance to leader -->

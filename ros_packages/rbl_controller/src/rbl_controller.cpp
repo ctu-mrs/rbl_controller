@@ -1523,7 +1523,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   }
 
   // Step 2: Walk forward along the path and accumulate distance
-  const double target_distance      = radius / 2.0;
+  const double target_distance      = radius;
   double       accumulated_distance = 0.0;
   size_t       best_idx             = start_idx;
 

@@ -897,18 +897,6 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
   closest_plane.first = far_plane;
   closest_plane.second = far_plane;
 
-  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-  if (cloud.size() > 0) {
-    kdtree.setInputCloud(cloud.makeShared());
-  }
-
-  // Query KD-tree for nearest neighbors
-  std::vector<int> k_indices(1);
-  std::vector<float> k_sqr_distances(1);
-
-  std::vector<int> radius_indices;
-  std::vector<float> radius_sqr_distances;
-
   //check other agents
   for (const auto &neighbor : neighbors) {
     double Delta_i_j = 2*encumbrance;
@@ -925,48 +913,50 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
     }
     plane_normals.push_back(plane_norm);
     plane_points.push_back(plane_point);
-
-    // std::cout << "Distance from robot to detected neighbor is: " << (robot_pos - neighbor).norm() << std::endl;
-
-    // Eigen::Vector3d plane_norm = tilde_p_j - tilde_p_i;
-    // Eigen::Vector3d plane_point = tilde_p_i + cwvd_rob * plane_norm;
-
-    // std::cout << "Plane from neighbor" << std::endl;
-
-    // if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
-    //   plane_normals.push_back(plane_norm);
-    //   plane_points.push_back(plane_point);
-    // } else {
-    //   plane_normals.push_back(-plane_norm);
-    //   plane_points.push_back(plane_point);
-    // }
   }
 
-  pcl::PointXYZ searchPoint(robot_pos[0], robot_pos[1], robot_pos[2]);
-  if (kdtree.radiusSearch(searchPoint, radius_sensing, radius_indices, radius_sqr_distances) > 0) {
-    for (size_t i = 0; i < radius_indices.size(); ++i) {
-      const auto& current_voxel = cloud.points[radius_indices[i]];
-    
-      Eigen::Vector3d voxel_point(current_voxel.x, current_voxel.y, current_voxel.z);
-      Eigen::Vector3d closest_p_on_vox = closest_point_from_voxel(robot_pos, voxel_point, map_resolution);
-      double Delta_i_j = encumbrance + sqrt(3*pow(map_resolution/2.0, 2));
-      Eigen::Vector3d tilde_p_i = Delta_i_j * (voxel_point - robot_pos)/(voxel_point - robot_pos).norm() + robot_pos;
-      Eigen::Vector3d tilde_p_j = Delta_i_j * (robot_pos - voxel_point)/(robot_pos - voxel_point).norm() + voxel_point;
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 
-      Eigen::Vector3d plane_norm, plane_point;
-      if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
-        plane_norm = tilde_p_j - tilde_p_i;
-        plane_point = tilde_p_i + cwvd_obs * plane_norm;
-      } else {
-        plane_norm = tilde_p_i - tilde_p_j;
-        plane_point = tilde_p_j;
-      }
-      plane_normals.push_back(plane_norm);
-      plane_points.push_back(plane_point);
+  bool check_cloud = true;
+  if (cloud.size() > 0) {
+    kdtree.setInputCloud(cloud.makeShared());
+    check_cloud = false; 
+  }
+
+  if (check_cloud) {
+    // Query KD-tree for nearest neighbors
+    std::vector<int> k_indices(1);
+    std::vector<float> k_sqr_distances(1);
+
+    std::vector<int> radius_indices;
+    std::vector<float> radius_sqr_distances;
+
+    pcl::PointXYZ searchPoint(robot_pos[0], robot_pos[1], robot_pos[2]);
+    if (kdtree.radiusSearch(searchPoint, radius_sensing, radius_indices, radius_sqr_distances) > 0) {
+      for (size_t i = 0; i < radius_indices.size(); ++i) {
+        const auto& current_voxel = cloud.points[radius_indices[i]];
       
-      if ((closest_plane.second - robot_pos).norm() >= (plane_point - robot_pos).norm() ) {
-        closest_plane.first = plane_norm;
-        closest_plane.second = plane_point;
+        Eigen::Vector3d voxel_point(current_voxel.x, current_voxel.y, current_voxel.z);
+        Eigen::Vector3d closest_p_on_vox = closest_point_from_voxel(robot_pos, voxel_point, map_resolution);
+        double Delta_i_j = encumbrance + sqrt(3*pow(map_resolution/2.0, 2));
+        Eigen::Vector3d tilde_p_i = Delta_i_j * (voxel_point - robot_pos)/(voxel_point - robot_pos).norm() + robot_pos;
+        Eigen::Vector3d tilde_p_j = Delta_i_j * (robot_pos - voxel_point)/(robot_pos - voxel_point).norm() + voxel_point;
+
+        Eigen::Vector3d plane_norm, plane_point;
+        if ((robot_pos - tilde_p_i).norm() <= (robot_pos - tilde_p_j).norm()) {
+          plane_norm = tilde_p_j - tilde_p_i;
+          plane_point = tilde_p_i + cwvd_obs * plane_norm;
+        } else {
+          plane_norm = tilde_p_i - tilde_p_j;
+          plane_point = tilde_p_j;
+        }
+        plane_normals.push_back(plane_norm);
+        plane_points.push_back(plane_point);
+        
+        if ((closest_plane.second - robot_pos).norm() >= (plane_point - robot_pos).norm() ) {
+          closest_plane.first = plane_norm;
+          closest_plane.second = plane_point;
+        }
       }
     }
   }

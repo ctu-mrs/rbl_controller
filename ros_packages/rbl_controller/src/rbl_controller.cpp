@@ -878,7 +878,6 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
                                                                                   const std::vector<Eigen::Vector3d>            &neighbors,
                                                                                   const pcl::PointCloud<pcl::PointXYZ>                &cloud) {
 
-    mrs_lib::ScopeTimer tmp_scp_timer("closest_point_from_voxel");
   auto start_time = std::chrono::high_resolution_clock::now();
 
   std::vector<bool> remove_mask(points.size(), false);

@@ -203,10 +203,10 @@ void RBLController::onInit() {
       sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/pcl_filter/livox_points_processed", 1, &RBLController::pointCloud2Callback, this);
     }
   }
-  sub_neighbors_ = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
-
+  sub_neighbors_      = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
+  sub_garmin_altitude_ = nh.subscribe("/" + _uav_name_ + "/mavros/distance_sensor/garmin", 1, &RBLController::garminCallback, this);
   //TODO del
-  sub_velocity_ = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
+  sub_velocity_       = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
 
   // initialize transformer
   transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
@@ -594,8 +594,9 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_sphere(Eigen::Vector3d
     for (auto y : y_coords) {
       for (auto z : z_coords) {
         double distance = std::sqrt(std::pow((x - x_center), 2) + std::pow((y - y_center), 2) + std::pow((z - z_center), 2));
-        if (distance <= radius && z >= min_z && z <= max_z)
+        if (distance <= radius && garmin_altitude_ >= min_z && garmin_altitude_ <= max_z) {
           points.push_back(Eigen::Vector3d(x, y, z));
+        }
       }
     }
   }
@@ -2307,6 +2308,21 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
       if (use_bonxai_mapping) {
         processed_cloud = *cloud_ptr;
+
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_ground_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        for (auto& pt : cloud_ptr->points) {
+          if (pt.z > garmin_altitude_ - 0.4) { //TODO load 
+            filtered_ground_cloud->points.push_back(pt);
+          }
+        }
+        filtered_ground_cloud->width = filtered_ground_cloud->points.size();
+        filtered_ground_cloud->height = 1;
+        filtered_ground_cloud->is_dense = true;
+
+
+        processed_cloud = *filtered_ground_cloud;
+
+
       } else {
         processed_cloud = voxelize_pcl(cloud_ptr, map_resolution);
       }
@@ -2537,6 +2553,11 @@ void RBLController::pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_clou
 
   cloud = *temp_cloud;
   /* ROS_INFO_STREAM("Received point cloud with " << cloud.size() << "points."); */
+}
+
+void RBLController::garminCallback(const sensor_msgs::Range& msg) {
+  garmin_altitude_ = msg.range;
+  // std::cout << "GARMIN Altitude is: " << garmin_altitude_ << std::endl;
 }
 
 void RBLController::neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl) {

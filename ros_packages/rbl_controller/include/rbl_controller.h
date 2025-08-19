@@ -28,6 +28,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <mrs_msgs/PoseWithCovarianceArrayStamped.h>
+#include <sensor_msgs/Range.h> 
 
 // custom helper functions from mrs library
 #include <mrs_lib/param_loader.h>
@@ -48,7 +49,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 // #include <pcl_conversions/pcl_conversions>
-
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
@@ -240,6 +242,7 @@ public:
   double                                 refZ_;
   double                                 min_z;
   double                                 max_z;
+  double                                 garmin_altitude_;
   bool                                   flag_3D;
   bool                                   use_z_rule;
   bool                                   simulation_;
@@ -269,9 +272,11 @@ public:
 
   ros::Subscriber                 sub_pointCloud2_;
   ros::Subscriber                 sub_neighbors_;
+  ros::Subscriber                 sub_garmin_altitude_;
   pcl::PointCloud<pcl::PointXYZ>  cloud;
   pcl::PointCloud<pcl::PointXYZ>  processed_cloud;
   pcl::PointCloud<pcl::PointXYZ>  downsampled_cloud;
+  void garminCallback(const sensor_msgs::Range& msg);
   void neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl);
   void pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_cloud2);
   ros::Publisher                 pub_pointCloud_; //for rviz

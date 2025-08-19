@@ -2317,9 +2317,16 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     mrs_lib::set_mutexed(mutex_centroid_, Eigen::Vector3d{ c1_no_conn[0], c1_no_conn[1], c1_no_conn[2] }, centroid_);
     c1_to_rviz = c1_no_conn;
 
+    Eigen::Vector3d goal_eigen(goal[0], goal[1], goal[2]);
+
     if (use_livox_tilted) {
       double desired_heading = std::atan2(c1_no_conn[1] - robot_pos[1], c1_no_conn[0] - robot_pos[0]);
-      p_ref.heading = desired_heading;
+      if ((goal_eigen - robot_pos).norm() > 0.2) { //TODO load distance to goal no rotation
+        p_ref.heading = desired_heading;
+      } else {
+        p_ref.heading = roll_pitch_yaw[2];
+      }
+      // p_ref.heading = desired_heading;
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
       double difference = (diff < -M_PI) ? diff + 2 * M_PI : diff;
 
@@ -2338,14 +2345,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
       p_ref.position.z = c1_no_conn[2];
     }
 
-    saveUAVPositionToCSV(_uav_name_, robot_pos, "uav_positions.csv");
+  //   saveUAVPositionToCSV(_uav_name_, robot_pos, "uav_positions.csv");
 
-  }
+  // }
 
-  if (save_scene_to_csv) {
-    std::cout << "All saved setting save_scene_to_csv as false" << std::endl;
-    save_scene_to_csv = false;
-  }
+  // if (save_scene_to_csv) {
+  //   std::cout << "All saved setting save_scene_to_csv as false" << std::endl;
+  //   save_scene_to_csv = false;
+  // }
 
   // set drone ref
   mrs_msgs::ReferenceStampedSrv srv;

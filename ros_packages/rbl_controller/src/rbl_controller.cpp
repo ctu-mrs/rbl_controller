@@ -911,10 +911,10 @@ std::vector<Eigen::Vector3d> RBLController::find_closest_points_using_voxel_fast
 
   pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 
-  bool check_cloud = false;
+  bool check_cloud = true;
   if (cloud.size() > 0) {
     kdtree.setInputCloud(cloud.makeShared());
-    check_cloud = true; 
+    check_cloud = false; 
   }
 
   if (check_cloud) {

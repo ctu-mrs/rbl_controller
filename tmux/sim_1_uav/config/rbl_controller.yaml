@@ -58,7 +58,7 @@ d4: 0.5
 d5: 0.5
 d6: 1.0
 d7: 0.2
-radius: 3.5  #point lio 
+radius: 4.5  #point lio 
 betaD: 0.3
 beta_min: 0.1
 dt: 0.1

@@ -7,7 +7,7 @@ max_waypoint_distance: -1.0 # [m] // or set negative for no padding
 min_altitude: -1000.0 # [m]
 max_altitude: 1000.0 # [m]
 unknown_is_occupied: false # if false, planning through unknown space is enabled 
-timeout_threshold: 3.0 # [s] time after which A* planning is aborted and returns path to the node with the so far lowest cost   
+timeout_threshold: 0.2 # [s] time after which A* planning is aborted and returns path to the node with the so far lowest cost   
 min_path_length: 0.5
 viz:
   scale:

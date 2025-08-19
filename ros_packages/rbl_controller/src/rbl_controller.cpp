@@ -203,10 +203,10 @@ void RBLController::onInit() {
       sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/pcl_filter/livox_points_processed", 1, &RBLController::pointCloud2Callback, this);
     }
   }
-  sub_neighbors_ = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
-
+  sub_neighbors_      = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
+  sub_garmin_altitude_ = nh.subscribe("/" + _uav_name_ + "/mavros/distance_sensor/garmin", 1, &RBLController::garminCallback, this);
   //TODO del
-  sub_velocity_ = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
+  sub_velocity_       = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
 
   // initialize transformer
   transformer_ = std::make_shared<mrs_lib::Transformer>(nh, "RBLController");
@@ -599,6 +599,7 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_sphere(Eigen::Vector3d
         // if (distance <= radius && z >= min_z && z <= max_z) {
         if (distance <= radius) {
           points.push_back(Eigen::Vector3d(x, y, z));
+        }
       }
     }
   }
@@ -2562,6 +2563,11 @@ void RBLController::pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_clou
 
   cloud = *temp_cloud;
   /* ROS_INFO_STREAM("Received point cloud with " << cloud.size() << "points."); */
+}
+
+void RBLController::garminCallback(const sensor_msgs::Range& msg) {
+  garmin_altitude_ = msg.range;
+  // std::cout << "GARMIN Altitude is: " << garmin_altitude_ << std::endl;
 }
 
 void RBLController::neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl) {

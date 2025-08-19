@@ -2347,7 +2347,10 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
     if (use_livox_tilted) {
       double desired_heading = std::atan2(c1_no_conn[1] - robot_pos[1], c1_no_conn[0] - robot_pos[0]);
-      p_ref.heading = desired_heading;
+      Eigen::Vector3d goal_eigen(goal[0], goal[1], goal[2]);
+      if ((robot_pos - goal_eigen).norm() <= 0.2) {
+        p_ref.heading = desired_heading;
+      }
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
       double difference = (diff < -M_PI) ? diff + 2 * M_PI : diff;
 

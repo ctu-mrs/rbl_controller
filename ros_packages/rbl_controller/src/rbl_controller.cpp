@@ -1473,6 +1473,138 @@ std::vector<Eigen::Vector3d> RBLController::slice_sphere(std::vector<Eigen::Vect
   return points;
 }
 
+// map_resolution
+// processed_cloud
+// robot_pos
+// goal
+
+
+// Manhattan distance as heuristic TODO - add yaw rotation also somehow?
+int RBLController::heuristic(const std::vector<int>& a, const std::vector<int>& b) {
+  return std::abs(a[0]-b[0]) + std::abs(a[1]-b[1]) + std::abs(a[2]-b[2]);
+}
+
+// 6-connected neighbors
+std::vector<std::vector<int>> RBLController::get_neighbors(const std::vector<int>& idx, const VoxelGrid& grid) {
+  std::vector<std::vector<int>> neighbors;
+  int dx[] = {1, -1, 0, 0, 0, 0};
+  int dy[] = {0, 0, 1, -1, 0, 0};
+  int dz[] = {0, 0, 0, 0, 1, -1};
+
+  for (int i = 0; i < 6; i++) {
+    int nx = idx[0] + dx[i];
+    int ny = idx[1] + dy[i];
+    int nz = idx[2] + dz[i];
+    if (nx >= 0 && nx < grid.X && ny >= 0 && ny < grid.Y && nz >= 0 && nz < grid.Z) {
+      if (grid.at(nx, ny, nz) == 0) {
+        neighbors.push_back({nx, ny, nz});
+      }
+    }
+  }
+  return neighbors;
+}
+
+//start is robot_pos, goal is the final goal - it can be outside of the local map from the octomap
+// I am also using FLOATS instead of DOUBLES !!!
+std::vector<geometry_msgs::Point> RBLController::A_star_plan(const Eigen::Vector3f start, const Eigen::Vector3f goal) {
+  // Dimensions of representation 3d matrix
+  int X = static_cast<int>(std::ceil(20.0 / map_resolution)); // this is from local map in octomap - TODO load 
+  int Y = static_cast<int>(std::ceil(20.0 / map_resolution));
+  int Z = static_cast<int>(std::ceil(10.0 / map_resolution));
+
+  //Make them even
+  X = (X % 2 == 0) ? X : X + 1;
+  Y = (Y % 2 == 0) ? Y : Y + 1;
+  Z = (Z % 2 == 0) ? Z : Z + 1;
+
+  //Agent / Start position and goal idx in grid is: 
+  std::vector<int> idx_start = { X/2, Y/2, Z/2 };
+  int x_goal = std::clamp(static_cast<int>(std::round((goal.x() - start.x()) / map_resolution)), 0, X);
+  int y_goal = std::clamp(static_cast<int>(std::round((goal.y() - start.y()) / map_resolution)), 0, Y);
+  int z_goal = std::clamp(static_cast<int>(std::round((goal.z() - start.z()) / map_resolution)), 0, Z);
+
+  std::vector<int> idx_goal  = {x_goal, y_goal, z_goal}; 
+
+  //Initialize voxel grid
+  VoxelGrid grid(X, Y, Z);
+  
+  //fill the grid with the occupied points
+  int x, y, z;
+  std::vector<std::vector<int>> idx_to_inflate;
+  for (const auto& point : processed_cloud.points) {
+    x = static_cast<int>(std::round((point.x - start.x()) / map_resolution));
+    y = static_cast<int>(std::round((point.y - start.y()) / map_resolution));
+    z = static_cast<int>(std::round((point.z - start.z()) / map_resolution));
+    grid.at(x, y, z) = 1;
+    idx_to_inflate.push_back({x,y,z});
+  }
+
+  //Inflate the grid 
+  int inflation_coeff = std::ceil(encumbrance / map_resolution);
+  for (const auto idx: idx_to_inflate) {
+    x = idx[0];
+    y = idx[1];
+    z = idx[2];
+    for (int dx = -inflation_coeff; dx <= inflation_coeff; dx++) {
+      for (int dy = -inflation_coeff; dy <= inflation_coeff; dy++) {
+        for (int dz = -inflation_coeff; dz <= inflation_coeff; dz++) {
+          int nx = x + dx, ny = y + dy, nz = z + dz;
+          if (nx >= 0 && nx < grid.X && ny >= 0 && ny < grid.Y && nz >= 0 && nz < grid.Z) {
+            grid.at(nx, ny, nz) = 1;
+          }
+        }
+      }
+    }
+  }
+
+  //A* plannig
+  using PQElement = std::pair<int, std::vector<int>>; // f-cost, index
+  std::priority_queue<PQElement, std::vector<PQElement>, std::greater<PQElement>> open_set;
+
+  std::unordered_map<std::vector<int>, int, Vec3Hash> g_cost;
+  std::unordered_map<std::vector<int>, std::vector<int>, Vec3Hash> came_from;
+
+  open_set.push({heuristic(idx_start, idx_goal), idx_start});
+  g_cost[idx_start] = 0;
+
+  while (!open_set.empty()) {
+    auto current = open_set.top().second;
+    open_set.pop();
+
+    if (current == idx_goal) {
+      // reconstruct path
+      std::vector<geometry_msgs::Point> path;
+      while (current != idx_start) {
+        geometry_msgs::Point point;
+        point.x = (current[0] - grid.X) * map_resolution;
+        point.y = (current[1] - grid.Y) * map_resolution;
+        point.z = (current[2] - grid.Z) * map_resolution;
+        path.push_back(point);
+        current = came_from[current];
+      }
+      geometry_msgs::Point point_start;
+      point_start.x = (current[0] - grid.X) * map_resolution;
+      point_start.y = (current[1] - grid.Y) * map_resolution;
+      point_start.z = (current[2] - grid.Z) * map_resolution;
+      path.push_back(point_start);
+      std::reverse(path.begin(), path.end());
+      return path;
+    }
+
+    for (auto& neighbor : get_neighbors(current, grid)) {
+      int tentative_g = g_cost[current] + 1; // uniform cost
+      if (!g_cost.count(neighbor) || tentative_g < g_cost[neighbor]) {
+        g_cost[neighbor] = tentative_g;
+        int f = tentative_g + heuristic(neighbor, idx_goal);
+        open_set.push({f, neighbor});
+        came_from[neighbor] = current;
+      }
+    }
+  }
+
+  return {};
+}
+
 void RBLController::goalUpdateLoop(const ros::TimerEvent&)
 {
   if (!is_initialized_) {
@@ -1497,11 +1629,12 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   if (isReplanNeeded(uav_position, points_copy, centroid)) {
     ROS_INFO_STREAM("[RBLController]: Replanning");
 
-    auto ret = getPath(uav_position, group_goal);
+    // auto ret = getPath(uav_position, group_goal);
+    auto ret = A_star_plan(Eigen::Vector3f(uav_position_[0], uav_position_[1], uav_position_[2]),Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]));
     {
       std::scoped_lock lck(points_mutex_);
-      if (ret) {
-        dense_points_ = getInterpolatedPath(ret.value(), 0.2);
+      if (ret.size()>0) {
+        dense_points_ = getInterpolatedPath(ret, 0.2);
         points_copy   = dense_points_;
 
         publishPath(dense_points_);
@@ -2733,16 +2866,16 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
   auto uav_position                = mrs_lib::get_mutexed(mutex_position_command_, uav_position_);
   auto goto_goal = Eigen::Vector3d{req.goal[0], req.goal[1], req.goal[2]};
 
-  auto ret = getPath(uav_position, goto_goal);
+  auto ret = A_star_plan(Eigen::Vector3f(uav_position_[0], uav_position_[1], uav_position_[2]),Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]));
   {
     std::scoped_lock lck(points_mutex_);
-    if (!ret) {
+    if (ret.size()==0) {
       dense_points_.clear();
       res.success = false;
       res.message = "Path not found";
       return false;
     }
-    dense_points_ = getInterpolatedPath(ret.value(), 0.2);
+    dense_points_ = getInterpolatedPath(ret, 0.2);
     group_goal_ = goto_goal;
 
     control_allowed_ = true;

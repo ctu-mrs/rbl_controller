@@ -56,6 +56,9 @@
 // #include <omp.h>
 
 // helper libraries
+#include <queue>
+#include <unordered_map>
+#include <tuple>
 #include <string>
 #include <vector>
 #include <set>
@@ -71,6 +74,28 @@
 #include<optional>
 namespace formation_control
 {
+
+struct VoxelGrid {
+  int X, Y, Z;
+  std::vector<int> data;
+
+  VoxelGrid(int x, int y, int z) : X(x), Y(y), Z(z), data(x * y * z, 0) {}
+
+  int& at(int x, int y, int z) {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+  // Const version for reading
+  const int& at(int x, int y, int z) const {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+};
+struct Vec3Hash {
+  size_t operator()(const std::vector<int>& v) const {
+    return std::hash<int>()(v[0]) ^ std::hash<int>()(v[1] << 1) ^ std::hash<int>()(v[2] << 2);
+  }
+};
 
 class RBLController : public nodelet::Nodelet {
 
@@ -393,6 +418,11 @@ std::vector<geometry_msgs::Point>
 getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
                                    double                                   resolution=0.2);
 bool isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid);
+
+int heuristic(const std::vector<int>& a, const std::vector<int>& b);
+std::vector<std::vector<int>> get_neighbors(const std::vector<int>& idx, const VoxelGrid& grid);
+std::vector<geometry_msgs::Point> A_star_plan(const Eigen::Vector3f start, const Eigen::Vector3f goal);
+
 void timeoutGeneric(const std::string& topic, const ros::Time& last_msg);
 };
 

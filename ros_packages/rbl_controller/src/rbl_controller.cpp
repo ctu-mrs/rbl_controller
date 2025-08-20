@@ -574,11 +574,13 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_sphere(Eigen::Vector3d
   double y_center = robot_pos[1];
   double z_center = robot_pos[2];
 
+  double r_low = std::min(radius, std::max(garmin_altitude_-min_z, 0.));
+
   int    x_min    = static_cast<int>((x_center - radius) / step_size);
   int    x_max    = static_cast<int>((x_center + radius) / step_size);
   int    y_min    = static_cast<int>((y_center - radius) / step_size);
   int    y_max    = static_cast<int>((y_center + radius) / step_size);
-  int    z_min    = static_cast<int>((z_center - radius) / step_size);
+  int    z_min    = static_cast<int>((z_center - r_low) / step_size);
   int    z_max    = static_cast<int>((z_center + radius) / step_size);
 
   std::vector<double> x_coords, y_coords, z_coords;
@@ -594,7 +596,8 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_sphere(Eigen::Vector3d
     for (auto y : y_coords) {
       for (auto z : z_coords) {
         double distance = std::sqrt(std::pow((x - x_center), 2) + std::pow((y - y_center), 2) + std::pow((z - z_center), 2));
-        if (distance <= radius && garmin_altitude_ >= min_z && garmin_altitude_ <= max_z) {
+        // if (distance <= radius && z >= min_z && z <= max_z) {
+        if (distance <= radius) {
           points.push_back(Eigen::Vector3d(x, y, z));
         }
       }
@@ -602,6 +605,9 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_sphere(Eigen::Vector3d
   }
   return points;
 }
+
+//garmin - min_z
+//5.0 - 0.5  
 
 
 std::vector<Eigen::Vector3d> RBLController::insert_vec3d_at_index(const std::vector<Eigen::Vector3d> &vec, size_t idx, const Eigen::Vector3d &value) {
@@ -1593,7 +1599,7 @@ std::tuple<Eigen::Vector3d, Eigen::Vector3d, Eigen::Vector3d> RBLController::get
   std::vector<Eigen::Vector3d> boundary_cell_A_points;
   std::vector<Eigen::Vector3d> projected_boundry_A_points;
 
-  std::cout << "Neighbors size: " << neighbors.size() << std::endl;
+  // std::cout << "Neighbors size: " << neighbors.size() << std::endl;
 
   if (flag_3D){
     cell_A_points = points_inside_sphere(robot_pos, radius, step_size);
@@ -2300,7 +2306,7 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_ground_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         for (auto& pt : cloud_ptr->points) {
-          if (pt.z > garmin_altitude_ - 0.4) { //TODO load 
+          if (pt.z > robot_pos[2] - 0.4) { //TODO load 
             filtered_ground_cloud->points.push_back(pt);
           }
         }
@@ -2345,9 +2351,14 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     mrs_lib::set_mutexed(mutex_centroid_, Eigen::Vector3d{ c1_no_conn[0], c1_no_conn[1], c1_no_conn[2] }, centroid_);
     c1_to_rviz = c1_no_conn;
 
+    std::cout << "Current goal is: [" << goal[0] << ", " << goal[1] << ", " << goal[2] << "]" << std::endl;
+
     if (use_livox_tilted) {
       double desired_heading = std::atan2(c1_no_conn[1] - robot_pos[1], c1_no_conn[0] - robot_pos[0]);
-      p_ref.heading = desired_heading;
+      Eigen::Vector3d goal_eigen(goal[0], goal[1], goal[2]);
+      if ((robot_pos - goal_eigen).norm() >= 0.2) {
+        p_ref.heading = desired_heading;
+      }
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
       double difference = (diff < -M_PI) ? diff + 2 * M_PI : diff;
 
@@ -2754,6 +2765,9 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
     }
     dense_points_ = getInterpolatedPath(ret.value(), 0.2);
     group_goal_ = goto_goal;
+    goal[0] = goto_goal[0];
+    goal[1] = goto_goal[1];
+    goal[2] = goto_goal[2];
 
     control_allowed_ = true;
     starting_time    = ros::Time::now();

@@ -127,6 +127,9 @@ void RBLController::onInit() {
   goal_original[0] = destination[0];
   goal_original[1] = destination[1];
   goal_original[2] = destination[2];
+  group_goal_[0]   = destination[0];
+  group_goal_[1]   = destination[1];
+  group_goal_[2]   = destination[2];
 
   // std::vector<Eigen::Vector3d> uav_positionsN_(uav_positions_);
   /* create multiple subscribers to read uav odometries */
@@ -181,6 +184,8 @@ void RBLController::onInit() {
 
   // initialize publishers
   pub_destination_    = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
+  pub_goal_replanner_ = nh.advertise<visualization_msgs::Marker>("goal_replanner", 1, true);
+  pub_grid_goal_      = nh.advertise<visualization_msgs::Marker>("grid_goal", 1, true);
   pub_position_       = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
   pub_centroid_       = nh.advertise<visualization_msgs::Marker>("centroid_out", 1, true);
   pub_pointCloud_     = nh.advertise<sensor_msgs::PointCloud2>("point_cloud", 1, true);
@@ -189,6 +194,7 @@ void RBLController::onInit() {
   pub_planes_         = nh.advertise<visualization_msgs::MarkerArray>("planes", 1, true);
   pub_norms_          = nh.advertise<visualization_msgs::MarkerArray>("planes_norms", 1, true);
   pub_path_           = nh.advertise<nav_msgs::Path>("path", 1, true);
+  pub_inflated_grid_  = nh.advertise<sensor_msgs::PointCloud2>("inflated_map", 1, true);
   pub_active_wp_ = nh.advertise<geometry_msgs::PointStamped>("destination_point", 1, true);
   pub_viz_target_ = nh.advertise<visualization_msgs::Marker>("viz/target", 1, true);
 
@@ -383,6 +389,51 @@ void RBLController::publishCellA(std::vector<Eigen::Vector3d> points) {
 }
 //}
 
+
+/*RBLController::publishInflatedGrid () //{ */
+void RBLController::publishInflatedGrid(VoxelGrid grid, Eigen::Vector3f start, std::tuple<int, int, int> start_idx){
+
+  std::vector<Eigen::Vector3d> points;
+  // int cnt = 0;
+  for (int x = 0; x < grid.X; ++x) {
+    for (int y = 0; y < grid.Y; ++y){
+      for (int z = 0; z < grid.Z; ++z) {
+        if (grid.at(x,y,z) == 1) {
+          double p_x = (x - std::get<0>(start_idx))*map_resolution + start[0];
+          double p_y = (y - std::get<1>(start_idx))*map_resolution + start[1];
+          double p_z = (z - std::get<2>(start_idx))*map_resolution + start[2];
+          Eigen::Vector3d p(p_x, p_y, p_z);
+          points.push_back(p);
+          // ++cnt;
+        }
+      }
+    }
+  }
+
+  // std::cout << "Counter: " << cnt << std::endl; 
+  pcl::PointCloud<pcl::PointXYZ> pclCloud;
+  pclCloud.width = points.size();
+  pclCloud.height = 1;
+  pclCloud.is_dense = true;
+  pclCloud.points.resize(pclCloud.width * pclCloud.height);
+
+  for (size_t i = 0; i < points.size(); ++i) {
+    pclCloud.points[i].x = static_cast<float>(points[i].x());
+    pclCloud.points[i].y = static_cast<float>(points[i].y());
+    pclCloud.points[i].z = static_cast<float>(points[i].z());
+  }
+
+  sensor_msgs::PointCloud2 cloud_msg;
+  pcl::toROSMsg(pclCloud, cloud_msg);
+  cloud_msg.header.frame_id = _control_frame_;
+  cloud_msg.header.stamp = ros::Time::now();
+
+  pub_inflated_grid_.publish(cloud_msg);
+}
+//}
+
+
+
 /*RBLController::publishCellA () //{ */
 void RBLController::publishCellActivelySensedA(std::vector<Eigen::Vector3d> points) {
   pcl::PointCloud<pcl::PointXYZ> pclCloud;
@@ -456,8 +507,34 @@ void RBLController::publishCentroid() {
 }
 //}
 
-/*RBLController::publishDestination() //{ */
+/*RBLController::publishDestination() //{ */ 
 void RBLController::publishDestination() {
+  visualization_msgs::Marker marker;
+  marker.header.frame_id    = _control_frame_;
+  marker.header.stamp       = ros::Time::now();
+  marker.ns                 = "destination";
+  marker.id                 = 0;
+  marker.type               = visualization_msgs::Marker::SPHERE;
+  marker.action             = visualization_msgs::Marker::ADD;
+  marker.pose.position.x    = group_goal_[0]; //this one is one is the final goal where the replanner is trying to guide him
+  marker.pose.position.y    = group_goal_[1];
+  marker.pose.position.z    = group_goal_[2];  
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x            = 4 * encumbrance;  // Adjust size as necessary
+  marker.scale.y            = 4 * encumbrance;
+  marker.scale.z            = 4 * encumbrance;
+  marker.color.r            = 0.0;  // Red color
+  marker.color.g            = 0.0;
+  marker.color.b            = 1.0;
+  marker.color.a            = 0.3;  // Fully opaque
+
+  pub_destination_.publish(marker);
+}
+//}
+
+
+/*RBLController::publishReplannerGoal() //{ */
+void RBLController::publishReplannerGoal() {
   visualization_msgs::Marker marker;
   marker.header.frame_id    = _control_frame_;
   marker.header.stamp       = ros::Time::now();
@@ -477,7 +554,32 @@ void RBLController::publishDestination() {
   marker.color.b            = 1.0;
   marker.color.a            = 0.3;  // Fully opaque
 
-  pub_destination_.publish(marker);
+  pub_goal_replanner_.publish(marker);
+}
+//}
+
+/*RBLController::publishReplannerGoal() //{ */
+void RBLController::publishGridGoal() {
+  visualization_msgs::Marker marker;
+  marker.header.frame_id    = _control_frame_;
+  marker.header.stamp       = ros::Time::now();
+  marker.ns                 = "destination";
+  marker.id                 = 0;
+  marker.type               = visualization_msgs::Marker::SPHERE;
+  marker.action             = visualization_msgs::Marker::ADD;
+  marker.pose.position.x    = grid_goal[0];
+  marker.pose.position.y    = grid_goal[1];
+  marker.pose.position.z    = grid_goal[2];  
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x            = 4 * encumbrance;  // Adjust size as necessary
+  marker.scale.y            = 4 * encumbrance;
+  marker.scale.z            = 4 * encumbrance;
+  marker.color.r            = 0.0;  // Red color
+  marker.color.g            = 1.0;
+  marker.color.b            = 0.0;
+  marker.color.a            = 0.6;  // Fully opaque
+
+  pub_grid_goal_.publish(marker);
 }
 //}
 
@@ -500,6 +602,7 @@ void RBLController::publishPcl() {
 std::vector<Eigen::Vector3d> RBLController::points_inside_circle(Eigen::Vector3d robot_pos, double radius, double step_size) { 
   double x_center = robot_pos[0];
   double y_center = robot_pos[1];
+  double z_center = robot_pos[2];
   
   int    x_min    = static_cast<int>((x_center - radius) / step_size);
   int    x_max    = static_cast<int>((x_center + radius) / step_size);
@@ -517,7 +620,7 @@ std::vector<Eigen::Vector3d> RBLController::points_inside_circle(Eigen::Vector3d
     for (auto y : y_coords) {
       double distance = std::sqrt(std::pow((x - x_center), 2) + std::pow((y - y_center), 2));
       if (distance <= radius)
-        points.push_back(Eigen::Vector3d(x, y, refZ_));
+        points.push_back(Eigen::Vector3d(x, y, z_center));
     }
   }
   return points;
@@ -1469,6 +1572,338 @@ std::vector<Eigen::Vector3d> RBLController::slice_sphere(std::vector<Eigen::Vect
   return points;
 }
 
+
+
+
+// map_resolution
+// processed_cloud
+// robot_pos
+// goal
+
+
+// Manhattan distance as heuristic TODO - add yaw rotation also somehow?
+// int RBLController::heuristic(const std::vector<int>& a, const std::vector<int>& b) {
+//   return std::abs(a[0]-b[0]) + std::abs(a[1]-b[1]) + std::abs(a[2]-b[2]);
+// }
+
+// // 6-connected neighbors
+// std::vector<std::vector<int>> RBLController::get_neighbors(const std::vector<int>& idx, const VoxelGrid& grid) {
+//   std::vector<std::vector<int>> neighbors;
+//   int dx[] = {1, -1, 0, 0, 0, 0};
+//   int dy[] = {0, 0, 1, -1, 0, 0};
+//   int dz[] = {0, 0, 0, 0, 1, -1};
+
+//   for (int i = 0; i < 6; i++) {
+//     int nx = idx[0] + dx[i];
+//     int ny = idx[1] + dy[i];
+//     int nz = idx[2] + dz[i];
+//     if (nx >= 0 && nx < grid.X && ny >= 0 && ny < grid.Y && nz >= 0 && nz < grid.Z) {
+//       if (grid.at(nx, ny, nz) == 0) {
+//         neighbors.push_back({nx, ny, nz});
+//       }
+//     }
+//   }
+//   return neighbors;
+// }
+
+// VoxelGrid RBLController::get_grid(const Eigen::Vector3f start, const Eigen::Vector3f goal) {
+  
+// }
+
+
+void RBLController::fill_inflate_grid(VoxelGrid& grid, const Eigen::Vector3f start, const std::tuple<int, int, int> start_idx) {
+  //fill the grid with the occupied points
+  // std::cout << "Fill occupied points" << std::endl;
+  int x, y, z;
+  std::vector<std::vector<int>> idx_to_inflate;
+  double p_x = (x - grid.X/2)*map_resolution + start[0];
+  for (const auto& point : cloud_with_ground.points) {
+    x = static_cast<int>(std::round((point.x - start.x()) / map_resolution)) + std::get<0>(start_idx);
+    y = static_cast<int>(std::round((point.y - start.y()) / map_resolution)) + std::get<1>(start_idx);
+    z = static_cast<int>(std::round((point.z - start.z()) / map_resolution)) + std::get<2>(start_idx);
+    if (x>0 && x<grid.X && y>0 && y<grid.Y && z>0 && z<grid.Z){
+      grid.at(x, y, z) = 1;
+      idx_to_inflate.push_back({x,y,z});
+    } else {
+      // std::cout << "Error indexing the grid" << std::endl; // TODO THINK about it because it misses a lot - its + 1 somewhere ._.
+    } 
+  }
+
+  //Inflate the grid 
+  // std::cout << "Inflate" << std::endl;
+
+  int inflation_coeff = std::ceil(encumbrance / map_resolution);
+  for (const auto idx: idx_to_inflate) {
+    x = idx[0];
+    y = idx[1];
+    z = idx[2];
+    for (int dx = -inflation_coeff; dx <= inflation_coeff; dx++) {
+      for (int dy = -inflation_coeff; dy <= inflation_coeff; dy++) {
+        for (int dz = -inflation_coeff; dz <= inflation_coeff; dz++) {
+          int nx = x + dx, ny = y + dy, nz = z + dz;
+          if (nx >= 0 && nx < grid.X && ny >= 0 && ny < grid.Y && nz >= 0 && nz < grid.Z) {
+            grid.at(nx, ny, nz) = 1;
+          }
+        }
+      }
+    }
+  }
+  // int min_z_idx = std::clamp(static_cast<int>(grid.Z/2 - garmin_altitude_/map_resolution), 0, grid.Z-1);; //ground - can ban planning
+  // for (int z = 0; z <= min_z_idx; z++){
+    for (int x = 0; x < grid.X; ++x) {
+      for (int y = 0; y< grid.Y; ++y){
+        grid.at(x,y,0) = 1; //fill the floor
+      }
+    }
+  // }
+
+}
+
+VoxelGrid RBLController::get_free_space_grid(VoxelGrid grid) {
+  VoxelGrid free_space_grid(grid.X, grid.Y, grid.Z);
+
+  int new_positions[][3] = {
+    {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}, // Face
+    {-1, -1, 0}, {-1, 1, 0}, {1, -1, 0}, {1, 1, 0}, // Edge XY
+    {0, -1, -1}, {0, -1, 1}, {0, 1, -1}, {0, 1, 1}, // Edge YZ
+    {-1, 0, -1}, {-1, 0, 1}, {1, 0, -1}, {1, 0, 1}, // Edge XZ
+    {-1, -1, -1}, {-1, -1, 1}, {-1, 1, -1}, {-1, 1, 1}, // Corner
+    {1, -1, -1}, {1, -1, 1}, {1, 1, -1}, {1, 1, 1}
+  };
+
+  for (int x = 0; x < grid.X; ++x) {
+    for (int y = 0; y < grid.Y; ++y) {
+      for (int z = 0; z < grid.Z; ++z) {
+        int free_space_cnt = 0;
+        for (int i = 0; i < 26; ++i) {
+          std::tuple<int, int, int> neighbor_pos = {x + new_positions[i][0], y + new_positions[i][1], z + new_positions[i][2]};
+          if (std::get<0>(neighbor_pos) > grid.X-1 || std::get<0>(neighbor_pos) < 0 ||
+              std::get<1>(neighbor_pos) > grid.Y-1 || std::get<1>(neighbor_pos) < 0 ||
+              std::get<2>(neighbor_pos) > grid.Z-1 || std::get<2>(neighbor_pos) < 0) {
+            continue;
+          }
+          if (grid.at(x, y, z) != 0) {
+            continue;
+          }
+
+          ++free_space_cnt;
+        }
+        free_space_grid.at(x,y,z) = free_space_cnt;
+      }
+    }
+  }
+  return free_space_grid;
+}
+
+std::tuple<int, int, int> RBLController::closest_free_end(std::tuple<int, int, int> cur_end, VoxelGrid grid) {
+  if (grid.at(std::get<0>(cur_end), std::get<1>(cur_end), std::get<2>(cur_end)) == 0) {
+    return cur_end;
+  }
+  std::queue<std::tuple<int, int, int>> q;
+  std::set<std::tuple<int, int, int>> visited;
+
+  q.push(cur_end);
+  visited.insert(cur_end);
+
+  int new_positions[][3] = {
+    {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1},
+    {-1, -1, 0}, {-1, 1, 0}, {1, -1, 0}, {1, 1, 0},
+    {0, -1, -1}, {0, -1, 1}, {0, 1, -1}, {0, 1, 1},
+    {-1, 0, -1}, {-1, 0, 1}, {1, 0, -1}, {1, 0, 1},
+    {-1, -1, -1}, {-1, -1, 1}, {-1, 1, -1}, {-1, 1, 1},
+    {1, -1, -1}, {1, -1, 1}, {1, 1, -1}, {1, 1, 1}
+  };
+
+  while (!q.empty()) {
+    std::tuple<int, int, int> current_pos = q.front();
+    q.pop();
+
+    for (int i = 0; i < 26; ++i) {
+      std::tuple<int, int, int> next_pos = {
+        std::get<0>(current_pos) + new_positions[i][0],
+        std::get<1>(current_pos) + new_positions[i][1],
+        std::get<2>(current_pos) + new_positions[i][2]
+      };
+
+      if (visited.count(next_pos)) {
+        continue;
+      }
+
+      if (std::get<0>(next_pos) < 0 || std::get<0>(next_pos) >= grid.X ||
+          std::get<1>(next_pos) < 0 || std::get<1>(next_pos) >= grid.Y ||
+          std::get<2>(next_pos) < 0 || std::get<2>(next_pos) >= grid.Z) {
+        continue;
+      }
+
+      if (grid.at(std::get<0>(next_pos), std::get<1>(next_pos), std::get<2>(next_pos)) == 0) {
+        return next_pos; // Found the closest free spot
+      }
+
+      visited.insert(next_pos);
+      q.push(next_pos);
+    }
+  }
+  return cur_end; //return original
+}
+
+
+
+
+//start is robot_pos, goal is the final goal - it can be outside of the local map from the octomap
+// I am also using FLOATS instead of DOUBLES !!!
+std::vector<geometry_msgs::Point> RBLController::A_star_plan(const Eigen::Vector3f start_f, const Eigen::Vector3f goal_f, VoxelGrid grid, std::tuple<int, int, int> start) {
+  int x_goal = std::clamp(static_cast<int>((goal_f.x() - start_f.x()) / map_resolution) + std::get<0>(start), 0, grid.X-1);
+  int y_goal = std::clamp(static_cast<int>((goal_f.y() - start_f.y()) / map_resolution) + std::get<1>(start), 0, grid.Y-1);
+  int z_goal = std::clamp(static_cast<int>((goal_f.z() - start_f.z()) / map_resolution) + std::get<2>(start), 0, grid.Z-1);
+
+  std::tuple<int, int, int> end = {x_goal, y_goal, z_goal};
+
+  geometry_msgs::Point point = get_point_from_grid(start_f, end, grid, start); //closest free
+  // geometry_msgs::Point point = get_point_from_grid(start_f, {x_goal, y_goal, z_goal}, grid, start);
+  grid_goal = Eigen::Vector3d(point.x, point.y, point.z);
+  std::cout << "Grid Goal is: " << grid_goal[0] << ", " << grid_goal[1] << ", " << grid_goal[2] << std::endl;
+
+  Node* start_node = new Node(nullptr, start);
+  Node* end_node = new Node(nullptr, end);
+
+  VoxelGrid free_space_grid = get_free_space_grid(grid);
+
+  std::priority_queue<Node*, std::vector<Node*>, CompareNode> open_list;
+  ExpandedGrid closed_voxels(grid.X, grid.Y, grid.Y);
+
+  open_list.push(start_node);
+  std::vector<Node*> all_allocated_nodes;
+  all_allocated_nodes.push_back(start_node);
+  all_allocated_nodes.push_back(end_node);
+  // open_list.push_back(start_node);
+
+  // std::cout << "Before while" << std::endl;
+
+  // int cnt = 0;
+
+  while (!open_list.empty()) {
+    // std::cout << "Counter whiles: " << cnt << std::endl;
+    // ++cnt;
+    // Node* current_node = open_list[0];
+    Node* current_node = open_list.top();
+    open_list.pop();
+    if (closed_voxels.at(current_node->position)) {
+      continue;
+    }
+
+    closed_voxels.at(current_node->position) = 1;
+
+    if (*current_node == *end_node) { //reconstruct the path
+      std::cout << "reconstructing path" << std::endl;
+
+      Node* current = current_node;
+      std::vector<std::tuple<int, int ,int>> path_idx;
+      while (current != nullptr) { //nullptr means start
+        path_idx.push_back(current->position);
+        current = current->parent;
+      }
+      std::reverse(path_idx.begin(), path_idx.end());
+
+      std::vector<geometry_msgs::Point> path;
+      for (auto point_idx: path_idx) {
+        path.push_back(get_point_from_grid(start_f, point_idx, grid, start));
+      }
+
+      for (Node* node : all_allocated_nodes) delete node;
+      std::cout << "Path found returning path of this size: " << path.size() << std::endl;
+      
+      return path;
+    }
+
+    std::vector<Node*> children;
+    int new_positions[][3] = {
+      {0, -1, 0}, {0, 1, 0}, {-1, 0, 0}, {1, 0, 0}, {0, 0, -1}, {0, 0, 1}, // Face
+      {-1, -1, 0}, {-1, 1, 0}, {1, -1, 0}, {1, 1, 0}, // Edge XY
+      {0, -1, -1}, {0, -1, 1}, {0, 1, -1}, {0, 1, 1}, // Edge YZ
+      {-1, 0, -1}, {-1, 0, 1}, {1, 0, -1}, {1, 0, 1}, // Edge XZ
+      {-1, -1, -1}, {-1, -1, 1}, {-1, 1, -1}, {-1, 1, 1}, // Corner
+      {1, -1, -1}, {1, -1, 1}, {1, 1, -1}, {1, 1, 1}
+    };
+
+    // std::cout << "Expanding the node to children" << std::endl;
+
+    for (int i = 0; i < 26; ++i) {
+      std::tuple<int, int, int> node_position = {std::get<0>(current_node->position) + new_positions[i][0],
+                                                  std::get<1>(current_node->position) + new_positions[i][1],
+                                                  std::get<2>(current_node->position) + new_positions[i][2]};
+
+      if (std::get<0>(node_position) > grid.X - 1 || std::get<0>(node_position) < 0 || //check if outside of local map where mapping and planning is happening
+        std::get<1>(node_position) > grid.Y - 1 || std::get<1>(node_position) < 0 ||
+        std::get<2>(node_position) > grid.Z - 1 || std::get<2>(node_position) < 0) {
+        continue;
+      }
+
+      if (grid.at(std::get<0>(node_position),std::get<1>(node_position), std::get<2>(node_position)) != 0) { //check if free space
+        continue;
+      }
+
+      Node* new_node = new Node(current_node, node_position);
+      all_allocated_nodes.push_back(new_node);
+      children.push_back(new_node);
+    }
+
+    for (Node* child : children) {
+
+      if (closed_voxels.at(child->position)) continue;
+      
+      std::tuple<int, int, int> new_direction = {std::get<0>(child->position) - std::get<0>(current_node->position),
+                                                std::get<1>(child->position) - std::get<1>(current_node->position),
+                                                std::get<2>(child->position) - std::get<2>(current_node->position)};
+      child->direction = new_direction;
+
+      // g cost is cost to get from start to here
+      // I should consider the yaw chaning - somehow compensate sharp turns
+      double turn_penalty = 0;
+      if (current_node->parent != nullptr) {
+        if (child->direction != current_node->direction) {
+          turn_penalty = 1.0; //TODO tune
+        }
+      }
+      // child->g = current_node->g + 1 + turn_penalty;
+      double open_bonus_coeff = 0.6;
+
+      int num_neighbors = free_space_grid.at(std::get<0>(child->position), std::get<1>(child->position), std::get<2>(child->position));
+      child->g = current_node->g + 1 + open_bonus_coeff*(26-num_neighbors);
+      // h - heuristic estimation on how much from this position to the end - euclidian dis?
+      double open_bonus = num_neighbors * open_bonus_coeff; // TODO THINK about this - tune;
+      child->h = sqrt(pow(std::get<0>(child->position) - std::get<0>(end_node->position), 2) +
+                      pow(std::get<1>(child->position) - std::get<1>(end_node->position), 2) +
+                      pow(std::get<2>(child->position) - std::get<2>(end_node->position), 2)); 
+
+      child->h -= open_bonus;
+
+      //combination
+      child->f = child->g + child->h;
+
+      open_list.push(child);
+    }
+  }
+  
+  for (Node* node : all_allocated_nodes) delete node;
+
+  std::cout << "No path found" << std::endl;
+
+  return {};
+}
+
+
+geometry_msgs::Point RBLController::get_point_from_grid(Eigen::Vector3f start_f, std::tuple<int, int, int> p_idx, VoxelGrid grid, std::tuple<int, int, int> start_idx) {
+  geometry_msgs::Point point;
+
+  point.x = (std::get<0>(p_idx) - std::get<0>(start_idx)) * map_resolution + start_f[0];
+  point.y = (std::get<1>(p_idx) - std::get<1>(start_idx)) * map_resolution + start_f[1];
+  point.z = (std::get<2>(p_idx) - std::get<2>(start_idx)) * map_resolution + start_f[2];
+
+  return point;
+}
+
+
+
 void RBLController::goalUpdateLoop(const ros::TimerEvent&)
 {
   if (!is_initialized_) {
@@ -1485,19 +1920,37 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   auto group_goal   = mrs_lib::get_mutexed(mutex_position_command_, group_goal_);
   auto centroid     = mrs_lib::get_mutexed(mutex_centroid_, centroid_);
 
-  if (points_copy.size() < 2) {
-    ROS_WARN_STREAM("[RBLController]: Can not select a new goal, path length = " << points_copy.size());
-    return;
-  }
 
-  if (isReplanNeeded(uav_position, points_copy, centroid)) {
+  // Dimensions of representation 3d matrix
+  int X = static_cast<int>(std::ceil(20.0 / map_resolution)); // this is from local map in octomap - TODO load 
+  int Y = static_cast<int>(std::ceil(20.0 / map_resolution));
+  int Z = static_cast<int>(std::ceil(10.0 / map_resolution));
+  //Make them even
+  X = (X % 2 == 0) ? X : X + 1;
+  Y = (Y % 2 == 0) ? Y : Y + 1;
+  Z = (Z % 2 == 0) ? Z : Z + 1;
+  //Initialize
+  VoxelGrid grid(X, Y, Z);
+
+  Eigen::Vector3f start(uav_position_[0], uav_position_[1], uav_position_[2]);
+  std::tuple<int, int, int> start_ints(grid.X/2, grid.Y/2, std::max(static_cast<int>(garmin_altitude_/map_resolution), 0));
+
+  fill_inflate_grid(grid, start, start_ints);
+  publishInflatedGrid(grid, start, start_ints);
+
+  // if (isReplanNeeded(uav_position, points_copy, centroid)) {
+  if (1) {
     ROS_INFO_STREAM("[RBLController]: Replanning");
 
-    auto ret = getPath(uav_position, group_goal);
+    // auto ret = getPath(uav_position, group_goal);
+    std::cout << "Group Goal is: " << group_goal_[0] << ", " << group_goal_[1] << ", " << group_goal_[2] << std::endl;
+    std::cout << "Before A*" << std::endl;
+    auto ret = A_star_plan(start, Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]), grid, start_ints);
+    std::cout << "After A*" << std::endl;
     {
       std::scoped_lock lck(points_mutex_);
-      if (ret) {
-        dense_points_ = getInterpolatedPath(ret.value(), 0.2);
+      if (ret.size()>0) {
+        dense_points_ = getInterpolatedPath(ret, 0.2);
         points_copy   = dense_points_;
 
         publishPath(dense_points_);
@@ -1506,6 +1959,7 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   }
 
   // Step 1: Find the closest point on the path to the current robot position
+  std::cout << "Step 1" << std::endl;
   size_t start_idx = 0;
   double min_dist  = std::numeric_limits<double>::max();
   for (size_t i = 0; i < points_copy.size(); ++i) {
@@ -1519,30 +1973,77 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
     }
   }
 
+  // // Step 2: Walk forward along the path and accumulate distance
+  // std::cout << "Step 2" << std::endl;
+  // const double target_distance      = radius;
+  // double       accumulated_distance = 0.0;
+  // size_t       best_idx             = start_idx;
+
+  // for (size_t i = start_idx; i < points_copy.size() - 1; ++i) {
+  //   const geometry_msgs::Point& p1      = points_copy[i];
+  //   const geometry_msgs::Point& p2      = points_copy[i + 1];
+  //   double                      dx      = p2.x - p1.x;
+  //   double                      dy      = p2.y - p1.y;
+  //   double                      dz      = p2.z - p1.z;
+  //   double                      segment = std::sqrt(dx * dx + dy * dy + dz * dz);
+  //   accumulated_distance += segment;
+
+  //   if (accumulated_distance >= target_distance) {
+  //     best_idx = i + 1;
+  //     break;
+  //   }
+  // }
+  // std::cout << "Step 3" << std::endl;
+  // const geometry_msgs::Point& chosen = points_copy[best_idx];
+  // destination[0] = goal[0] = chosen.x;
+  // destination[1] = goal[1] = chosen.y;
+  // destination[2] = goal[2] = chosen.z;
+
   // Step 2: Walk forward along the path and accumulate distance
+  std::cout << "Step 2" << std::endl;
   const double target_distance      = radius;
   double       accumulated_distance = 0.0;
   size_t       best_idx             = start_idx;
 
-  for (size_t i = start_idx; i < points_copy.size() - 1; ++i) {
-    const geometry_msgs::Point& p1      = points_copy[i];
-    const geometry_msgs::Point& p2      = points_copy[i + 1];
-    double                      dx      = p2.x - p1.x;
-    double                      dy      = p2.y - p1.y;
-    double                      dz      = p2.z - p1.z;
-    double                      segment = std::sqrt(dx * dx + dy * dy + dz * dz);
-    accumulated_distance += segment;
+  // Handle the case where the path has fewer than two points
+  if (points_copy.size() < 2 || start_idx >= points_copy.size() - 1) {
+    best_idx = points_copy.size() - 1;
+  } else {
+    for (size_t i = start_idx; i < points_copy.size() - 1; ++i) {
+      const geometry_msgs::Point& p1      = points_copy[i];
+      const geometry_msgs::Point& p2      = points_copy[i + 1];
+      double                      dx      = p2.x - p1.x;
+      double                      dy      = p2.y - p1.y;
+      double                      dz      = p2.z - p1.z;
+      double                      segment = std::sqrt(dx * dx + dy * dy + dz * dz);
+      accumulated_distance += segment;
 
-    if (accumulated_distance >= target_distance) {
-      best_idx = i + 1;
-      break;
+      if (accumulated_distance >= target_distance) {
+        best_idx = i + 1;
+        break;
+      }
+      best_idx = i + 1; // Update best_idx to the last point checked
     }
   }
 
+  // Final check to ensure we don't go out of bounds
+  if (best_idx >= points_copy.size()) {
+    best_idx = points_copy.size() - 1;
+  }
+
+  if (points_copy.size() == 0 ) {
+    return;
+  }
+
+  std::cout << "Step 3" << std::endl;
   const geometry_msgs::Point& chosen = points_copy[best_idx];
   destination[0] = goal[0] = chosen.x;
   destination[1] = goal[1] = chosen.y;
   destination[2] = goal[2] = chosen.z;
+
+  // destination[0] = goal[0] = group_goal_[0];
+  // destination[1] = goal[1] = group_goal_[1];
+  // destination[2] = goal[2] = group_goal_[2];
 
   ROS_DEBUG("Goal updated at path distance ~4m: idx=%lu, x=%.2f y=%.2f z=%.2f", best_idx, chosen.x, chosen.y, chosen.z);
 }
@@ -2303,19 +2804,57 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
 
       if (use_bonxai_mapping) {
         processed_cloud = *cloud_ptr;
+        cloud_with_ground = *cloud_ptr;
 
-        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_ground_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-        for (auto& pt : cloud_ptr->points) {
-          if (pt.z > robot_pos[2] - 0.4) { //TODO load 
-            filtered_ground_cloud->points.push_back(pt);
-          }
+        std::vector<Eigen::Vector3d>  patch_ground_below_uav; //The uav does not see below it self - add patch so the replanner doesnot replna below ground.
+        Eigen::Vector3d patch_seed(robot_pos[0], robot_pos[1], robot_pos[2] - garmin_altitude_);
+        patch_ground_below_uav = points_inside_circle(patch_seed, 3.0, map_resolution);
+
+        pcl::copyPointCloud(*cloud_ptr, processed_cloud);
+        pcl::copyPointCloud(*cloud_ptr, cloud_with_ground);
+        // Add imaginable ground
+        for (const auto& p : patch_ground_below_uav) {
+          pcl::PointXYZ pcl_point(p.x(), p.y(), p.z());
+          cloud_with_ground.push_back(pcl_point);
         }
-        filtered_ground_cloud->width = filtered_ground_cloud->points.size();
-        filtered_ground_cloud->height = 1;
-        filtered_ground_cloud->is_dense = true;
+        cloud_with_ground.width = cloud_with_ground.points.size();
+        cloud_with_ground.height = 1; // Unorganized point cloud
+        cloud_with_ground.is_dense = true; // All points are valid
+
+        pcl::PointCloud<pcl::PointXYZ> filtered_ground_cloud;
+
+        // Iterate and filter points
+        for (const auto& pt : cloud_ptr->points) {
+            if (pt.z > robot_pos[2] - 0.4) {
+                filtered_ground_cloud.points.push_back(pt);
+            }
+        }
+
+        pcl::PointCloud<pcl::PointXYZ>::Ptr ground_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+        for (const auto& pt : cloud_ptr->points) {
+            if (pt.z > robot_pos[2] - 0.4) {
+                ground_cloud_ptr->points.push_back(pt);
+            }
+        }
+        ground_cloud_ptr->width = ground_cloud_ptr->points.size();
+        ground_cloud_ptr->height = 1;
+        ground_cloud_ptr->is_dense = true;
+
+        // Now, copy the filtered data to processed_cloud
+        processed_cloud = *ground_cloud_ptr;
+
+        // pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_ground_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        // for (auto& pt : cloud_ptr->points) {
+        //   if (pt.z > robot_pos[2] - 0.4) { //TODO load 
+        //     filtered_ground_cloud->points.push_back(pt);
+        //   }
+        // }
+        // filtered_ground_cloud->width = filtered_ground_cloud->points.size();
+        // filtered_ground_cloud->height = 1;
+        // filtered_ground_cloud->is_dense = true;
 
 
-        processed_cloud = *filtered_ground_cloud;
+        // processed_cloud = *filtered_ground_cloud;
 
 
       } else {
@@ -2351,12 +2890,12 @@ void RBLController::callbackTimerSetReference([[maybe_unused]] const ros::TimerE
     mrs_lib::set_mutexed(mutex_centroid_, Eigen::Vector3d{ c1_no_conn[0], c1_no_conn[1], c1_no_conn[2] }, centroid_);
     c1_to_rviz = c1_no_conn;
 
-    std::cout << "Current goal is: [" << goal[0] << ", " << goal[1] << ", " << goal[2] << "]" << std::endl;
+    // std::cout << "Current goal is: [" << goal[0] << ", " << goal[1] << ", " << goal[2] << "]" << std::endl;
 
     if (use_livox_tilted) {
       double desired_heading = std::atan2(c1_no_conn[1] - robot_pos[1], c1_no_conn[0] - robot_pos[0]);
-      Eigen::Vector3d goal_eigen(goal[0], goal[1], goal[2]);
-      if ((robot_pos - goal_eigen).norm() >= 0.2) {
+      // Eigen::Vector3d goal_eigen(goal[0], goal[1], goal[2]);
+      if ((robot_pos - group_goal_).norm() >= 0.2) {
         p_ref.heading = desired_heading;
       }
       double diff = std::fmod(desired_heading - roll_pitch_yaw[2] + M_PI, 2 * M_PI) - M_PI;
@@ -2518,6 +3057,20 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
   }
   catch (...) {
     ROS_ERROR("exception caught during publishing topic '%s'", pub_destination_.getTopic().c_str());
+  }
+
+  try {
+    publishReplannerGoal();
+  }
+  catch (...) {
+    ROS_ERROR("exception caught during publishing topic '%s'", pub_goal_replanner_.getTopic().c_str());
+  }
+
+  try {
+    publishGridGoal();
+  }
+  catch (...) {
+    ROS_ERROR("exception caught during publishing topic '%s'", pub_grid_goal_.getTopic().c_str());
   }
 
   try {
@@ -2753,30 +3306,49 @@ bool RBLController::goalServiceCallback(mrs_msgs::Vec4::Request&  req,
   }
   auto uav_position                = mrs_lib::get_mutexed(mutex_position_command_, uav_position_);
   auto goto_goal = Eigen::Vector3d{req.goal[0], req.goal[1], req.goal[2]};
+  group_goal_ = goto_goal;
 
-  auto ret = getPath(uav_position, goto_goal);
-  {
-    std::scoped_lock lck(points_mutex_);
-    if (!ret) {
-      dense_points_.clear();
-      res.success = false;
-      res.message = "Path not found";
-      return false;
-    }
-    dense_points_ = getInterpolatedPath(ret.value(), 0.2);
-    group_goal_ = goto_goal;
-    goal[0] = goto_goal[0];
-    goal[1] = goto_goal[1];
-    goal[2] = goto_goal[2];
+  // // Dimensions of representation 3d matrix
+  // int X = static_cast<int>(std::ceil(20.0 / map_resolution)); // this is from local map in octomap - TODO load 
+  // int Y = static_cast<int>(std::ceil(20.0 / map_resolution));
+  // int Z = static_cast<int>(std::ceil(10.0 / map_resolution));
 
-    control_allowed_ = true;
-    starting_time    = ros::Time::now();
-    start_time_1     = ros::Time::now();
-    publishPath(dense_points_);
-  }
+  // //Make them even
+  // X = (X % 2 == 0) ? X : X + 1;
+  // Y = (Y % 2 == 0) ? Y : Y + 1;
+  // Z = (Z % 2 == 0) ? Z : Z + 1;
+
+  // //Initialize voxel grid
+  // VoxelGrid grid(X, Y, Z);
+  // Eigen::Vector3f start(uav_position_[0], uav_position_[1], uav_position_[2]);
+  // std::tuple<int, int, int> start_idx(grid.X/2, grid.Y/2, std::max(static_cast<int>(garmin_altitude_/map_resolution), 0));
+  // fill_inflate_grid(grid, start, start_idx);
+
+  // publishInflatedGrid(grid, start, start_idx);
+
+  // // auto ret = getPath(uav_position, goto_goal);
+  // std::cout << "Recieved this goto goal: " << goto_goal[0] << goto_goal[1] << goto_goal[2] << std::endl;
+  // group_goal_ = goto_goal;
+  // auto ret = A_star_plan(Eigen::Vector3f(uav_position_[0], uav_position_[1], uav_position_[2]),Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]), grid, start_idx);
+  // {
+  //   std::scoped_lock lck(points_mutex_);
+  //   if (ret.size()==0) {
+  //     dense_points_.clear();
+  //     res.success = false;
+  //     res.message = "Path not found";
+  //     return false;
+  //   }
+  //   dense_points_ = getInterpolatedPath(ret, 0.2);
+    
+
+  //   control_allowed_ = true;
+  //   starting_time    = ros::Time::now();
+  //   start_time_1     = ros::Time::now();
+  //   publishPath(dense_points_);
+  // }
   
   res.success = true;
-  res.message = "Path found";
+  res.message = "Goal Updated";
   return true;
 }
 

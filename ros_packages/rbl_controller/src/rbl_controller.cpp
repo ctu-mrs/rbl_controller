@@ -22,6 +22,7 @@ void RBLController::onInit() {
   param_loader.loadParam("uav_name", _uav_name_);
   param_loader.loadParam("odometry_topic", _odometry_topic_name_);
   param_loader.loadParam("set_reference_timer/rate", _rate_timer_set_reference_);
+  param_loader.loadParam("set_reference_timer/replanner_rate", _rate_replanner_set_reference_);
   param_loader.loadParam("control_frame", _control_frame_);
   param_loader.loadParam("odom_msg_max_latency", _odom_msg_max_latency_);
   param_loader.loadParam("diagnostics/odom_timeout", _odom_timeout_);
@@ -163,7 +164,7 @@ void RBLController::onInit() {
     
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
-  timer_set_active_wp_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::goalUpdateLoop, this);
+  timer_set_active_wp_ = nh.createTimer(ros::Rate(_rate_replanner_set_reference_), &RBLController::goalUpdateLoop, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
   // timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
 

@@ -6,12 +6,14 @@ uav_uvdar_ids: [1] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 
 set_reference_timer:
   rate: 10 # [Hz]
+  replanner_rate: 1 #[Hz]
   
 size_neighbors1: 0.5 
 size_obstacles1: 0.01 
-encumbrance: 0.2
+encumbrance: 0.5
 maximum_distance_conn: 10.0
 connectivity_flag: false #not used for now
+flag_replanner: true
 noisy_measurements: 0.0 #0.15
 noisy_angle: 0.0 #0.3
 threshold: 0.0 

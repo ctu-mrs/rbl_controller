@@ -69,6 +69,8 @@ void RBLController::onInit() {
   param_loader.loadParam("max_z", max_z);
   param_loader.loadParam("flag_3D", flag_3D);
   param_loader.loadParam("use_z_rule", use_z_rule);
+  param_loader.loadParam("time_keep", _time_keep_);
+  
 
   param_loader.loadParam("use_livox_tilted", use_livox_tilted);
   param_loader.loadParam("livox_tilt_deg", livox_tilt_deg);
@@ -210,7 +212,8 @@ void RBLController::onInit() {
       sub_pointCloud2_  = nh.subscribe("/" + _uav_name_ + "/pcl_filter/livox_points_processed", 1, &RBLController::pointCloud2Callback, this);
     }
   }
-  sub_neighbors_      = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
+  // sub_neighbors_      = nh.subscribe("/" + _uav_name_ + "/filter_reflective_uavs/agents_pcl", 1, &RBLController::neighborCallback, this);
+  sub_pointCloud2_pos_  = nh.subscribe("/" + _uav_name_ + "reflective_marker_detection/reflective_centroids_out", 1, &RBLController::pointCloud2PosCallback, this);
   sub_garmin_altitude_ = nh.subscribe("/" + _uav_name_ + "/mavros/distance_sensor/garmin", 1, &RBLController::garminCallback, this);
   //TODO del
   sub_velocity_       = nh.subscribe("/" + _uav_name_ + "/hw_api/velocity", 1, &RBLController::velocityCallback, this);
@@ -3128,6 +3131,34 @@ void RBLController::neighborCallback(const sensor_msgs::PointCloud2& neighbors_p
   neighbors = neighbors_;
 }
 
+
+void RBLController::pointCloud2PosCallback(const sensor_msgs::PointCloud2& pcl_cloud2) {
+  ros::Time now = ros::Time::now();
+	ros::Time pose_time = pcl_cloud2.header.stamp;
+	pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+
+    pcl::fromROSMsg(pcl_cloud2, pcl_cloud);
+
+    for (const auto& point : pcl_cloud.points) {
+        double x = point.x;
+        double y = point.y;
+        double z = point.z;
+        prev_neigh_pos.emplace_back(pose_time, Eigen::Vector3d(x, y, z));
+	}
+
+  prev_neigh_pos.erase(std::remove_if(prev_neigh_pos.begin(), prev_neigh_pos.end(),[&](const auto& entry) {
+          return (now - entry.first).toSec() > _time_keep_;}),prev_neigh_pos.end());
+
+
+  std::vector<Eigen::Vector3d> neighbors_;
+  neighbors_.reserve(prev_neigh_pos.size());
+
+  for (const auto& pos : prev_neigh_pos) {
+    neighbors_.emplace_back(pos.second.x(), pos.second.y(), pos.second.z());
+  }
+
+  neighbors = neighbors_;
+}
 
 
 /*ServicesCallbacks //{ */

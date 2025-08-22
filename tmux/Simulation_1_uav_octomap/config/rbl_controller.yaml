@@ -7,6 +7,8 @@ uav_uvdar_ids: [1] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 set_reference_timer:
   rate: 10 # [Hz]
   replanner_rate: 1 #[Hz]
+
+time_keep: 2.0
   
 size_neighbors1: 0.5 
 size_obstacles1: 0.01 

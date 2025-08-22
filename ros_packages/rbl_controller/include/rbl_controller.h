@@ -200,6 +200,7 @@ public:
   ros::Timer               timer_set_active_wp_;
   ros::Timer               timer_pub_;
   int                      _rate_timer_set_reference_;
+  int                      _rate_replanner_set_reference_;
   void                     callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
   // void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
 
@@ -313,6 +314,8 @@ public:
   std::vector<double>                    size_neighbors;
   std::vector<double>                    size_obstacles;
 
+  std::vector<std::pair<ros::Time, Eigen::Vector3d>>																				prev_neigh_pos;
+
   std::vector<std::pair<ros::Time, Eigen::Vector3d>>																				neighbor_pos_ref_marker;
 
   double                                 size_neighbors1;
@@ -374,8 +377,10 @@ public:
   double                       livox_tilt_deg;
   double                       livox_fov;
   Eigen::Vector3d              livox_translation;
+  double                       _time_keep_;
 
   ros::Subscriber                 sub_pointCloud2_;
+  ros::Subscriber                 sub_pointCloud2_pos_;
   ros::Subscriber                 sub_neighbors_;
   ros::Subscriber                 sub_garmin_altitude_;
   pcl::PointCloud<pcl::PointXYZ>  cloud;
@@ -384,6 +389,7 @@ public:
   pcl::PointCloud<pcl::PointXYZ>  downsampled_cloud;
   void garminCallback(const sensor_msgs::Range& msg);
   void neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl);
+  void pointCloud2PosCallback(const sensor_msgs::PointCloud2& pcl_cloud2);
   void pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_cloud2);
   ros::Publisher                 pub_pointCloud_; //for rviz
   void publishPcl();

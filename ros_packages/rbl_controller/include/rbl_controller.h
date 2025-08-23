@@ -378,6 +378,8 @@ public:
   double                       livox_fov;
   Eigen::Vector3d              livox_translation;
   double                       _time_keep_;
+  int                          replanner_counter_max;
+  int                          replanner_counter;
 
   ros::Subscriber                 sub_pointCloud2_;
   ros::Subscriber                 sub_pointCloud2_pos_;

@@ -85,6 +85,9 @@ void RBLController::onInit() {
 
   // omp_set_num_threads(4); //TODO load? 
 
+  replanner_counter_max = static_cast<int>(_rate_timer_set_reference_/_rate_replanner_set_reference_);
+  replanner_counter = 0;
+
   livox_translation = Eigen::Vector3d(0.0, 0.0, 0.10); //TODO actually measure this on uav, and maybe loading it
 
   radius_sensing = radius / cwvd_obs + searchRadius;//radius is r_A, and r_sensing is for the points I need to consider only due to the agressivity
@@ -166,10 +169,10 @@ void RBLController::onInit() {
     
   // initialize timers
   timer_set_reference_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackTimerSetReference, this);
-  timer_set_active_wp_ = nh.createTimer(ros::Rate(_rate_replanner_set_reference_), &RBLController::goalUpdateLoop, this);
+  timer_set_active_wp_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::goalUpdateLoop, this);
   timer_diagnostics_   = nh.createTimer(ros::Rate(_rate_timer_diagnostics_), &RBLController::callbackTimerDiagnostics, this);
   // timer_pub_ = nh.createTimer(ros::Rate(_rate_timer_set_reference_), &RBLController::callbackPublisher, this);
-
+  
   // initialize service servers
   service_activate_control_   = nh.advertiseService("control_activation_in", &RBLController::activationServiceCallback, this);
   service_deactivate_control_ = nh.advertiseService("control_deactivation_in", &RBLController::deactivationServiceCallback, this);
@@ -1924,42 +1927,46 @@ void RBLController::goalUpdateLoop(const ros::TimerEvent&)
   auto group_goal   = mrs_lib::get_mutexed(mutex_position_command_, group_goal_);
   auto centroid     = mrs_lib::get_mutexed(mutex_centroid_, centroid_);
 
+  if (replanner_counter > replanner_counter_max) {
+    replanner_counter = 0;
+    // Dimensions of representation 3d matrix
+    int X = static_cast<int>(std::ceil(20.0 / map_resolution)); // this is from local map in octomap - TODO load 
+    int Y = static_cast<int>(std::ceil(20.0 / map_resolution));
+    int Z = static_cast<int>(std::ceil(10.0 / map_resolution));
+    //Make them even
+    X = (X % 2 == 0) ? X : X + 1;
+    Y = (Y % 2 == 0) ? Y : Y + 1;
+    Z = (Z % 2 == 0) ? Z : Z + 1;
+    //Initialize
+    VoxelGrid grid(X, Y, Z);
 
-  // Dimensions of representation 3d matrix
-  int X = static_cast<int>(std::ceil(20.0 / map_resolution)); // this is from local map in octomap - TODO load 
-  int Y = static_cast<int>(std::ceil(20.0 / map_resolution));
-  int Z = static_cast<int>(std::ceil(10.0 / map_resolution));
-  //Make them even
-  X = (X % 2 == 0) ? X : X + 1;
-  Y = (Y % 2 == 0) ? Y : Y + 1;
-  Z = (Z % 2 == 0) ? Z : Z + 1;
-  //Initialize
-  VoxelGrid grid(X, Y, Z);
+    Eigen::Vector3f start(uav_position_[0], uav_position_[1], uav_position_[2]);
+    std::tuple<int, int, int> start_ints(grid.X/2, grid.Y/2, std::max(static_cast<int>(garmin_altitude_/map_resolution), 0));
 
-  Eigen::Vector3f start(uav_position_[0], uav_position_[1], uav_position_[2]);
-  std::tuple<int, int, int> start_ints(grid.X/2, grid.Y/2, std::max(static_cast<int>(garmin_altitude_/map_resolution), 0));
+    fill_inflate_grid(grid, start, start_ints);
+    publishInflatedGrid(grid, start, start_ints);
 
-  fill_inflate_grid(grid, start, start_ints);
-  publishInflatedGrid(grid, start, start_ints);
+    // if (isReplanNeeded(uav_position, points_copy, centroid)) {
+    if (1) {
+      ROS_INFO_STREAM("[RBLController]: Replanning");
 
-  // if (isReplanNeeded(uav_position, points_copy, centroid)) {
-  if (1) {
-    ROS_INFO_STREAM("[RBLController]: Replanning");
+      // auto ret = getPath(uav_position, group_goal);
+      std::cout << "Group Goal is: " << group_goal_[0] << ", " << group_goal_[1] << ", " << group_goal_[2] << std::endl;
+      std::cout << "Before A*" << std::endl;
+      auto ret = A_star_plan(start, Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]), grid, start_ints);
+      std::cout << "After A*" << std::endl;
+      {
+        std::scoped_lock lck(points_mutex_);
+        if (ret.size()>0) {
+          dense_points_ = getInterpolatedPath(ret, 0.2);
+          points_copy   = dense_points_;
 
-    // auto ret = getPath(uav_position, group_goal);
-    std::cout << "Group Goal is: " << group_goal_[0] << ", " << group_goal_[1] << ", " << group_goal_[2] << std::endl;
-    std::cout << "Before A*" << std::endl;
-    auto ret = A_star_plan(start, Eigen::Vector3f(group_goal_[0], group_goal_[1], group_goal_[2]), grid, start_ints);
-    std::cout << "After A*" << std::endl;
-    {
-      std::scoped_lock lck(points_mutex_);
-      if (ret.size()>0) {
-        dense_points_ = getInterpolatedPath(ret, 0.2);
-        points_copy   = dense_points_;
-
-        publishPath(dense_points_);
+          publishPath(dense_points_);
+        }
       }
     }
+  } else {
+    ++replanner_counter;
   }
 
   // Step 1: Find the closest point on the path to the current robot position

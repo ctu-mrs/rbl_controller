@@ -50,11 +50,22 @@ windows:
   #     layout: tiled
   #     panes:
   #       - export UAV_NAME=uav1; waitForTime; roslaunch mrs_uav_core core.launch
+
+  - activation:
+      layout: tiled
+      synchronize: after
+      panes:
+        - export UAV_NAME=uav1; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
   
   - rbl_controller:
       layout: tiled
       panes:
         - export UAV_NAME=uav1; waitForTime; roslaunch rbl_controller controller.launch custom_config:=./config/rbl_controller.yaml
+
+  - goto:
+      layout: tiled
+      panes:
+        - 'history -s rosservice call /$UAV_NAME/rbl_controller/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
 
   - gazebo:
       layout: tiled
@@ -93,11 +104,7 @@ windows:
   #     panes:
   #       - export UAV_NAME=uav1; waitForControl; roslaunch replanner example.launch
 
-  - activation:
-      layout: tiled
-      synchronize: after
-      panes:
-        - export UAV_NAME=uav1; waitForControl; history -s rosservice call /$UAV_NAME/rbl_controller/activation
+  
 
   # - fly_to_start:
   #     layout: tiled
@@ -121,10 +128,6 @@ windows:
       panes:
         - waitForHw; roslaunch mrs_uav_autostart automatic_start.launch
         - 'waitForControl; rosservice call /$UAV_NAME/hw_api/arming 1; sleep 2; rosservice call /$UAV_NAME/hw_api/offboard'
-  - goto:
-      layout: tiled
-      panes:
-        - 'history -s rosservice call /$UAV_NAME/octomap_planner/goto \"goal: \[0.0, 60.0, 2.0, 0.0\]\"'
 
   # - tf_connector:
   #     layout: tiled

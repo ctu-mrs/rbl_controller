@@ -58,6 +58,9 @@
 // #include <omp.h>
 
 // helper libraries
+#include <queue>
+#include <unordered_map>
+#include <tuple>
 #include <string>
 #include <vector>
 #include <set>
@@ -73,6 +76,98 @@
 #include<optional>
 namespace formation_control
 {
+
+struct VoxelGrid {
+  int X, Y, Z;
+  std::vector<int> data;
+
+  VoxelGrid(int x, int y, int z) : X(x), Y(y), Z(z), data(x * y * z, 0) {}
+
+  int& at(int x, int y, int z) {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+  // Const version for reading
+  const int& at(int x, int y, int z) const {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+};
+
+struct ExpandedGrid {
+  int X, Y, Z;
+  std::vector<char> data; // Change bool to char or uint8_t
+
+  ExpandedGrid(int x, int y, int z) : X(x), Y(y), Z(z), data(x * y * z, 0) {}
+
+  char& at(int x, int y, int z) {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+  // Const version for reading
+  const char& at(int x, int y, int z) const {
+    return data[x * Y * Z + y * Z + z];
+  }
+
+  char& at(std::tuple<int, int, int> pos) {
+    return data[std::get<0>(pos) * Y * Z + std::get<1>(pos) * Z + std::get<2>(pos)];
+  }
+
+  // Const version for reading
+  const char& at(std::tuple<int, int, int> pos) const {
+    return data[std::get<0>(pos) * Y * Z + std::get<1>(pos) * Z + std::get<2>(pos)];
+  }
+};
+
+
+
+struct Node {
+  Node* parent;
+  std::tuple<int, int, int> position;
+  std::tuple<int, int, int> direction;
+
+  double g;
+  double h;
+  double f;
+
+  Node(Node* parent = nullptr, std::tuple<int, int, int> position = {0, 0, 0}) {
+    this->parent = parent;
+    this->position = position;
+    this->g = 0;
+    this->h = 0;
+    this->f = 0;
+  }
+
+  bool operator==(const Node& other) const {
+    return position == other.position;
+  }
+};
+
+struct CompareNode {
+  bool operator()(const Node* a, const Node* b) const {
+      return a->f > b->f;
+  }
+};
+
+
+
+// struct Vec3Hash {
+//   size_t operator()(const std::vector<int>& v) const {
+//     return std::hash<int>()(v[0]) ^ std::hash<int>()(v[1] << 1) ^ std::hash<int>()(v[2] << 2);
+//   }
+// };
+
+// struct Vec3Hash {
+//   std::size_t operator()(const std::vector<int>& v) const {
+//     if (v.size() != 3) {
+//       return 0;
+//     }
+//     std::size_t h1 = std::hash<int>{}(v[0]);
+//     std::size_t h2 = std::hash<int>{}(v[1]);
+//     std::size_t h3 = std::hash<int>{}(v[2]);
+//     return h1 ^ (h2 << 1) ^ (h3 << 2); 
+//   }
+// };
 
 class RBLController : public nodelet::Nodelet {
 
@@ -105,6 +200,7 @@ public:
   ros::Timer               timer_set_active_wp_;
   ros::Timer               timer_pub_;
   int                      _rate_timer_set_reference_;
+  int                      _rate_replanner_set_reference_;
   void                     callbackTimerSetReference([[maybe_unused]] const ros::TimerEvent &te);
   // void callbackPublisher([[maybe_unused]] const ros::TimerEvent &te);
 
@@ -145,12 +241,22 @@ public:
   Eigen::Vector3d _monitored_area_origin_;
   // visualization publishing
   ros::Publisher pub_destination_;
+  ros::Publisher pub_goal_replanner_;
   ros::Publisher pub_position_;
   ros::Publisher pub_centroid_;
   ros::Publisher pub_active_wp_;
   void           publishDestination();
+  void           publishReplannerGoal();
   void           publishPosition();
   void           publishCentroid();
+
+  ros::Publisher pub_inflated_grid_;
+  void           publishInflatedGrid(VoxelGrid grid, Eigen::Vector3f start, std::tuple<int, int, int> start_idx);
+
+  ros::Publisher pub_grid_goal_;
+  Eigen::Vector3d grid_goal;
+  void publishGridGoal();
+
 
   std::vector<ros::Subscriber> clusters_sub_;
   std::vector<ros::Subscriber> clusters_sub_1;
@@ -207,6 +313,8 @@ public:
   std::vector<double>                    size_neighbors_and_obstacles;
   std::vector<double>                    size_neighbors;
   std::vector<double>                    size_obstacles;
+
+  std::vector<std::pair<ros::Time, Eigen::Vector3d>>																				prev_neigh_pos;
 
   std::vector<std::pair<ros::Time, Eigen::Vector3d>>																				neighbor_pos_ref_marker;
 
@@ -269,15 +377,21 @@ public:
   double                       livox_tilt_deg;
   double                       livox_fov;
   Eigen::Vector3d              livox_translation;
+  double                       _time_keep_;
+  int                          replanner_counter_max;
+  int                          replanner_counter;
 
   ros::Subscriber                 sub_pointCloud2_;
+  ros::Subscriber                 sub_pointCloud2_pos_;
   ros::Subscriber                 sub_neighbors_;
   ros::Subscriber                 sub_garmin_altitude_;
   pcl::PointCloud<pcl::PointXYZ>  cloud;
   pcl::PointCloud<pcl::PointXYZ>  processed_cloud;
+  pcl::PointCloud<pcl::PointXYZ>  cloud_with_ground; //for replanning
   pcl::PointCloud<pcl::PointXYZ>  downsampled_cloud;
   void garminCallback(const sensor_msgs::Range& msg);
   void neighborCallback(const sensor_msgs::PointCloud2& neighbors_pcl);
+  void pointCloud2PosCallback(const sensor_msgs::PointCloud2& pcl_cloud2);
   void pointCloud2Callback(const sensor_msgs::PointCloud2& pcl_cloud2);
   ros::Publisher                 pub_pointCloud_; //for rviz
   void publishPcl();
@@ -398,6 +512,14 @@ std::vector<geometry_msgs::Point>
 getInterpolatedPath(const std::vector<geometry_msgs::Point>& input_points,
                                    double                                   resolution=0.2);
 bool isReplanNeeded(const Eigen::Vector3d& uav_position, const std::vector<geometry_msgs::Point>& path, const Eigen::Vector3d& centroid);
+int heuristic(const std::vector<int>& a, const std::vector<int>& b);
+std::vector<std::vector<int>> get_neighbors(const std::vector<int>& idx, const VoxelGrid& grid);
+// VoxelGrid get_grid(const Eigen::Vector3f start, const Eigen::Vector3f goal);
+void fill_inflate_grid(VoxelGrid& grid, const Eigen::Vector3f start, const std::tuple<int, int, int> start_idx);
+std::vector<geometry_msgs::Point> A_star_plan(const Eigen::Vector3f start_f, const Eigen::Vector3f goal_f, VoxelGrid grid, std::tuple<int, int, int> start);
+geometry_msgs::Point get_point_from_grid(Eigen::Vector3f start_f, std::tuple<int, int, int> p_idx, VoxelGrid grid, std::tuple<int, int, int> start_idx);
+VoxelGrid get_free_space_grid(VoxelGrid grid);
+std::tuple<int, int, int> closest_free_end(std::tuple<int, int, int> cur_end, VoxelGrid grid);
 void timeoutGeneric(const std::string& topic, const ros::Time& last_msg);
 };
 

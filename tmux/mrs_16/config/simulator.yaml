@@ -1,6 +1,6 @@
 simulation_rate: 100.0
 clock_rate: 100.0
-realtime_factor: 0.1
+realtime_factor: 0.5
 
 iterate_without_input: true
 
@@ -40,6 +40,13 @@ uav_names: [
   "uav7",
   "uav8",
   "uav9",
+  "uav10",
+  "uav11",
+  "uav12",
+  "uav13",
+  "uav14",
+  "uav15",
+  "uav16",
 ]
 
 
@@ -116,3 +123,58 @@ uav9:
     z: 2.0
     heading: 0.0
 
+uav10:
+  type: "x500"
+  spawn:
+    x: 0.0 #6.2348980185873355
+    y: -48.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav11:
+  type: "x500"
+  spawn:
+    x: -3.0 #6.2348980185873355
+    y: -47.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav12:
+  type: "x500"
+  spawn:
+    x: -6.0 #6.2348980185873355
+    y: -47.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav13:
+  type: "x500"
+  spawn:
+    x: -9.0 #6.2348980185873355
+    y: -47.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav14:
+  type: "x500"
+  spawn:
+    x: -9.0 #6.2348980185873355
+    y: -45.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav15:
+  type: "x500"
+  spawn:
+    x: -9.0 #6.2348980185873355
+    y: -42.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0
+
+uav16:
+  type: "x500"
+  spawn:
+    x: -9.0 #6.2348980185873355
+    y: -39.0 #7.818314824680298
+    z: 2.0
+    heading: 0.0

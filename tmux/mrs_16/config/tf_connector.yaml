@@ -30,6 +30,27 @@ connections:
   - root_frame_id: "uav9/fcu"
     equal_frame_id: "uav9/world_origin"
 
+  - root_frame_id: "uav10/fcu"
+    equal_frame_id: "uav10/world_origin"
+
+  - root_frame_id: "uav11/fcu"
+    equal_frame_id: "uav11/world_origin"
+
+  - root_frame_id: "uav12/fcu"
+    equal_frame_id: "uav12/world_origin"
+
+  - root_frame_id: "uav13/fcu"
+    equal_frame_id: "uav13/world_origin"
+    
+  - root_frame_id: "uav14/fcu"
+    equal_frame_id: "uav14/world_origin"
+
+  - root_frame_id: "uav15/fcu"
+    equal_frame_id: "uav15/world_origin"
+
+  - root_frame_id: "uav16/fcu"
+    equal_frame_id: "uav16/world_origin"
+
 
 
   - root_frame_id: "simulator_origin"

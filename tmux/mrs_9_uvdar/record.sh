@@ -1,6 +1,6 @@
 #!/bin/bash
 
-path="."
+path="/home/manuel/mrs/mrs_apptainer/user_ros_workspace/src/rbl_controller/tmux/mrs_9_uvdar"
 
 # By default, we record everything.
 # Except for this list of EXCLUDED topics:

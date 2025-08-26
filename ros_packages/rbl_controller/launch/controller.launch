@@ -61,6 +61,7 @@
             <remap from="~obstacle_markers_out" to="~obstacles_vis" />
             <remap from="~neighbors_markers_out" to="~neighbors_vis" />
             <remap from="~hull_markers_out" to="~hull_vis" />
+            <remap from="~line_out" to="~line_vis" />
 
             
 

@@ -150,6 +150,7 @@ void RBLController::onInit() {
   pub_neighbors_   = nh.advertise<visualization_msgs::MarkerArray>("neighbors_markers_out", 1, true);
   pub_destination_ = nh.advertise<visualization_msgs::Marker>("destination_out", 1, true);
   pub_position_    = nh.advertise<visualization_msgs::Marker>("position_out", 1, true);
+  pub_line_        = nh.advertise<visualization_msgs::Marker>("line_out", 1, true);
   pub_hull_        = nh.advertise<visualization_msgs::MarkerArray>("hull_markers_out", 1, true);
   pub_centroid_    = nh.advertise<visualization_msgs::Marker>("centroid_out", 1, true);
   // initialize transformer
@@ -291,6 +292,57 @@ void RBLController::publishPosition() {
 }
 //}
 
+
+void RBLController::publishLine() {
+    visualization_msgs::Marker line_list;
+    line_list.header.frame_id = _control_frame_;
+    line_list.header.stamp = ros::Time::now();
+    line_list.ns = "neighbors";
+    line_list.id = 0;
+    line_list.type = visualization_msgs::Marker::LINE_LIST;
+    line_list.action = visualization_msgs::Marker::ADD;
+
+    // Line thickness
+    line_list.scale.x = 0.05;
+
+    // Line color (blue)
+    line_list.color.r = 0.0f;
+    line_list.color.g = 1.0f;
+    line_list.color.b = 0.0f;
+    line_list.color.a = 0.5f;
+
+    // Pose (must be valid!)
+    line_list.pose.position.x = 0.0;
+    line_list.pose.position.y = 0.0;
+    line_list.pose.position.z = 0.0;
+    line_list.pose.orientation.x = 0.0;
+    line_list.pose.orientation.y = 0.0;
+    line_list.pose.orientation.z = 0.0;
+    line_list.pose.orientation.w = 1.0;  // identity quaternion
+
+    // Build the line list
+    line_list.points.clear();
+
+    geometry_msgs::Point robot_point;
+    robot_point.x = robot_pos.first;
+    robot_point.y = robot_pos.second;
+    robot_point.z = 0.0;
+
+    for (auto& uav : fixed_neighbors_vec) {
+        geometry_msgs::Point uav_point;
+        uav_point.x = uav.first;
+        uav_point.y = uav.second;
+        uav_point.z = 0.0;
+
+        // LINE_LIST expects pairs of points
+        line_list.points.push_back(robot_point);  // start
+        line_list.points.push_back(uav_point);    // end
+    }
+
+    // Publish marker
+    pub_line_.publish(line_list);
+}
+
 /*RBLController::publishCentroid() //{ */
 void RBLController::publishCentroid() {
   visualization_msgs::Marker marker;
@@ -333,9 +385,9 @@ void RBLController::publishDestination() {
   marker.scale.y            = 1.0;
   marker.scale.z            = 1.0;
   marker.color.r            = 0.0;  // Red color
-  marker.color.g            = 0.0;
-  marker.color.b            = 1.0;
-  marker.color.a            = 1.0;  // Fully opaque
+  marker.color.g            = 0.5;
+  marker.color.b            = 0.5;
+  marker.color.a            = 0.5;  // Fully opaque
 
   pub_destination_.publish(marker);
 }
@@ -1482,6 +1534,12 @@ void RBLController::callbackTimerDiagnostics([[maybe_unused]] const ros::TimerEv
   }
   catch (...) {
     ROS_ERROR("exception caught during publishing topic '%s'", pub_position_.getTopic().c_str());
+  }
+  try {
+    publishLine();
+  }
+  catch (...) {
+    ROS_ERROR("exception caught during publishing topic '%s'", pub_line_.getTopic().c_str());
   }
 
   try {

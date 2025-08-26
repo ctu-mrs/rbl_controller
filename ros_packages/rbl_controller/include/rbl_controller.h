@@ -117,12 +117,14 @@ public:
   ros::Publisher pub_position_;
   ros::Publisher pub_centroid_;
   ros::Publisher pub_hull_;
+  ros::Publisher pub_line_;
   void           publishObstacles();
   void           publishDestination();
   void           publishPosition();
   void           publishNeighbors();
   void           publishHull();
   void           publishCentroid();
+  void           publishLine();
 
   std::vector<ros::Subscriber> clusters_sub_;
   std::vector<ros::Subscriber> clusters_sub_1;

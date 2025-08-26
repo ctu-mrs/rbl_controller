@@ -7,14 +7,15 @@ then `rosservice call /uav1/rbl_controller/activation`
 
 # To-Do List
 
-- [~] Fix active waypoint for the rbl
+- [x] Fix active waypoint for the rbl
 - [x] Add reflective markers in simulator
 - [ ] Make the replanner team-aware
 - [x] Speed up computation of the cell and centroid
-- [ ] filter the robot pointcloud for the path planner they should not be considered as obstacles 
-- [~] Update service call
-- [ ] Adjust parameters map. Robots remain in the map too much 
-- [ ] Fix The replanner, sometimes it can be chattering, frequency of replanner probably is too high
+- [x] filter the robot pointcloud for the path planner they should not be considered as obstacles 
+- [x] Update service call
+- [x] Adjust parameters map. Robots remain in the map too much 
+- [x] Fix The replanner, sometimes it can be chattering, frequency of replanner probably is too high
 - [ ] long-term upgrade to ROS2
-- [ ] maybe FlightForge simulator 
-- [ ] create image for robofly. to add option for communication between robots.
+- [ ] FlightForge simulator 
+- [x] create image for robofly. to add option for communication between robots.
+- [x] make it losos compiliant

@@ -5,7 +5,7 @@ odometry_topic: "estimation_manager/odom_main"
 uav_uvdar_ids: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] # 0,1,2,3,4] #,"uav40","uav41"] #, \"uav11\"]\n
 
 set_reference_timer:
-  rate: 10 # [Hz]
+  rate: 15 # [Hz]
   
 size_neighbors1: 0.5 
 size_obstacles1: 0.05 
@@ -23,6 +23,17 @@ refZ: 1.0
 max_obstacle_integration_dist: 9.0
 replanner_flag: false
 connectivity_flag: true
+
+# Adj_matrix_uav1: [0,0,0,1,1,0,0,0,1]
+# Adj_matrix_uav2: [0,0,0,1,0,1,1,0,0]
+# Adj_matrix_uav3: [0,0,0,1,1,1,0,0,0]
+# Adj_matrix_uav4: [1,1,1,0,0,0,0,1,0]
+# Adj_matrix_uav5: [1,0,1,0,0,0,0,0,0]
+# Adj_matrix_uav6: [0,1,1,0,0,0,0,0,0]
+# Adj_matrix_uav7: [0,1,0,0,0,0,0,1,0]
+# Adj_matrix_uav8: [0,0,0,1,0,0,1,0,1]
+# Adj_matrix_uav9: [1,0,0,0,0,0,0,1,0]
+
 Adj_matrix_uav1: [0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0]
 Adj_matrix_uav2: [1,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0]
 Adj_matrix_uav3: [0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0]
@@ -39,15 +50,6 @@ Adj_matrix_uav13: [0,0,0,0,1,0,1,0,1,0,0,0,0,0,0,0]
 Adj_matrix_uav14: [1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0]
 Adj_matrix_uav15: [1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0]
 
-# Adj_matrix_uav1: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav2: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav3: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav4: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav5: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav6: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav7: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav8: [0,0,0,0,0,0,0,0,0]
-# Adj_matrix_uav9: [0,0,0,0,0,0,0,0,0]
 # control approach params
 controlled_dimensions: 3
 
@@ -71,55 +73,90 @@ monitored_area_origin:
   y: 0.0
   z: 0.0
 
+
 final_positions: # defined with respect to monitored_area_origin
 
   uav1:
-    x: -6.0
-    y: 45.0
-    z: 3.0
+    x: -3.0
+    y: 40.0
+    z: 1.0
 
   uav2:
-    x: -6.0
-    y: 45.0
-    z: 3.0
+    x: 3.0
+    y: 40.0
+    z: 1.0
       
   uav3:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: 0.0
+    y: 43.0
+    z: 1.0
 
   uav4:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: 0.0
+    y: 40.0
+    z: 1.0
 
   uav5:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: -3.0
+    y: 43.0
+    z: 1.0
 
   uav6:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: 3.0
+    y: 43.0
+    z: 1.0
 
   uav7:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: 3.0
+    y: 37.0
+    z: 1.0
   uav8:
-
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: 0.0
+    y: 37.0
+    z: 1.0
       
   uav9:
-    x: 0
-    x: -6.0
-    y: 45.0
+    x: -3.0
+    y: 37.0
+    z: 1.0
 
+  uav10:
+    x: 0
+    y: -6.0
+    z: 45.0
+
+  uav11:
+    x: 0
+    y: -6.0
+    z: 45.0
+
+  uav12:
+    x: 0
+    y: -6.0
+    z: 45.0
+
+  uav13:
+    x: 0
+    y: -6.0
+    z: 45.0
+
+  uav14:
+    x: 0
+    y: -6.0
+    z: 45.0
+      
+  uav15:
+    x: 0
+    y: -6.0
+    z: 45.0
+
+  uav16:
+    x: 0
+    y: -6.0
+    z: 45.0
 
 initial_positions: # defined with respect to monitored_area_origin
+
 
   uav1:
     x: -6.0 #10
@@ -162,6 +199,41 @@ initial_positions: # defined with respect to monitored_area_origin
     z: 2.0
 
   uav9:
+    x: -6.0 #6.2348980185873355
+    y: -45.0 #7.818314824680298
+    z: 2.0
+
+  uav10:
+    x: 0.0 #10
+    y: -48.0 #0
+    z: 2.0
+
+  uav11:
+    x: -0.0 #6.2348980185873355
+    y: -39.0 #7.818314824680298
+    z: 2.0
+
+  uav12:
+    x: 0.0 #-2.22520933956314
+    y: -45.0 #9.7492791218
+    z: 2.0
+      
+  uav13:
+    x: -3.0 #10
+    y: -45.0 #0
+    z: 2.0
+
+  uav14:
+    x: -6.0 #6.2348980185873355
+    y: -45.0 #7.818314824680298
+    z: 2.0
+
+  uav15:
+    x: -3.0 #10
+    y: -45.0 #0
+    z: 2.0
+
+  uav16:
     x: -6.0 #6.2348980185873355
     y: -45.0 #7.818314824680298
     z: 2.0

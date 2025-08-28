@@ -326,7 +326,8 @@ void WrapperRosRBL::cbTmDiagnostics([[maybe_unused]] const ros::TimerEvent& te)
     pub_viz_target_.publish(getVizModGroupGoal(rbl_controller_->getGoal(), 0.5, _frame_));
     pub_viz_position_.publish(getVizPosition(rbl_controller_->getCurrentPosition(), 0.5, _frame_));
     pub_viz_centroid_.publish(getVizCentroid(rbl_controller_->getCentroid(), _frame_));
-    pub_viz_pcl_.publish(getVizPCL(rbl_controller_->getPCL(), _frame_));
+    auto pcl_ptr = getVizPCL(rbl_controller_->getPCL(), _frame_);
+    pub_viz_pcl_.publish(*pcl_ptr);
   }
 }
 
@@ -365,7 +366,7 @@ bool WrapperRosRBL::cbSrvGotoPosition(mrs_msgs::Vec4::Request&  req,
 {
   {
     std::scoped_lock lck(mtx_rbl_);
-    rbl_controller_->setGoal(Eigen::Vector3d{req.goal[0], req.goal[1], req.goal[2]});
+    rbl_controller_->setGoal(Eigen::Vector3d{ req.goal[0], req.goal[1], req.goal[2] });
   }
   res.success = true;
   res.message = "Goal set";

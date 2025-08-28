@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options(-std=c++17)
 
-# Find catkin packages
 find_package(catkin REQUIRED COMPONENTS
   nodelet
   roscpp
@@ -18,25 +17,11 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   pcl_msgs
   pcl_conversions
-  mrs_octomap_planner
   message_generation
 )
 
-find_package(OpenMP REQUIRED)
-
-# Find Eigen
 find_package(Eigen3 REQUIRED)
-
-# Find Pcl
 find_package(pcl_ros REQUIRED)
-
-message(STATUS "pcl_ros_INCLUDE_DIRS: ${pcl_ros_INCLUDE_DIRS}")
-
-
-# Find Boost
-find_package(Boost REQUIRED)
-
-# Set Eigen variables
 set(Eigen_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS})
 set(Eigen_LIBRARIES ${EIGEN_LIBRARIES})
 
@@ -49,15 +34,13 @@ generate_messages(
   DEPENDENCIES
   std_msgs
 )
-# Declare catkin package
+
 catkin_package(
-  LIBRARIES RBLController 
+  LIBRARIES nodelet_rbl_controller 
   CATKIN_DEPENDS roscpp mrs_lib mrs_msgs geometry_msgs nav_msgs pcl_ros pcl_msgs pcl_conversions message_runtime
   DEPENDS Eigen
 )
 
-
-# Include directories
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -65,29 +48,23 @@ include_directories(
   ${pcl_ros_INCLUDE_DIRS}
 )
 
-# Declare C++ library
-add_library(RBLController src/rbl_controller.cpp)
-add_dependencies(RBLController
+add_library(nodelet_rbl_controller src/nodelet.cpp)
+add_dependencies(nodelet_rbl_controller
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${catkin_EXPORTED_TARGETS}
 )
-# add_library(lidar_clusters src/lidar_clusters.cpp)
-
-# Link libraries for the RBLController library
-target_link_libraries(RBLController
+target_link_libraries(nodelet_rbl_controller
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
   ${pcl_ros_LIBRARIES}
-  OpenMP::OpenMP_CXX
 )
 
-# Declare the lidar_clusters executable
+install(TARGETS nodelet_rbl_controller
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-#add_executable(lidar_clusters_node src/lidar_clusters.cpp)
-# add_executable(continuous_marker_clear src/clear.cpp)
-# target_link_libraries(continuous_marker_clear ${catkin_LIBRARIES})
-# Link libraries for the lidar_clusters executable
-#target_link_libraries(lidar_clusters
-#  ${catkin_LIBRARIES}
-#)
-
+install(FILES plugin.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)

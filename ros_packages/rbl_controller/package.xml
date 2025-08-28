@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rbl_controller</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>Package implementing distributed control for multi-robot collision avoidance.</description>
 
   <maintainer email="boldrman@fel.cvut.cz">Manuel Boldrer</maintainer>
+  <author email="ahmadafz@fel.cvut.cz">Afzal Ahmad</author>
 
   <license>MIT</license>
 
@@ -18,14 +19,10 @@
   <depend>mrs_lib</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>mrs_hector_estimator_plugin</depend>
-  <depend>hector_mapping</depend>
   <depend>pcl_ros</depend>
   <depend>pcl_conversions</depend>
   <depend>pcl_msgs</depend>
-  <depend>mrs_octomap_planner</depend>
   <depend>message_runtime</depend>
- 
 
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

@@ -23,7 +23,7 @@
     <arg name="standalone"
          default="true" />
     <arg name="manager"
-         default="$(arg UAV_NAME)_waypointflier_manager" />
+         default="$(arg UAV_NAME)_wrapper_rbl_manager" />
     <arg name="n_threads"
          default="8" />
     <arg unless="$(arg standalone)"
@@ -39,15 +39,12 @@
          name="nodelet_manager"
          value="" />
 
-    <!-- Namespace - all topics, services and parameters will be remapped using this namespace as a
-    prefix (eg.: "/waypoint_flier/odom_uav_in" to "/uav1/waypoint_flier/odom_uav_in") -->
     <group ns="$(arg UAV_NAME)">
 
-        <!-- FormationPlanning nodelet -->
         <node pkg="nodelet"
               type="nodelet"
               name="rbl_controller"
-              args="$(arg nodelet) formation_control/RBLController $(arg nodelet_manager)"
+              args="$(arg nodelet) WrapperRosRBL $(arg nodelet_manager)"
               launch-prefix="$(arg launch_prefix_debug)"
               output="screen">
 
@@ -124,9 +121,6 @@
                    to="~neighbors_vis" />
             <remap from="~hull_markers_out"
                    to="~hull_vis" />
-
-
         </node>
-
     </group>
-
+</launch>

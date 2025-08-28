@@ -1,6 +1,6 @@
-<library path="lib/libRBLController">
-  <class name="formation_control/RBLController"
-         type="formation_control::RBLController"
+<library path="lib/libnodelet_rbl_controller">
+  <class name="WrapperRosRBL"
+         type="WrapperRosRBL"
          base_class_type="nodelet::Nodelet">
     <description>
         This nodelet receives a message and publishes it.
